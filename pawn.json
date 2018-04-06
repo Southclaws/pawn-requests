@@ -1,0 +1,11 @@
+{
+  "user": "Southclaws",
+  "repo": "pawn-restful",
+  "entry": "test/gamemodes/test.pwn",
+  "output": "test/gamemodes/test.amx",
+  "dependencies": ["Southclaws/samp-stdlib"],
+  "dev_dependencies": ["pawn-lang/YSI-Includes"],
+  "runtime": {
+    "plugins": ["Southclaws/pawn-restful"]
+  }
+}
