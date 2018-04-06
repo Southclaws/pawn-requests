@@ -25,4 +25,5 @@ add_samp_plugin(restful
 	impl.hpp
 	natives.cpp
 	natives.hpp
+	plugin.def
 )

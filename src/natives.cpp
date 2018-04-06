@@ -8,6 +8,7 @@ The code here acts as the translation between AMX data types and native types.
 */
 
 #include "natives.hpp"
+#include "plugin-natives\NativeFunc.hpp"
 
 PAWN_NATIVE_DEFN(restful, Function, bool())
 {

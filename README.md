@@ -42,6 +42,9 @@ Run `make test-windows` to:
 * build the Pawn test script to an .amx with y_testing
 * run the test script as a full SA:MP server instance
 
+You should see `Function called` among the typical SA:MP boilerplate text and
+y_testing output.
+
 ### `src`
 
 This contains the C++ source code. Read the file head comments in order:
