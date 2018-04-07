@@ -7,3 +7,9 @@
 [submodule "src/plugin-natives"]
 	path = src/plugin-natives
 	url = https://github.com/Y-Less/plugin-natives
+[submodule "lib/curl"]
+	path = lib/curl
+	url = https://github.com/curl/curl.git
+[submodule "lib/openssl"]
+	path = lib/openssl
+	url = https://github.com/openssl/openssl.git

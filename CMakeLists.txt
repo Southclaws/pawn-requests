@@ -14,4 +14,13 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/test/plugins)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
+set(BUILD_CURL_EXE OFF)
+set(CURL_STATICLIB ON)
+set(HTTP_ONLY ON)
+set(ENABLE_MANUAL OFF)
+set(BUILD_TESTING OFF)
+set(OPENSSL_ROOT_DIR "${PROJECT_SOURCE_DIR}/lib/openssl")
+
+add_subdirectory(lib/curl)
+include_directories(lib/curl/include/curl)
 add_subdirectory(src)

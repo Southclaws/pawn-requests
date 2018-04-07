@@ -10,3 +10,8 @@ log-core by maddinat0r.
 */
 
 #include "impl.hpp"
+
+int Impl::HttpGet() {
+
+	return 0;
+}

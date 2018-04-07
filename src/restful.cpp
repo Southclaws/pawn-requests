@@ -8,6 +8,8 @@ The "main" source file with most of the boilerplate code. Includes the
 - `Load` is called when the plugin loads and sets up the `logprintf` function.
 */
 
+#include <curl.h>
+
 #include <amx/amx.h>
 #include <plugincommon.h>
 
@@ -26,6 +28,9 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void** ppData)
 {
     pAMXFunctions = ppData[PLUGIN_DATA_AMX_EXPORTS];
     logprintf = (logprintf_t)ppData[PLUGIN_DATA_LOGPRINTF];
+
+	curl_global_init(CURL_GLOBAL_ALL);
+
     return true;
 }
 
