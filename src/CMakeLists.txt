@@ -1,7 +1,7 @@
 include(AMXConfig)
 include(AddSAMPPlugin)
 
-set(SAMP_SDK_ROOT "${PROJECT_SOURCE_DIR}/lib/samp-plugin-sdk")
+set(SAMP_SDK_ROOT "${CMAKE_SOURCE_DIR}/lib/samp-plugin-sdk")
 find_package(SAMPSDK REQUIRED)
 
 include_directories(
@@ -28,5 +28,5 @@ add_samp_plugin(restful
 	plugin.def
 )
 
+target_include_directories(restful PUBLIC "${CMAKE_SOURCE_DIR}/lib/curl/include")
 target_link_libraries(restful libcurl)
-target_include_directories(restful PUBLIC "${PROJECT_SOURCE_DIR}/lib/curl/include")

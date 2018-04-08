@@ -8,7 +8,7 @@ The "main" source file with most of the boilerplate code. Includes the
 - `Load` is called when the plugin loads and sets up the `logprintf` function.
 */
 
-
+#define CURL_STATICLIB
 #include <curl/curl.h>
 
 #include <amx/amx.h>
