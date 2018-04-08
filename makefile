@@ -11,7 +11,11 @@ test-setup:
 # -
 
 test-windows:
-	cp test/plugins/Debug/restful.dll test/plugins/restful.dll
+	cp test/plugins/Debug/restful-d.dll test/plugins/restful.dll
+	sampctl package build
+	cd test && sampctl server run
+test-windows-release:
+	cp test/plugins/Release/restful.dll test/plugins/restful.dll
 	sampctl package build
 	cd test && sampctl server run
 
