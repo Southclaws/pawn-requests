@@ -27,3 +27,6 @@ add_samp_plugin(restful
 	natives.hpp
 	plugin.def
 )
+
+target_link_libraries(restful libcurl)
+target_include_directories(restful PUBLIC "${PROJECT_SOURCE_DIR}/lib/curl/include")
