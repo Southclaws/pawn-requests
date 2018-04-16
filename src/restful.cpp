@@ -8,17 +8,18 @@ The "main" source file with most of the boilerplate code. Includes the
 - `Load` is called when the plugin loads and sets up the `logprintf` function.
 */
 
-#define CURL_STATICLIB
-#include <curl/curl.h>
-
 #include <amx/amx.h>
 #include <plugincommon.h>
 
 #include "common.hpp"
 #include "natives.hpp"
-#include "plugin-natives\NativesMain.hpp" // must be included last
+// #include "plugin-natives\NativesMain.hpp" // must be included last
 
 logprintf_t logprintf;
+
+extern "C" AMX_NATIVE_INFO amx_Natives[] = {
+	{0, 0}
+};
 
 PLUGIN_EXPORT unsigned int PLUGIN_CALL Supports()
 {
@@ -30,14 +31,13 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void** ppData)
     pAMXFunctions = ppData[PLUGIN_DATA_AMX_EXPORTS];
     logprintf = (logprintf_t)ppData[PLUGIN_DATA_LOGPRINTF];
 
-	curl_global_init(CURL_GLOBAL_ALL);
-
     return true;
 }
 
 PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX *amx)
 {
-	return pawn_natives::AmxLoad(amx);
+	// return pawn_natives::AmxLoad(amx);
+	return amx_Register(amx, amx_Natives, -1);
 }
 
 PLUGIN_EXPORT int PLUGIN_CALL Unload()

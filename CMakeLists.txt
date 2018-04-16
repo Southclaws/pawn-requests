@@ -12,13 +12,5 @@ endif()
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/test/plugins)
 
-set(BUILD_CURL_EXE OFF)
-set(CURL_STATICLIB ON)
-set(HTTP_ONLY ON)
-set(CMAKE_USE_LIBSSH2 OFF)
-set(ENABLE_MANUAL OFF)
-set(BUILD_TESTING OFF)
-set(OPENSSL_ROOT_DIR "${CMAKE_SOURCE_DIR}/lib/openssl")
-
-add_subdirectory(lib/curl)
+find_package(cpprestsdk REQUIRED)
 add_subdirectory(src)

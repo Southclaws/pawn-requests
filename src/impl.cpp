@@ -12,6 +12,9 @@ log-core by maddinat0r.
 #include "impl.hpp"
 
 int Impl::HttpGet() {
+	web::http::client::http_client_config client_config;
+	http_client client(U("http://api.samp.southcla.ws/v2/servers/"), client_config);
+	client.request(methods::GET, "", "").wait();
 
 	return 0;
 }
