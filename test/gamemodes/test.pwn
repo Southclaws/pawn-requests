@@ -6,5 +6,11 @@
 #include "../../restful.inc"
 
 main() {
-    Function();
+    JsonObject(
+        "AAA", 777,
+        "key2", JsonString("value"),
+        "key3", JsonObject(
+            "key1", JsonNumber(1.2)
+        )
+    );
 }

@@ -18,7 +18,17 @@ The "main" source file with most of the boilerplate code. Includes the
 logprintf_t logprintf;
 
 extern "C" AMX_NATIVE_INFO amx_Natives[] = {
-	{0, 0}
+    { "RestfulGetData", Natives::RestfulGetData },
+    { "RestfulPostData", Natives::RestfulPostData },
+    { "RestfulGetJSON", Natives::RestfulGetJSON },
+    { "RestfulPostJSON", Natives::RestfulPostJSON },
+    { "RestfulHeaders", Natives::RestfulHeaders },
+    { "JsonObject", Natives::JsonObject },
+    { "JsonString", Natives::JsonString },
+    { "JsonNumber", Natives::JsonNumber },
+    { "JsonArray", Natives::JsonArray },
+    { "JsonStringify", Natives::JsonStringify },
+    { 0, 0 }
 };
 
 PLUGIN_EXPORT unsigned int PLUGIN_CALL Supports()
@@ -34,18 +44,18 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void** ppData)
     return true;
 }
 
-PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX *amx)
+PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX* amx)
 {
-	// return pawn_natives::AmxLoad(amx);
-	return amx_Register(amx, amx_Natives, -1);
+    // return pawn_natives::AmxLoad(amx);
+    return amx_Register(amx, amx_Natives, -1);
 }
 
 PLUGIN_EXPORT int PLUGIN_CALL Unload()
 {
-	return 1;
+    return 1;
 }
 
 PLUGIN_EXPORT int PLUGIN_CALL AmxUnload()
 {
-	return 1;
+    return 1;
 }
