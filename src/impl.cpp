@@ -11,10 +11,22 @@ log-core by maddinat0r.
 
 #include "impl.hpp"
 
-int Impl::HttpGet() {
-	web::http::client::http_client_config client_config;
-	http_client client(U("http://api.samp.southcla.ws/v2/servers/"), client_config);
-	client.request(methods::GET, "", "").wait();
+int Impl::RestfulGetData(std::string endpoint, std::string callback, std::vector<std::string> headers) {
+	return 0;
+}
 
+int Impl::RestfulPostData(std::string endpoint, std::string callback, char * data, std::vector<std::string> headers) {
+	return 0;
+}
+
+int Impl::RestfulGetJSON(std::string endpoint, std::string callback, std::vector<std::string> headers) {
+	return 0;
+}
+
+int Impl::RestfulPostJSON(std::string endpoint, std::string callback, web::json::object json, std::vector<std::string> headers) {
+	return 0;
+}
+
+int Impl::RestfulHeaders(std::string ...) {
 	return 0;
 }

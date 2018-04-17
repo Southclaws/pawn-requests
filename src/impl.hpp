@@ -9,16 +9,15 @@ is for declaring implementation functions for the plugin's core functionality.
 #include <cpprest/http_client.h>
 #include <cpprest/json.h>
 
-using namespace utility;
-using namespace web::http;
-using namespace web::http::client;
-using namespace concurrency::streams;
-
 #ifndef RESTFUL_IMPL_H
 #define RESTFUL_IMPL_H
 
 namespace Impl {
-int HttpGet();
+int RestfulGetData(std::string endpoint, std::string callback, std::vector<std::string> headers);
+int RestfulPostData(std::string endpoint, std::string callback, char* data, std::vector<std::string> headers);
+int RestfulGetJSON(std::string endpoint, std::string callback, std::vector<std::string> headers);
+int RestfulPostJSON(std::string endpoint, std::string callback, web::json::object json, std::vector<std::string> headers);
+int RestfulHeaders(std::string ...);
 };
 
 #endif
