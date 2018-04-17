@@ -10,12 +10,24 @@ test-setup:
 # Run Tests
 # -
 
-test-windows:
-	cp test/plugins/Debug/restful-d.dll test/plugins/restful.dll
+test-windows-debug:
+	-cp test/plugins/Debug/restful-d.dll test/plugins/restful.dll
+	-cp test/plugins/Debug/boost_date_time-vc141-mt-gd-x32-1_66.dll test/boost_date_time-vc141-mt-gd-x32-1_66.dll
+	-cp test/plugins/Debug/boost_system-vc141-mt-gd-x32-1_66.dll test/boost_system-vc141-mt-gd-x32-1_66.dll
+	-cp test/plugins/Debug/cpprest_2_10d.dll test/cpprest_2_10d.dll
+	-cp test/plugins/Debug/LIBEAY32.dll test/LIBEAY32.dll
+	-cp test/plugins/Debug/SSLEAY32.dll test/SSLEAY32.dll
+	-cp test/plugins/Debug/zlibd1.dll test/zlibd1.dll
 	sampctl package build
 	cd test && sampctl server run
 test-windows-release:
-	cp test/plugins/Release/restful.dll test/plugins/restful.dll
+	-cp test/plugins/Release/restful.dll test/plugins/restful.dll
+	-cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_66.dll test/boost_date_time-vc141-mt-x32-1_66.dll
+	-cp test/plugins/Release/boost_system-vc141-mt-x32-1_66.dll test/boost_system-vc141-mt-x32-1_66.dll
+	-cp test/plugins/Release/cpprest_2_10.dll test/cpprest_2_10.dll
+	-cp test/plugins/Release/LIBEAY32.dll test/LIBEAY32.dll
+	-cp test/plugins/Release/SSLEAY32.dll test/SSLEAY32.dll
+	-cp test/plugins/Release/zlib1.dll test/zlib1.dll
 	sampctl package build
 	cd test && sampctl server run
 
