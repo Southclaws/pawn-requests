@@ -10,8 +10,7 @@ The code here acts as the translation between AMX data types and native types.
 #include "natives.hpp"
 // #include "plugin-natives\NativeFunc.hpp"
 
-std::unordered_map<int, web::json::value> Natives::JSON::jsonPool;
-std::set<web::json::value*> nodePool;
+std::unordered_map<int, web::json::value*> Natives::JSON::jsonPool;
 int Natives::JSON::jsonPoolCounter = 0;
 
 int Natives::RestfulGetData(AMX* amx, cell* params)
@@ -165,13 +164,7 @@ int Natives::JSON::Cleanup(AMX* amx, cell* params)
 
 cell Natives::JSON::Alloc(web::json::value item)
 {
-	cell id;
-
-	if (nodePool.find(item)) {
-	}
-	else {
-		nodePool.insert(item);
-	}
+	// bring back old id pool code
 
 	return id;
 }
