@@ -14,6 +14,15 @@ native Headers:RestfulHeaders(...);
 // JSON
 native Node:JsonObject({_, Node}:...);
 native Node:JsonString(const value[]);
-native Node:JsonNumber({_,Float}:value);
-native Node:JsonArray(Node:values[]);
+native Node:JsonInt(value);
+native Node:JsonFloat(Float:value);
+native Node:JsonArray(Node:...);
 native JsonStringify(Node:node, buf[], len = sizeof(buf));
+native JsonCleanup(Node:node);
+
+// cleans up nodes once they go out of scope.
+operator~(Node:nodes[], len) {
+    for(new i; i < len; ++i) {
+        JsonCleanup(nodes[i]);
+    }
+}

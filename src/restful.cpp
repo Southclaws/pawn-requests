@@ -23,11 +23,13 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "RestfulGetJSON", Natives::RestfulGetJSON },
     { "RestfulPostJSON", Natives::RestfulPostJSON },
     { "RestfulHeaders", Natives::RestfulHeaders },
-    { "JsonObject", Natives::JSON::JsonObject },
-    { "JsonString", Natives::JSON::JsonString },
-    { "JsonNumber", Natives::JSON::JsonNumber },
-    { "JsonArray", Natives::JSON::JsonArray },
-    { "JsonStringify", Natives::JSON::JsonStringify },
+    { "JsonObject", Natives::JSON::Object },
+    { "JsonString", Natives::JSON::String },
+    { "JsonInt", Natives::JSON::Int },
+    { "JsonFloat", Natives::JSON::Float },
+    { "JsonArray", Natives::JSON::Array },
+    { "JsonStringify", Natives::JSON::Stringify },
+    { "JsonCleanup", Natives::JSON::Cleanup },
     { 0, 0 }
 };
 

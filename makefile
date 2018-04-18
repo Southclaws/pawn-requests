@@ -11,7 +11,7 @@ test-setup:
 # -
 
 test-windows-debug:
-	-cp test/plugins/Debug/restful-d.dll test/plugins/restful.dll
+	-cp test/plugins/Debug/restful.dll test/plugins/restful.dll
 	-cp test/plugins/Debug/boost_date_time-vc141-mt-gd-x32-1_66.dll test/boost_date_time-vc141-mt-gd-x32-1_66.dll
 	-cp test/plugins/Debug/boost_system-vc141-mt-gd-x32-1_66.dll test/boost_system-vc141-mt-gd-x32-1_66.dll
 	-cp test/plugins/Debug/cpprest_2_10d.dll test/cpprest_2_10d.dll

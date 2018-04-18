@@ -7,17 +7,34 @@
 
 main() {
     new Node:node = JsonObject(
-        "AAA", JsonNumber(777),
-        "key2", JsonString("value"),
-        "key3", JsonObject(
-            "key1", JsonNumber(1.2)
-        )
+        "key1", JsonString("value1")
     );
 
-    printf("node: %d", node);
+    printf("node: %d", _:node);
 
     new buf[128];
     new ret = JsonStringify(node, buf);
     printf("ret: %d", ret);
     printf("buf: '%s'", buf);
 }
+
+// Test:JsonObjectEmpty() {
+//     new Node:node = JsonObject();
+
+//     new buf[128];
+//     new ret = JsonStringify(node, buf);
+//     ASSERT(ret == 0);
+//     ASSERT(!strcmp(buf, "{}"));
+// }
+
+// Test:JsonObjectString() {
+//     new Node:node = JsonObject(
+//         "key", JsonString("value")
+//     );
+
+//     new buf[128];
+//     new ret = JsonStringify(node, buf);
+//     ASSERT(ret == 0);
+//     ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
+//     print(buf);
+// }

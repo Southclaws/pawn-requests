@@ -17,7 +17,7 @@ int RestfulGetData(std::string endpoint, std::string callback, std::vector<std::
 int RestfulPostData(std::string endpoint, std::string callback, char* data, std::vector<std::string> headers);
 int RestfulGetJSON(std::string endpoint, std::string callback, std::vector<std::string> headers);
 int RestfulPostJSON(std::string endpoint, std::string callback, web::json::object json, std::vector<std::string> headers);
-int RestfulHeaders(std::string ...);
+int RestfulHeaders(std::string...);
 };
 
 #endif
