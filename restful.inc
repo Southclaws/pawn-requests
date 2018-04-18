@@ -16,4 +16,4 @@ native Node:JsonObject({_, Node}:...);
 native Node:JsonString(const value[]);
 native Node:JsonNumber({_,Float}:value);
 native Node:JsonArray(Node:values[]);
-native JsonStringify(Node:node);
+native JsonStringify(Node:node, buf[], len = sizeof(buf));

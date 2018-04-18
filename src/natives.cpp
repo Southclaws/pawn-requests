@@ -10,6 +10,9 @@ The code here acts as the translation between AMX data types and native types.
 #include "natives.hpp"
 // #include "plugin-natives\NativeFunc.hpp"
 
+std::unordered_map<int, web::json::value> Natives::JSON::jsonPool;
+int Natives::JSON::jsonPoolCounter = 0;
+
 int Natives::RestfulGetData(AMX* amx, cell* params)
 {
     return 0;
@@ -35,7 +38,7 @@ int Natives::RestfulHeaders(AMX* amx, cell* params)
     return 0;
 }
 
-int Natives::JsonObject(AMX* amx, cell* params)
+int Natives::JSON::JsonObject(AMX* amx, cell* params)
 {
 	int arg = 0;
 	std::string key;
@@ -54,7 +57,10 @@ int Natives::JsonObject(AMX* amx, cell* params)
 		}
 
 		if (arg & 1) {
-			fields.push_back(std::make_pair(utility::conversions::to_string_t(key), *addr));
+			int id = *addr;
+			auto obj = JsonGet(id);
+			logprintf("- reading object id %d", id);
+			fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
 		} else {
 			if (*addr == 0) {
 				break;
@@ -75,28 +81,57 @@ int Natives::JsonObject(AMX* amx, cell* params)
 	}
 
 	web::json::value obj = web::json::value::object(fields);
+	int id = JsonAlloc(obj);
+
 	std::string s = utility::conversions::to_utf8string(obj.serialize());
 	logprintf("JSON: '%s'", s.c_str());
 
-    return 5;
+    return id;
 }
 
-int Natives::JsonString(AMX* amx, cell* params)
+int Natives::JSON::JsonString(AMX* amx, cell* params)
+{
+	web::json::value obj = web::json::value::string(utility::conversions::to_string_t(amx_GetCppString(amx, params[1])));
+	int id = JsonAlloc(obj);
+	logprintf("JsonString: %d", id);
+	return id;
+}
+
+int Natives::JSON::JsonNumber(AMX* amx, cell* params)
+{
+	web::json::value obj = web::json::value::number(params[1]);
+	int id = JsonAlloc(obj);
+	logprintf("JsonNumber: %d", id);
+	return id;
+}
+
+int Natives::JSON::JsonArray(AMX* amx, cell* params)
 {
     return 0;
 }
 
-int Natives::JsonNumber(AMX* amx, cell* params)
+int Natives::JSON::JsonStringify(AMX* amx, cell* params)
 {
-    return 0;
+	auto obj = JsonGet(params[1]);
+	std::string s = utility::conversions::to_utf8string(obj.serialize());
+
+	amx_SetCppString(amx, params[2], s, params[3]);
+
+	return 0;
 }
 
-int Natives::JsonArray(AMX* amx, cell* params)
+int Natives::JSON::JsonAlloc(web::json::value item)
 {
-    return 0;
+	int id = jsonPoolCounter++;
+	jsonPool[id] = item;
+	return id;
 }
 
-int Natives::JsonStringify(AMX* amx, cell* params)
-{
-    return 0;
+web::json::value Natives::JSON::JsonGet(int id) {
+	if (id < 0 || id > jsonPoolCounter) {
+		logprintf("error: id %d out of range %d", id, jsonPoolCounter);
+		return web::json::value();
+	}
+	return jsonPool[id];
 }
+
