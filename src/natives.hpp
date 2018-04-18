@@ -33,8 +33,9 @@ namespace JSON {
     int Stringify(AMX* amx, cell* params);
     int Cleanup(AMX* amx, cell* params);
 
-    extern std::unordered_map<int, web::json::value> jsonPool;
-	extern std::set<web::json::value*> nodePool;
+    // this is now a pointer to json value, upon cleanup, delete the value
+    // no need to invalidate the pool ID as they are ephemeral across function calls.
+    extern std::unordered_map<int, web::json::value*> jsonPool;
     extern int jsonPoolCounter;
     int Alloc(web::json::value item);
     web::json::value Get(int id);
