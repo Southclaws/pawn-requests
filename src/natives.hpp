@@ -37,7 +37,7 @@ namespace JSON {
     extern int jsonPoolCounter;
     int Alloc(web::json::value* item);
     web::json::value Get(int id, bool gc = true);
-	void Erase(int id);
+    void Erase(int id);
 }
 }
 

@@ -60,16 +60,16 @@ int Natives::JSON::Object(AMX* amx, cell* params)
             break;
         }
 
-		logprintf("arg: %d addr: %x value: %d", arg, addr, *addr);
+        logprintf("arg: %d addr: %x value: %d", arg, addr, *addr);
 
         if (!key.empty()) {
-			web::json::value obj = Get(*addr);
-			if (obj == web::json::value::null()) {
-				continue;
-			}
+            web::json::value obj = Get(*addr);
+            if (obj == web::json::value::null()) {
+                continue;
+            }
             fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
-			key = "";
-		} else {
+            key = "";
+        } else {
             if (*addr == 0) {
                 break;
             }
@@ -83,7 +83,7 @@ int Natives::JSON::Object(AMX* amx, cell* params)
 
             key = std::string(len, ' ');
             amx_GetString(&key[0], addr, 0, len + 1);
-		}
+        }
     }
 
     web::json::value* obj = new web::json::value;
@@ -150,12 +150,12 @@ int Natives::JSON::Stringify(AMX* amx, cell* params)
 int Natives::JSON::Cleanup(AMX* amx, cell* params)
 {
     web::json::value* ptr = nodeTable[params[1]];
-	if (ptr == nullptr) {
-		logprintf("error: attempt to cleanup null ID %d", params[1]);
-		return 1;
-	}
+    if (ptr == nullptr) {
+        logprintf("error: attempt to cleanup null ID %d", params[1]);
+        return 1;
+    }
 
-	Erase(params[1]);
+    Erase(params[1]);
 
     return 0;
 }
@@ -174,23 +174,24 @@ web::json::value Natives::JSON::Get(int id, bool gc)
         return web::json::value::null();
     }
 
-	web::json::value* ptr = nodeTable[id];
-	if (ptr == nullptr) {
-		logprintf("error: attempt to get node from null ID %d", id);
-		return web::json::value::null();
-	}
+    web::json::value* ptr = nodeTable[id];
+    if (ptr == nullptr) {
+        logprintf("error: attempt to get node from null ID %d", id);
+        return web::json::value::null();
+    }
 
-	// deref the node into a local copy for returning
+    // deref the node into a local copy for returning
     web::json::value copy = *ptr;
-	if (gc) {
-		// if gc, then delete the heap copy
-		Erase(id);
-	}
+    if (gc) {
+        // if gc, then delete the heap copy
+        Erase(id);
+    }
     // and return the copy
     return copy;
 }
 
-void Natives::JSON::Erase(int id) {
-	delete nodeTable[id];
-	nodeTable[id] = nullptr;
+void Natives::JSON::Erase(int id)
+{
+    delete nodeTable[id];
+    nodeTable[id] = nullptr;
 }
