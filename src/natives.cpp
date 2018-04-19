@@ -10,7 +10,8 @@ The code here acts as the translation between AMX data types and native types.
 #include "natives.hpp"
 // #include "plugin-natives\NativeFunc.hpp"
 
-std::unordered_map<int, web::json::value*> Natives::JSON::jsonPool;
+// identToNode maps numeric identifiers to JSON node pointers.
+std::unordered_map<int, web::json::value*> Natives::JSON::nodeTable;
 int Natives::JSON::jsonPoolCounter = 0;
 
 int Natives::RestfulGetData(AMX* amx, cell* params)
@@ -55,14 +56,20 @@ int Natives::JSON::Object(AMX* amx, cell* params)
         cell* addr = nullptr;
         amx_GetAddr(amx, params[i], &addr);
 
-        if (addr == 0) {
+        if (addr == nullptr) {
             break;
         }
 
-        if (arg & 1) {
-            auto obj = Get(*addr);
+		logprintf("arg: %d addr: %x value: %d", arg, addr, *addr);
+
+        if (!key.empty()) {
+			web::json::value obj = Get(*addr);
+			if (obj == web::json::value::null()) {
+				continue;
+			}
             fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
-        } else {
+			key = "";
+		} else {
             if (*addr == 0) {
                 break;
             }
@@ -76,34 +83,33 @@ int Natives::JSON::Object(AMX* amx, cell* params)
 
             key = std::string(len, ' ');
             amx_GetString(&key[0], addr, 0, len + 1);
-        }
-
-        arg++;
+		}
     }
 
-    web::json::value obj = web::json::value::object(fields);
+    web::json::value* obj = new web::json::value;
+    *obj = web::json::value::object(fields);
     return Alloc(obj);
 }
 
 int Natives::JSON::String(AMX* amx, cell* params)
 {
-    web::json::value obj = web::json::value::string(utility::conversions::to_string_t(amx_GetCppString(amx, params[1])));
-    int id = Alloc(obj);
-    return id;
+    web::json::value* obj = new web::json::value;
+    *obj = web::json::value::string(utility::conversions::to_string_t(amx_GetCppString(amx, params[1])));
+    return Alloc(obj);
 }
 
 int Natives::JSON::Int(AMX* amx, cell* params)
 {
-    web::json::value obj = web::json::value::number(params[1]);
-    int id = Alloc(obj);
-    return id;
+    web::json::value* obj = new web::json::value;
+    *obj = web::json::value::number(params[1]);
+    return Alloc(obj);
 }
 
 int Natives::JSON::Float(AMX* amx, cell* params)
 {
-    web::json::value obj = web::json::value::number(amx_ctof(params[1]));
-    int id = Alloc(obj);
-    return id;
+    web::json::value* obj = new web::json::value;
+    *obj = web::json::value::number(amx_ctof(params[1]));
+    return Alloc(obj);
 }
 
 int Natives::JSON::Array(AMX* amx, cell* params)
@@ -126,13 +132,14 @@ int Natives::JSON::Array(AMX* amx, cell* params)
         fields.push_back(obj);
     }
 
-    web::json::value obj = web::json::value::array(fields);
+    web::json::value* obj = new web::json::value;
+    *obj = web::json::value::array(fields);
     return Alloc(obj);
 }
 
 int Natives::JSON::Stringify(AMX* amx, cell* params)
 {
-    auto obj = Get(params[1]);
+    auto obj = Get(params[1], false);
     std::string s = utility::conversions::to_utf8string(obj.serialize());
 
     amx_SetCppString(amx, params[2], s, params[3]);
@@ -142,38 +149,48 @@ int Natives::JSON::Stringify(AMX* amx, cell* params)
 
 int Natives::JSON::Cleanup(AMX* amx, cell* params)
 {
-	auto obj = Get(params[1]);
-	std::function<void(web::json::value)> recurse;
+    web::json::value* ptr = nodeTable[params[1]];
+	if (ptr == nullptr) {
+		logprintf("error: attempt to cleanup null ID %d", params[1]);
+		return 1;
+	}
 
-	recurse = [&recurse](web::json::value v) {
-		if (v.is_object()) {
-			for (auto e : v.as_object()) {
-				recurse(e.second);
-			}
-		} else {
-			// todo: figure out a way to address JSON value objects
-			// and use that in jsonPool or in a map that maps values
-			// back to IDs so they can be removed from jsonPool.
-			logprintf("cleaning leaf node");
-		}
-	};
-	recurse(obj);
+	Erase(params[1]);
 
-	return 0;
+    return 0;
 }
 
-cell Natives::JSON::Alloc(web::json::value item)
+cell Natives::JSON::Alloc(web::json::value* item)
 {
-	// bring back old id pool code
-
-	return id;
+    int id = jsonPoolCounter++;
+    nodeTable[id] = item;
+    return id;
 }
 
-web::json::value Natives::JSON::Get(int id)
+web::json::value Natives::JSON::Get(int id, bool gc)
 {
     if (id < 0 || id > jsonPoolCounter) {
         logprintf("error: id %d out of range %d", id, jsonPoolCounter);
-        return web::json::value();
+        return web::json::value::null();
     }
-    return jsonPool[id];
+
+	web::json::value* ptr = nodeTable[id];
+	if (ptr == nullptr) {
+		logprintf("error: attempt to get node from null ID %d", id);
+		return web::json::value::null();
+	}
+
+	// deref the node into a local copy for returning
+    web::json::value copy = *ptr;
+	if (gc) {
+		// if gc, then delete the heap copy
+		Erase(id);
+	}
+    // and return the copy
+    return copy;
+}
+
+void Natives::JSON::Erase(int id) {
+	delete nodeTable[id];
+	nodeTable[id] = nullptr;
 }

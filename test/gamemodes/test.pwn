@@ -18,23 +18,23 @@ main() {
     printf("buf: '%s'", buf);
 }
 
-// Test:JsonObjectEmpty() {
-//     new Node:node = JsonObject();
+Test:JsonObjectEmpty() {
+    new Node:node = JsonObject();
 
-//     new buf[128];
-//     new ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{}"));
-// }
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{}"));
+}
 
-// Test:JsonObjectString() {
-//     new Node:node = JsonObject(
-//         "key", JsonString("value")
-//     );
+Test:JsonObjectString() {
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
 
-//     new buf[128];
-//     new ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
-//     print(buf);
-// }
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
+    print(buf);
+}
