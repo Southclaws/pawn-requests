@@ -48,7 +48,7 @@ int Natives::JSON::Object(AMX* amx, cell* params)
     std::string key;
     std::vector<std::pair<utility::string_t, web::json::value>> fields;
 
-    for (int i = 1; i < params[0]; ++i) {
+    for(size_t i = 1; i <= params[0] / sizeof(cell); i++)
         if (params[i] == 0) {
             break;
         }
