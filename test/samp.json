@@ -5,5 +5,5 @@
   "port": 7777,
   "hostname": "test",
   "maxplayers": 32,
-  "mode": "y_testing"
+  "mode": "server"
 }

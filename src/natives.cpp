@@ -8,15 +8,29 @@ The code here acts as the translation between AMX data types and native types.
 */
 
 #include "natives.hpp"
+#include "impl.hpp"
 // #include "plugin-natives\NativeFunc.hpp"
 
 // identToNode maps numeric identifiers to JSON node pointers.
 std::unordered_map<int, web::json::value*> Natives::JSON::nodeTable;
 int Natives::JSON::jsonPoolCounter = 0;
 
+int Natives::RestfulClient(AMX* amx, cell* params)
+{
+    std::string endpoint = amx_GetCppString(amx, params[1]);
+    std::vector<std::string> headers;
+    return Impl::RestfulClient(endpoint, headers);
+}
+
 int Natives::RestfulGetData(AMX* amx, cell* params)
 {
-    return 0;
+    std::string
+        endpoint
+        = amx_GetCppString(amx, params[2]),
+        callback = amx_GetCppString(amx, params[3]);
+    std::vector<std::string> headers;
+
+    return Impl::RestfulGetData(params[1], endpoint, callback, headers);
 }
 
 int Natives::RestfulPostData(AMX* amx, cell* params)
@@ -36,7 +50,22 @@ int Natives::RestfulPostJSON(AMX* amx, cell* params)
 
 int Natives::RestfulHeaders(AMX* amx, cell* params)
 {
-    return 0;
+    std::vector<std::pair<std::string, std::string>> headers;
+    std::string key;
+    for (size_t i = 1; i <= params[0] / sizeof(cell); i++) {
+        std::string header = amx_GetCppString(amx, params[i]);
+        if (i & 1) {
+            key = header;
+        } else {
+            headers.push_back(std::make_pair(key, header));
+        }
+    }
+    return Impl::RestfulHeaders(headers);
+}
+
+void Natives::processTick(AMX* amx)
+{
+    std::vector<Impl::CallbackTask> tasks = Impl::gatherTasks();
 }
 
 // JSON implementation is directly in the Natives section unlike other API.
@@ -140,7 +169,6 @@ int Natives::JSON::Cleanup(AMX* amx, cell* params)
 {
     web::json::value* ptr = nodeTable[params[1]];
     if (ptr == nullptr) {
-        logprintf("error: attempt to cleanup null ID %d", params[1]);
         return 1;
     }
 
@@ -182,5 +210,5 @@ web::json::value Natives::JSON::Get(int id, bool gc)
 void Natives::JSON::Erase(int id)
 {
     delete nodeTable[id];
-    nodeTable[id] = nullptr;
+    nodeTable.erase(id);
 }

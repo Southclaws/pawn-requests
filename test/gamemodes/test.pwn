@@ -9,6 +9,26 @@ main() {
     //
 }
 
+Test:NewClient() {
+    new Restful:client = RestfulClient("http://httpbin.org/");
+    printf("new restful client: %d", _:client);
+}
+
+Test:NewClientWithHeaders() {
+    new Restful:client = RestfulClient("http://httpbin.org/", RestfulHeaders(
+        "Authorization", "Basic "
+    ));
+    printf("new restful client: %d", _:client);
+    RestfulGetData(client, "headers", "OnNewClientWithHeaders");
+}
+
+forward OnNewClientWithHeaders();
+public OnNewClientWithHeaders() {
+    //
+}
+
+#endinput
+
 Test:JsonObjectEmpty() {
     new Node:node = JsonObject();
 
