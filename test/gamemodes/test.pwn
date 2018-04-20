@@ -158,6 +158,41 @@ Test:JsonObjectArray() {
     print(buf);
 }
 
+/*
+JsonObjectComplex generates this rather complex JSON object:
+{
+  "object": {
+    "a_float": 66.599998474121094,
+    "a_number": 76,
+    "a_string": "a value",
+    "nested_object": {
+      "a_deeper_float": 66.599998474121094,
+      "a_deeper_number": 76,
+      "a_deeper_string": "another value"
+    }
+  },
+  "list": [
+    {
+      "a_listobj_float": 66.599998474121094,
+      "a_listobj_number": 76,
+      "a_listobj_string": "another value",
+      "one": "value one"
+    },
+    {
+      "a_listobj_float": 66.599998474121094,
+      "a_listobj_number": 76,
+      "a_listobj_string": "another value",
+      "two": "value two"
+    },
+    {
+      "a_listobj_float": 66.599998474121094,
+      "a_listobj_number": 76,
+      "a_listobj_string": "another value",
+      "three": "value three"
+    }
+  ]
+}
+*/
 Test:JsonObjectComplex() {
     new Node:node = JsonObject(
         "object", JsonObject(
