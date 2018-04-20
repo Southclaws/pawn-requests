@@ -7,7 +7,6 @@
 
 main() {
     new Node:node = JsonObject(
-        "key1", JsonString("value1")
     );
 
     printf("node: %d", _:node);
@@ -36,5 +35,19 @@ Test:JsonObjectString() {
     new ret = JsonStringify(node, buf);
     ASSERT(ret == 0);
     ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
+    print(buf);
+}
+
+Test:JsonObjectStrings() {
+    new Node:node = JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value1"),
+        "key3", JsonString("value1")
+    );
+
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value1\",\"key3\":\"value1\"}"));
     print(buf);
 }

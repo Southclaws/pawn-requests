@@ -44,15 +44,10 @@ int Natives::RestfulHeaders(AMX* amx, cell* params)
 
 int Natives::JSON::Object(AMX* amx, cell* params)
 {
-    int arg = 0;
     std::string key;
     std::vector<std::pair<utility::string_t, web::json::value>> fields;
 
-    for(size_t i = 1; i <= params[0] / sizeof(cell); i++)
-        if (params[i] == 0) {
-            break;
-        }
-
+    for (size_t i = 1; i <= params[0] / sizeof(cell); i++) {
         cell* addr = nullptr;
         amx_GetAddr(amx, params[i], &addr);
 
@@ -60,29 +55,23 @@ int Natives::JSON::Object(AMX* amx, cell* params)
             break;
         }
 
-        logprintf("arg: %d addr: %x value: %d", arg, addr, *addr);
-
-        if (!key.empty()) {
-            web::json::value obj = Get(*addr);
-            if (obj == web::json::value::null()) {
-                continue;
-            }
-            fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
-            key = "";
-        } else {
-            if (*addr == 0) {
-                break;
-            }
-
+        if (i & 1) {
             int len = 0;
             amx_StrLen(addr, &len);
             if (len <= 0 || len > 512) {
                 logprintf("error: string length in Object out of bounds (%d)", len);
-                return 0;
+                return -1;
             }
 
             key = std::string(len, ' ');
             amx_GetString(&key[0], addr, 0, len + 1);
+        } else {
+            web::json::value obj = Get(*addr);
+            if (obj == web::json::value::null()) {
+				logprintf("error: value node %d was invalid", *addr);
+				return -2;
+            }
+            fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
         }
     }
 
