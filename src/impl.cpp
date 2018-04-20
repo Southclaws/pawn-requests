@@ -52,11 +52,12 @@ int Impl::RestfulGetData(int id, std::string path, std::string callback, int hea
     }
     request.set_request_uri(utility::conversions::to_string_t(path));
 
+	int requestID = requestCounter;
     cd.client->request(request).then([=](http_response response) {
         taskStackLock.lock();
-        taskStack.push([&]() {
+        taskStack.push([=]() {
             CallbackTask t;
-            t.id = requestCounter;
+            t.id = requestID;
             t.callback = callback;
             t.type = E_TASK_TYPE::string;
             t.status = response.status_code();

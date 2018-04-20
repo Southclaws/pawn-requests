@@ -14,19 +14,19 @@ Test:NewClient() {
     printf("new restful client: %d", _:client);
 }
 
+new Request:OnNewClientWithHeaders_ID;
 Test:NewClientWithHeaders() {
     new Restful:client = RestfulClient("https://httpbin.org/", RestfulHeaders(
         "X-Pawn-Restful", "YES"
     ));
-    printf("new restful client: %d", _:client);
-    RestfulGetData(client, "headers", "OnNewClientWithHeaders", RestfulHeaders(
+    OnNewClientWithHeaders_ID = RestfulGetData(client, "headers", "OnNewClientWithHeaders", RestfulHeaders(
         "X-Pawn-Restful-Embedded", "YES"
     ));
 }
-
 forward OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen);
 public OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
-    assert(status == HTTP_STATUS_OK);
+    ASSERT(id == OnNewClientWithHeaders_ID);
+    ASSERT(status == HTTP_STATUS_OK);
     ASSERT(dataLen == 186);
     print(data);
 }
