@@ -10,7 +10,8 @@ if(UNIX)
 	set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS OFF)
 endif()
 
+set(Boost_USE_STATIC_LIBS ON)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/test/plugins)
 
-find_package(cpprestsdk REQUIRED)
+find_package(cpprestsdk REQUIRED NAMES cpprestsdk cpprest)
 add_subdirectory(src)
