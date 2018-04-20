@@ -3,28 +3,32 @@
 #include <a_samp>
 #include <YSI\y_testing>
 
-#include "../../restful.inc"
+#include "restful.inc"
 
 main() {
     //
 }
 
 Test:NewClient() {
-    new Restful:client = RestfulClient("http://httpbin.org/");
+    new Restful:client = RestfulClient("https://httpbin.org/");
     printf("new restful client: %d", _:client);
 }
 
 Test:NewClientWithHeaders() {
-    new Restful:client = RestfulClient("http://httpbin.org/", RestfulHeaders(
-        "Authorization", "Basic "
+    new Restful:client = RestfulClient("https://httpbin.org/", RestfulHeaders(
+        "X-Pawn-Restful", "YES"
     ));
     printf("new restful client: %d", _:client);
-    RestfulGetData(client, "headers", "OnNewClientWithHeaders");
+    RestfulGetData(client, "headers", "OnNewClientWithHeaders", RestfulHeaders(
+        "X-Pawn-Restful-Embedded", "YES"
+    ));
 }
 
-forward OnNewClientWithHeaders();
-public OnNewClientWithHeaders() {
-    //
+forward OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    assert(status == HTTP_STATUS_OK);
+    ASSERT(dataLen == 186);
+    print(data);
 }
 
 #endinput
@@ -253,4 +257,3 @@ Test:JsonObjectComplex() {
     ASSERT(!strcmp(buf, "{\"list\":[{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"one\":\"value one\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"two\":\"value two\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"three\":\"value three\"}],\"object\":{\"a_float\":66.599998474121094,\"a_number\":76,\"a_string\":\"a value\",\"nested_object\":{\"a_deeper_float\":66.599998474121094,\"a_deeper_number\":76,\"a_deeper_string\":\"another value\"}}}"));
     print(buf);
 }
-

@@ -18,19 +18,14 @@ int Natives::JSON::jsonPoolCounter = 0;
 int Natives::RestfulClient(AMX* amx, cell* params)
 {
     std::string endpoint = amx_GetCppString(amx, params[1]);
-    std::vector<std::string> headers;
-    return Impl::RestfulClient(endpoint, headers);
+    return Impl::RestfulClient(endpoint, params[2]);
 }
 
 int Natives::RestfulGetData(AMX* amx, cell* params)
 {
-    std::string
-        endpoint
-        = amx_GetCppString(amx, params[2]),
-        callback = amx_GetCppString(amx, params[3]);
-    std::vector<std::string> headers;
-
-    return Impl::RestfulGetData(params[1], endpoint, callback, headers);
+    std::string endpoint = amx_GetCppString(amx, params[2]);
+    std::string callback = amx_GetCppString(amx, params[3]);
+    return Impl::RestfulGetData(params[1], endpoint, callback, params[4]);
 }
 
 int Natives::RestfulPostData(AMX* amx, cell* params)
@@ -66,6 +61,42 @@ int Natives::RestfulHeaders(AMX* amx, cell* params)
 void Natives::processTick(AMX* amx)
 {
     std::vector<Impl::CallbackTask> tasks = Impl::gatherTasks();
+    for (auto task : tasks) {
+        int error;
+        int amx_idx;
+        cell amx_addr;
+        cell amx_ret;
+        cell* phys_addr;
+
+        switch (task.type) {
+        case Impl::E_TASK_TYPE::string: {
+            error = amx_FindPublic(amx, task.callback.c_str(), &amx_idx);
+            if (error != AMX_ERR_NONE) {
+                logprintf("ERROR: failed to locate public function '%s' in amx, error: %d", task.callback.c_str(), error);
+                continue;
+            }
+
+            // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
+            amx_Push(amx, task.string.length());
+            amx_PushString(amx, &amx_addr, &phys_addr, task.string.c_str(), 0, 0);
+            amx_Push(amx, task.status);
+            amx_Push(amx, task.id);
+
+            amx_Exec(amx, &amx_ret, amx_idx);
+            amx_Release(amx, amx_addr);
+
+            break;
+        }
+
+        case Impl::E_TASK_TYPE::json: {
+            json::value* obj = new json::value(task.json);
+            cell id = JSON::Alloc(obj);
+
+            JSON::Erase(id);
+            break;
+        }
+        }
+    }
 }
 
 // JSON implementation is directly in the Natives section unlike other API.

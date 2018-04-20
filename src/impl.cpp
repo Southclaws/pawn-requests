@@ -11,68 +11,78 @@ log-core by maddinat0r.
 
 #include "impl.hpp"
 
-std::unordered_map<int, http_client*> Impl::clientsTable;
+int Impl::requestCounter = 0;
+
+std::stack<Impl::CallbackTask> Impl::taskStack;
+std::mutex Impl::taskStackLock;
+
+std::unordered_map<int, Impl::ClientData> Impl::clientsTable;
 int Impl::clientsTableCounter = 0;
 
 std::unordered_map<int, std::vector<std::pair<std::string, std::string>>> Impl::headersTable;
 int Impl::headersTableCounter = 0;
 
-std::stack<Impl::CallbackTask> Impl::message_stack;
-std::mutex Impl::message_stack_mutex;
-
-int Impl::RestfulClient(std::string endpoint, std::vector<std::string> headers)
+int Impl::RestfulClient(std::string endpoint, int headers)
 {
     int id = clientsTableCounter++;
     http_client* client = new http_client(utility::conversions::to_string_t(endpoint));
-    clientsTable[id] = client;
+	clientsTable[id] = { client, headersTable[headers] };
     return id;
 }
 
-int Impl::RestfulGetData(int id, std::string path, std::string callback, std::vector<std::string> headers)
+int Impl::RestfulGetData(int id, std::string path, std::string callback, int headers)
 {
-    http_client* client = nullptr;
+    ClientData cd;
     try {
-        client = clientsTable[id];
+        cd = clientsTable[id];
     } catch (std::exception e) {
         return 1;
     }
-    if (client == nullptr) {
-        return 2;
-    }
 
     http_request request(methods::GET);
-    request.headers().add(U("Content-Type"), U("text/plain"));
+	for (auto h : cd.headers) {
+		request.headers().add(
+			utility::conversions::to_string_t(h.first),
+			utility::conversions::to_string_t(h.second));
+	}
+    for (auto h : headersTable[headers]) {
+        request.headers().add(
+            utility::conversions::to_string_t(h.first),
+            utility::conversions::to_string_t(h.second));
+    }
     request.set_request_uri(utility::conversions::to_string_t(path));
 
-    client->request(request).then([=](http_response response) {
-        status_code status = response.status_code();
-
-        auto a = response.extract_json().get();
-
-        logprintf("response %s", utility::conversions::to_utf8string(a.serialize()).c_str());
-
-        message_stack_mutex.lock();
-        message_stack.push({ "hello" });
-        message_stack_mutex.unlock();
+    cd.client->request(request).then([=](http_response response) {
+        taskStackLock.lock();
+        taskStack.push([&]() {
+            CallbackTask t;
+            t.id = requestCounter;
+            t.callback = callback;
+            t.type = E_TASK_TYPE::string;
+            t.status = response.status_code();
+            t.string = response.extract_utf8string().get();
+            return t;
+        }());
+        taskStackLock.unlock();
         return;
     });
 
-    return 0;
+    return requestCounter++;
 }
 
-int Impl::RestfulPostData(int id, std::string endpoint, std::string callback, char* data, std::vector<std::string> headers)
+int Impl::RestfulPostData(int id, std::string endpoint, std::string callback, char* data, int headers)
 {
-    return 0;
+    return requestCounter++;
 }
 
-int Impl::RestfulGetJSON(int id, std::string endpoint, std::string callback, std::vector<std::string> headers)
+int Impl::RestfulGetJSON(int id, std::string endpoint, std::string callback, int headers)
 {
-    return 0;
+    return requestCounter++;
 }
 
-int Impl::RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, std::vector<std::string> headers)
+int Impl::RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, int headers)
 {
-    return 0;
+    return requestCounter++;
 }
 
 int Impl::RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers)
@@ -93,17 +103,14 @@ std::vector<Impl::CallbackTask> Impl::gatherTasks()
     std::vector<CallbackTask> tasks;
 
     // if we can't lock the mutex, don't block, just return and try next tick
-    if (message_stack_mutex.try_lock()) {
+    if (taskStackLock.try_lock()) {
         CallbackTask cbt;
-        while (!message_stack.empty()) {
-            cbt = message_stack.top();
-
-            logprintf("received message");
-
+        while (!taskStack.empty()) {
+            cbt = taskStack.top();
             tasks.push_back(cbt);
-            message_stack.pop();
+            taskStack.pop();
         }
-        message_stack_mutex.unlock();
+        taskStackLock.unlock();
     }
 
     return tasks;

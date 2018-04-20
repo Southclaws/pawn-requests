@@ -27,23 +27,38 @@ using namespace concurrency::streams; // Asynchronous streams
 #define RESTFUL_IMPL_H
 
 namespace Impl {
-int RestfulClient(std::string endpoint, std::vector<std::string> headers);
-int RestfulGetData(int id, std::string endpoint, std::string callback, std::vector<std::string> headers);
-int RestfulPostData(int id, std::string endpoint, std::string callback, char* data, std::vector<std::string> headers);
-int RestfulGetJSON(int id, std::string endpoint, std::string callback, std::vector<std::string> headers);
-int RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, std::vector<std::string> headers);
+int RestfulClient(std::string endpoint, int headers);
+int RestfulGetData(int id, std::string endpoint, std::string callback, int headers);
+int RestfulPostData(int id, std::string endpoint, std::string callback, char* data, int headers);
+int RestfulGetJSON(int id, std::string endpoint, std::string callback, int headers);
+int RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, int headers);
 int RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers);
 int RestfulHeadersCleanup(int id);
 
-struct CallbackTask {
-    std::string callback;
+extern int requestCounter;
+
+enum E_TASK_TYPE {
+    string,
+    json
 };
-extern std::stack<CallbackTask> message_stack;
-extern std::mutex message_stack_mutex;
+struct CallbackTask {
+    int id;
+    std::string callback;
+    int status;
+    E_TASK_TYPE type;
+    std::string string;
+    json::value json;
+};
+extern std::stack<CallbackTask> taskStack;
+extern std::mutex taskStackLock;
 // gatherTasks is called by the Natives to get a list of callbacks to call
 std::vector<CallbackTask> gatherTasks();
 
-extern std::unordered_map<int, http_client*> clientsTable;
+struct ClientData {
+	http_client* client;
+	std::vector<std::pair<std::string, std::string>> headers;
+};
+extern std::unordered_map<int, ClientData> clientsTable;
 extern int clientsTableCounter;
 
 extern std::unordered_map<int, std::vector<std::pair<std::string, std::string>>> headersTable;
