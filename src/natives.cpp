@@ -68,8 +68,8 @@ int Natives::JSON::Object(AMX* amx, cell* params)
         } else {
             web::json::value obj = Get(*addr);
             if (obj == web::json::value::null()) {
-				logprintf("error: value node %d was invalid", *addr);
-				return -2;
+                logprintf("error: value node %d was invalid", *addr);
+                return -2;
             }
             fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
         }
@@ -105,19 +105,19 @@ int Natives::JSON::Array(AMX* amx, cell* params)
 {
     std::vector<web::json::value> fields;
 
-    for (int i = 1; i < params[0]; ++i) {
-        if (params[i] == 0) {
-            break;
-        }
-
+    for (size_t i = 1; i <= params[0] / sizeof(cell); i++) {
         cell* addr = nullptr;
         amx_GetAddr(amx, params[i], &addr);
 
-        if (addr == 0) {
+        if (addr == nullptr) {
             break;
         }
 
         auto obj = Get(*addr);
+        if (obj == web::json::value::null()) {
+            logprintf("error: value node %d was invalid", *addr);
+            return -2;
+        }
         fields.push_back(obj);
     }
 
