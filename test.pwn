@@ -283,19 +283,133 @@ Test:JsonObjectComplex() {
 }
 
 Test:JsonGetInt() {
-    //
+    new Node:node = JsonObject(
+        "key1", JsonInt(1),
+        "key2", JsonInt(2),
+        "key3", JsonInt(3)
+    );
+
+    new got;
+    new ret;
+    
+    ret = JsonGetInt(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1);
+
+    ret = JsonGetInt(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 2);
+
+    ret = JsonGetInt(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 3);
 }
 
 Test:JsonGetFloat() {
-    //
+    new Node:node = JsonObject(
+        "key1", JsonFloat(1.5),
+        "key2", JsonFloat(2.5),
+        "key3", JsonFloat(3.5)
+    );
+
+    new Float:got;
+    new ret;
+    
+    ret = JsonGetFloat(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1.5);
+
+    ret = JsonGetFloat(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 2.5);
+
+    ret = JsonGetFloat(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 3.5);
 }
 
 Test:JsonGetBool() {
-    //
+    new Node:node = JsonObject(
+        "key1", JsonBool(false),
+        "key2", JsonBool(true),
+        "key3", JsonBool(false)
+    );
+
+    new bool:got;
+    new ret;
+    
+    ret = JsonGetBool(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(got == false);
+
+    ret = JsonGetBool(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(got == true);
+
+    ret = JsonGetBool(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(got == false);
 }
 
 Test:JsonGetString() {
-    //
+    new Node:node = JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value2"),
+        "key3", JsonString("value3")
+    );
+
+    new got[128];
+    new ret;
+    
+    ret = JsonGetString(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value1"));
+
+    ret = JsonGetString(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value2"));
+
+    ret = JsonGetString(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value3"));
+}
+
+Test:JsonGetArray() {
+    new Node:node = JsonObject(
+        "key1", JsonArray(
+            JsonString("one"),
+            JsonString("two"),
+            JsonString("three")
+        )
+    );
+
+    new Node:arrayNode;
+    new ret;
+
+    ret = JsonGetArray(node, "key1", arrayNode);
+    printf("JsonGetArray:%d arrayNode: %d", ret, _:arrayNode);
+    ASSERT(ret == 0);
+
+    new Node:output;
+    new gotString[32];
+
+    ret = JsonArrayObject(arrayNode, 0, output);
+    ASSERT(ret == 0);
+    ret = JsonGetNodeString(output, gotString);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(gotString, "one"));
+
+    ret = JsonArrayObject(arrayNode, 1, output);
+    ASSERT(ret == 0);
+    ret = JsonGetNodeString(output, gotString);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(gotString, "two"));
+
+    ret = JsonArrayObject(arrayNode, 2, output);
+    ASSERT(ret == 0);
+    ret = JsonGetNodeString(output, gotString);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(gotString, "three"));
 }
 
 Test:JsonArrayObject() {
