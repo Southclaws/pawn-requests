@@ -239,7 +239,7 @@ int Natives::JSON::GetFloat(AMX* amx, cell* params)
 
 	cell* addr = nullptr;
 	amx_GetAddr(amx, params[2], &addr);
-	float d = obj.as_double();
+	float d = static_cast<float>(obj.as_double());
 	*addr = amx_ftoc(d);
 
 	return 0;
@@ -247,9 +247,21 @@ int Natives::JSON::GetFloat(AMX* amx, cell* params)
 
 int Natives::JSON::GetArray(AMX* amx, cell* params)
 {
-    return 0;
-}
+	web::json::value obj = Get(params[1]);
+	if (!obj.is_array()) {
+		return 1;
+	}
 
+	web::json::value* result = new web::json::value();
+	*result = obj.as_array().at(params[2]);
+	cell id = Alloc(result);
+
+	cell* addr = nullptr;
+	amx_GetAddr(amx, params[3], &addr);
+	*addr = id;
+
+	return 0;
+}
 
 int Natives::JSON::Stringify(AMX* amx, cell* params)
 {

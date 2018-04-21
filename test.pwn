@@ -79,6 +79,25 @@ Test:JsonGetObjectFloat() {
     ASSERT(got == 1.34);
 }
 
+Test:JsonGetArrayObject() {
+    new Node:node = JsonArray(
+        JsonString("one"),
+        JsonString("two"),
+        JsonString("three")
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetArray(node, 1, output);
+    printf("JsonGetArray %d", _:output);
+    ASSERT(ret == 0);
+
+    new got[32];
+    ret = JsonGetString(output, got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "two"));
+}
+
 Test:JsonObjectEmpty() {
     new Node:node = JsonObject();
 

@@ -112,7 +112,7 @@ native JsonGetFloat(Node:node, &Float:output);
 // new outputValue;
 // JsonGetInt(node, outputValue);
 //
-native Node:JsonGetArray(Node:node, index);
+native JsonGetArray(Node:node, index, &Node:output);
 
 // JsonStringify serialises a JSON node into its textual representation.
 native JsonStringify(Node:node, buf[], len = sizeof(buf));
