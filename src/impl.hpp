@@ -55,8 +55,8 @@ extern std::mutex taskStackLock;
 std::vector<CallbackTask> gatherTasks();
 
 struct ClientData {
-	http_client* client;
-	std::vector<std::pair<std::string, std::string>> headers;
+    http_client* client;
+    std::vector<std::pair<std::string, std::string>> headers;
 };
 extern std::unordered_map<int, ClientData> clientsTable;
 extern int clientsTableCounter;

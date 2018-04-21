@@ -26,7 +26,7 @@ int Impl::RestfulClient(std::string endpoint, int headers)
 {
     int id = clientsTableCounter++;
     http_client* client = new http_client(utility::conversions::to_string_t(endpoint));
-	clientsTable[id] = { client, headersTable[headers] };
+    clientsTable[id] = { client, headersTable[headers] };
     return id;
 }
 
@@ -40,11 +40,11 @@ int Impl::RestfulGetData(int id, std::string path, std::string callback, int hea
     }
 
     http_request request(methods::GET);
-	for (auto h : cd.headers) {
-		request.headers().add(
-			utility::conversions::to_string_t(h.first),
-			utility::conversions::to_string_t(h.second));
-	}
+    for (auto h : cd.headers) {
+        request.headers().add(
+            utility::conversions::to_string_t(h.first),
+            utility::conversions::to_string_t(h.second));
+    }
     for (auto h : headersTable[headers]) {
         request.headers().add(
             utility::conversions::to_string_t(h.first),
@@ -52,7 +52,7 @@ int Impl::RestfulGetData(int id, std::string path, std::string callback, int hea
     }
     request.set_request_uri(utility::conversions::to_string_t(path));
 
-	int requestID = requestCounter;
+    int requestID = requestCounter;
     cd.client->request(request).then([=](http_response response) {
         taskStackLock.lock();
         taskStack.push([=]() {
