@@ -50,6 +50,18 @@ native Headers:RestfulHeaders(...);
 // JSON
 // -
 
+enum JSON_NODE {
+    JSON_NODE_INVALID,
+    JSON_NODE_OBJECT,
+    JSON_NODE_STRING,
+    JSON_NODE_INTEGER,
+    JSON_NODE_FLOAT,
+    JSON_NODE_ARRAY,
+}
+
+// JsonNodeType returns the type of a node from the above enumerator.
+JSON_NODE:JsonNodeType(Node:node);
+
 // JsonObject allocates a node from a set of key-value pairs where each key must
 // be a string and each value must be a `Node:` value. For example:
 //
