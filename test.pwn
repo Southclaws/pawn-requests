@@ -31,73 +31,6 @@ public OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen)
     print(data);
 }
 
-Test:JsonGetObjectString() {
-    new Node:node = JsonObject(
-        "key", JsonString("value")
-    );
-
-    new Node:output;
-    new ret;
-    ret = JsonGetObject(node, "key", output);
-    ASSERT(ret == 0);
-
-    new got[32];
-    ret = JsonGetString(output, got);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(got, "value"));
-}
-
-Test:JsonGetObjectInt() {
-    new Node:node = JsonObject(
-        "key", JsonInt(1)
-    );
-
-    new Node:output;
-    new ret;
-    ret = JsonGetObject(node, "key", output);
-    ASSERT(ret == 0);
-
-    new got;
-    ret = JsonGetInt(output, got);
-    ASSERT(ret == 0);
-    ASSERT(got == 1);
-}
-
-Test:JsonGetObjectFloat() {
-    new Node:node = JsonObject(
-        "key", JsonFloat(1.34)
-    );
-
-    new Node:output;
-    new ret;
-    ret = JsonGetObject(node, "key", output);
-    ASSERT(ret == 0);
-
-    new Float:got;
-    ret = JsonGetFloat(output, got);
-    ASSERT(ret == 0);
-    ASSERT(got == 1.34);
-}
-
-Test:JsonGetArrayObject() {
-    new Node:node = JsonArray(
-        JsonString("one"),
-        JsonString("two"),
-        JsonString("three")
-    );
-
-    new Node:output;
-    new ret;
-    ret = JsonGetArray(node, 1, output);
-    printf("JsonGetArray %d", _:output);
-    ASSERT(ret == 0);
-
-    new got[32];
-    ret = JsonGetString(output, got);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(got, "two"));
-}
-
 Test:JsonObjectEmpty() {
     new Node:node = JsonObject();
 
@@ -105,32 +38,6 @@ Test:JsonObjectEmpty() {
     new ret = JsonStringify(node, buf);
     ASSERT(ret == 0);
     ASSERT(!strcmp(buf, "{}"));
-}
-
-Test:JsonObjectString() {
-    new Node:node = JsonObject(
-        "key", JsonString("value")
-    );
-
-    new buf[128];
-    new ret = JsonStringify(node, buf);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
-    print(buf);
-}
-
-Test:JsonObjectStrings() {
-    new Node:node = JsonObject(
-        "key1", JsonString("value1"),
-        "key2", JsonString("value2"),
-        "key3", JsonString("value3")
-    );
-
-    new buf[128];
-    new ret = JsonStringify(node, buf);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
-    print(buf);
 }
 
 Test:JsonObjectInt() {
@@ -182,6 +89,58 @@ Test:JsonObjectFloats() {
     new ret = JsonStringify(node, buf);
     ASSERT(ret == 0);
     ASSERT(!strcmp(buf, "{\"key1\":1.5,\"key2\":2.5,\"key3\":3.5}"));
+    print(buf);
+}
+
+Test:JsonObjectBool() {
+    new Node:node = JsonObject(
+        "key", JsonBool(true)
+    );
+
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":true}"));
+    print(buf);
+}
+
+Test:JsonObjectBools() {
+    new Node:node = JsonObject(
+        "key1", JsonBool(false),
+        "key2", JsonBool(true),
+        "key3", JsonBool(false)
+    );
+
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key1\":false,\"key2\":true,\"key3\":false}"));
+    print(buf);
+}
+
+Test:JsonObjectString() {
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
+
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
+    print(buf);
+}
+
+Test:JsonObjectStrings() {
+    new Node:node = JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value2"),
+        "key3", JsonString("value3")
+    );
+
+    new buf[128];
+    new ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
     print(buf);
 }
 
@@ -321,4 +280,102 @@ Test:JsonObjectComplex() {
     ASSERT(ret == 0);
     ASSERT(!strcmp(buf, "{\"list\":[{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"one\":\"value one\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"two\":\"value two\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"three\":\"value three\"}],\"object\":{\"a_float\":66.599998474121094,\"a_number\":76,\"a_string\":\"a value\",\"nested_object\":{\"a_deeper_float\":66.599998474121094,\"a_deeper_number\":76,\"a_deeper_string\":\"another value\"}}}"));
     print(buf);
+}
+
+Test:JsonGetInt() {
+    //
+}
+
+Test:JsonGetFloat() {
+    //
+}
+
+Test:JsonGetBool() {
+    //
+}
+
+Test:JsonGetString() {
+    //
+}
+
+Test:JsonArrayObject() {
+    new Node:node = JsonArray(
+        JsonString("one"),
+        JsonString("two"),
+        JsonString("three")
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonArrayObject(node, 1, output);
+    ASSERT(ret == 0);
+
+    new got[32];
+    ret = JsonGetNodeString(output, got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "two"));
+}
+
+Test:JsonGetNodeInt() {
+    new Node:node = JsonObject(
+        "key", JsonInt(1)
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new got;
+    ret = JsonGetNodeInt(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1);
+}
+
+Test:JsonGetNodeFloat() {
+    new Node:node = JsonObject(
+        "key", JsonFloat(1.34)
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new Float:got;
+    ret = JsonGetNodeFloat(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1.34);
+}
+
+Test:JsonGetNodeBool() {
+    new Node:node = JsonObject(
+        "key", JsonBool(true)
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new bool:got;
+    ret = JsonGetNodeBool(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == true);
+}
+
+Test:JsonGetNodeString() {
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new got[32];
+    ret = JsonGetNodeString(output, got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value"));
 }

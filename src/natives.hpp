@@ -29,16 +29,26 @@ void processTick(AMX* amx);
 
 namespace JSON {
     int Object(AMX* amx, cell* params);
-    int String(AMX* amx, cell* params);
+	int Bool(AMX* amx, cell* params);
     int Int(AMX* amx, cell* params);
     int Float(AMX* amx, cell* params);
+    int String(AMX* amx, cell* params);
     int Array(AMX* amx, cell* params);
-    int GetObject(AMX* amx, cell* params);
-    int GetString(AMX* amx, cell* params);
+
+	int GetObject(AMX* amx, cell* params);
     int GetInt(AMX* amx, cell* params);
     int GetFloat(AMX* amx, cell* params);
+	int GetBool(AMX* amx, cell* params);
+    int GetString(AMX* amx, cell* params);
     int GetArray(AMX* amx, cell* params);
-    int Stringify(AMX* amx, cell* params);
+	int ArrayObject(AMX* amx, cell* params);
+
+	int GetNodeInt(AMX* amx, cell* params);
+	int GetNodeFloat(AMX* amx, cell* params);
+	int GetNodeBool(AMX* amx, cell* params);
+	int GetNodeString(AMX* amx, cell* params);
+
+	int Stringify(AMX* amx, cell* params);
     int Cleanup(AMX* amx, cell* params);
 
     extern std::unordered_map<int, web::json::value*> nodeTable;

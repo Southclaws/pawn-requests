@@ -26,16 +26,27 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "RestfulGetJSON", Natives::RestfulGetJSON },
     { "RestfulPostJSON", Natives::RestfulPostJSON },
     { "RestfulHeaders", Natives::RestfulHeaders },
+
     { "JsonObject", Natives::JSON::Object },
-    { "JsonString", Natives::JSON::String },
     { "JsonInt", Natives::JSON::Int },
     { "JsonFloat", Natives::JSON::Float },
+    { "JsonBool", Natives::JSON::Bool },
+    { "JsonString", Natives::JSON::String },
     { "JsonArray", Natives::JSON::Array },
+
     { "JsonGetObject", Natives::JSON::GetObject },
-    { "JsonGetString", Natives::JSON::GetString },
     { "JsonGetInt", Natives::JSON::GetInt },
     { "JsonGetFloat", Natives::JSON::GetFloat },
+    { "JsonGetBool", Natives::JSON::GetBool },
+    { "JsonGetString", Natives::JSON::GetString },
     { "JsonGetArray", Natives::JSON::GetArray },
+    { "JsonArrayObject", Natives::JSON::ArrayObject },
+
+    { "JsonGetNodeInt", Natives::JSON::GetNodeInt },
+    { "JsonGetNodeFloat", Natives::JSON::GetNodeFloat },
+    { "JsonGetNodeBool", Natives::JSON::GetNodeBool },
+    { "JsonGetNodeString", Natives::JSON::GetNodeString },
+
     { "JsonStringify", Natives::JSON::Stringify },
     { "JsonCleanup", Natives::JSON::Cleanup },
     { 0, 0 }
