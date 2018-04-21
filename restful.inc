@@ -79,22 +79,20 @@ native Node:JsonFloat(Float:value);
 //
 native Node:JsonArray(Node:...);
 
-// JsonStringify serialises a JSON node into its textual representation.
-native JsonStringify(Node:node, buf[], len = sizeof(buf));
-
 // JsonGetObject returns the `Node:` stored at `key` in the given `node`.
 // For example:
 //
 // input: {"key": "value"}
 //
-// new Node:node = JsonGetObject(node, "key");
+// new Node:output;
+// JsonGetObject(node, "key", output);
 //
-// `node` now contains a JSON string containing "value" and can be extracted by:
+// `output` now contains a JSON string containing "value" and can be extracted by:
 //
-// new output[128];
-// JsonGetString(node, output);
+// new outputValue[128];
+// JsonGetString(output, outputValue);
 //
-native Node:JsonGetObject(Node:node, const key[]);
+native JsonGetObject(Node:node, const key[], &Node:output);
 
 // JsonGet* functions extract a JSON object `Node:` to `output`.
 native JsonGetString(Node:node, output[], len = sizeof(output));
@@ -106,14 +104,18 @@ native JsonGetFloat(Node:node, &Float:output);
 //
 // input: [1, 2, 3]
 //
-// new Node:node = JsonGetArray(node, 1);
+// new Node:output;
+// JsonGetArray(node, 1, output);
 //
-// `node` now contains a JSON number containing 1 and can be extracted by:
+// `output` now contains a JSON number containing 1 and can be extracted by:
 //
-// new output;
-// JsonGetInt(node, output);
+// new outputValue;
+// JsonGetInt(node, outputValue);
 //
 native Node:JsonGetArray(Node:node, index);
+
+// JsonStringify serialises a JSON node into its textual representation.
+native JsonStringify(Node:node, buf[], len = sizeof(buf));
 
 // -
 // Internal

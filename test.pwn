@@ -31,7 +31,53 @@ public OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen)
     print(data);
 }
 
-#endinput
+Test:JsonGetObjectString() {
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new got[32];
+    ret = JsonGetString(output, got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value"));
+}
+
+Test:JsonGetObjectInt() {
+    new Node:node = JsonObject(
+        "key", JsonInt(1)
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new got;
+    ret = JsonGetInt(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1);
+}
+
+Test:JsonGetObjectFloat() {
+    new Node:node = JsonObject(
+        "key", JsonFloat(1.34)
+    );
+
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
+
+    new Float:got;
+    ret = JsonGetFloat(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1.34);
+}
 
 Test:JsonObjectEmpty() {
     new Node:node = JsonObject();

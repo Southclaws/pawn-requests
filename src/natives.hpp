@@ -33,6 +33,11 @@ namespace JSON {
     int Int(AMX* amx, cell* params);
     int Float(AMX* amx, cell* params);
     int Array(AMX* amx, cell* params);
+    int GetObject(AMX* amx, cell* params);
+    int GetString(AMX* amx, cell* params);
+    int GetInt(AMX* amx, cell* params);
+    int GetFloat(AMX* amx, cell* params);
+    int GetArray(AMX* amx, cell* params);
     int Stringify(AMX* amx, cell* params);
     int Cleanup(AMX* amx, cell* params);
 
