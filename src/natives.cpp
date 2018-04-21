@@ -237,7 +237,7 @@ int Natives::JSON::GetString(AMX* amx, cell* params)
 
 int Natives::JSON::GetArray(AMX* amx, cell* params)
 {
-	return 0;
+    return 0;
 }
 
 int Natives::JSON::ArrayObject(AMX* amx, cell* params)
