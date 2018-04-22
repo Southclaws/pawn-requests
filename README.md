@@ -116,6 +116,120 @@ See the
 [unit tests](https://github.com/Southclaws/pawn-restful/blob/master/test.pwn)
 for more examples of JSON builders.
 
+#### Accessing Data
+
+When you request JSON data, it's provided as a `Node:` in the callback. Most of
+the time, you'll get an object back but depending on the application that
+responded this could differ.
+
+**Note:** _the signature for response callbacks is in a comment in restful.inc_
+
+Lets assume this request responds with the following data:
+
+```json
+{
+  "name": "Southclaws",
+  "score": 45,
+  "vip": true,
+  "inventory": [
+    {
+      "name": "M4",
+      "ammo": 341
+    },
+    {
+      "name": "Desert Eagle",
+      "ammo": 32
+    }
+  ]
+}
+```
+
+```pawn
+public OnSomeResponse(Request:id, E_HTTP_STATUS:status, Node:json) {
+    new ret;
+
+    new name[MAX_PLAYER_NAME];
+    ret = JsonGetString(node, "name", name);
+    if(ret) {
+        err("failed to get name, error: %d", ret);
+        return 1;
+    }
+
+    new score;
+    ret = JsonGetInt(node, "score", score);
+    if(ret) {
+        err("failed to get score, error: %d", ret);
+        return 1;
+    }
+
+    new bool:vip;
+    ret = JsonGetBool(node, "vip", vip);
+    if(ret) {
+        err("failed to get vip, error: %d", ret);
+        return 1;
+    }
+
+    new Node:inventory;
+    ret = JsonGetArray(node, "inventory", inventory);
+    if(ret) {
+        err("failed to get inventory, error: %d", ret);
+        return 1;
+    }
+
+    new length;
+    ret = JsonArrayLength(inventory, length);
+    if(ret) {
+        err("failed to get inventory array length, error: %d", ret);
+        return 1;
+    }
+
+    for(new i; i < length; ++i) {
+        new Node:item;
+        ret = JsonArrayObject(inventory, i, item);
+        if(ret) {
+            err("failed to get inventory item %d, error: %d", i, ret);
+            return 1;
+        }
+
+        new itemName[32];
+        ret = JsonGetString(item, "name", itemName);
+        if(ret) {
+            err("failed to get inventory item %d, error: %d", i, ret);
+            return 1;
+        }
+
+        new itemAmmo;
+        ret = JsonGetInt(item, "name", itemAmmo);
+        if(ret) {
+            err("failed to get inventory item %d, error: %d", i, ret);
+            return 1;
+        }
+
+        printf("item %d name: %s ammo: %d", itemName, itemAmmo);
+    }
+
+    return 0;
+}
+```
+
+In this example, we extract each field from the JSON object with full error
+checking. This example shows usage of object and array access as well as
+primitives such as strings, integers and a boolean.
+
+If you're not a fan of the overly terse and explicit error checking, you can
+alternatively just check your errors at the end but this will mean you won't
+know exactly _where_ an error occurred, just that it did.
+
+```pawn
+new ret;
+ret += JsonGetString(node, "key1", value1);
+ret += JsonGetString(node, "key2", value2);
+ret += JsonGetString(node, "key3", value3);
+if(ret) {
+    err("some error occurred: %d", ret);
+}
+```
+
 ## Testing
 
 Run unit tests with:

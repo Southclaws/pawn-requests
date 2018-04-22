@@ -143,6 +143,7 @@ native JsonGetString(Node:node, const key[], output[], len = sizeof(output));
 // native integer type using `JsonGetNodeInt`.
 //
 native JsonGetArray(Node:node, const key[], &Node:output);
+native JsonArrayLength(Node:node, &length);
 native JsonArrayObject(Node:node, index, &Node:output);
 
 // JsonGetNode* functions extract a JSON object `Node:` to `output`.
