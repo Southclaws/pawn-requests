@@ -51,7 +51,7 @@ where you're sending the data but for this example I'll use an Object as the
 root node.
 
 ```pawn
-new Node:JsonObject();
+new Node:node = JsonObject();
 ```
 
 This just constructs an empty object and if you "stringify" it (stringify simply
@@ -64,7 +64,7 @@ means to turn into a string) you get:
 So to add more nodes to this object, simply add parameters, as key-value pairs:
 
 ```pawn
-new Node:JsonObject(
+new Node:node = JsonObject(
     "key", JsonString("value")
 );
 ```
@@ -80,7 +80,7 @@ This would stringify as:
 You can nest objects within objects too:
 
 ```pawn
-new Node:JsonObject(
+new Node:node = JsonObject(
     "key", JsonObject(
         "key", JsonString("value")
     )
@@ -98,7 +98,7 @@ new Node:JsonObject(
 And do arrays of any node:
 
 ```pawn
-new Node:JsonObject(
+new Node:node = JsonObject(
     "key", JsonArray(
         JsonString("one"),
         JsonString("two"),
