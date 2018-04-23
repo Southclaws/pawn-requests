@@ -45,4 +45,4 @@ build-linux:
 	docker run -v $(shell pwd)/test/plugins:/root/test/plugins southclaws/restful-build
 
 build-inside:
-	cd build && cmake .. -DCMAKE_PREFIX_PATH=/usr/local/lib/cpprestsdk && make
+	cd build && cmake .. && make
