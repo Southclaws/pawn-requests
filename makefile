@@ -43,14 +43,15 @@ build-linux:
 	rm -rf build
 	docker build -t southclaws/restful-build .
 	docker run \
-		-v $(shell pwd):/root \
+		-v $(shell pwd):/root/restful \
 		--entrypoint make \
+		--workdir /root/restful \
 		southclaws/restful-build \
 		build-inside
 
 build-interactive:
 	docker run \
-		-v $(shell pwd):/root \
+		-v $(shell pwd):/root/restful \
 		-it \
 		southclaws/restful-build
 

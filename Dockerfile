@@ -1,9 +1,6 @@
 FROM maddinat0r/debian-samp
 
 
-RUN apt update && apt install -y libssl-dev:i386
-
-
 # -
 # zlib
 # -
