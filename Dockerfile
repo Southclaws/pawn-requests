@@ -1,7 +1,7 @@
 FROM maddinat0r/debian-samp
 
 
-# RUN apt update && apt install -y libssl-dev
+RUN apt update && apt install -y libssl-dev:i386
 
 
 # -
@@ -56,9 +56,6 @@ RUN cd casablanca/Release && \
 
 
 # -
-# Add project create out-of-source build directory
+# Build restful plugin by mounting repo directory into container and executing
+# `make build-inside` as the entrypoint.
 # -
-
-ADD . .
-RUN mkdir build
-ENTRYPOINT [ "make", "build-inside" ]

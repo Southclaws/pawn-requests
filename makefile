@@ -42,7 +42,17 @@ test-linux:
 build-linux:
 	rm -rf build
 	docker build -t southclaws/restful-build .
-	docker run -v $(shell pwd)/test/plugins:/root/test/plugins southclaws/restful-build
+	docker run \
+		-v $(shell pwd):/root \
+		--entrypoint make \
+		southclaws/restful-build \
+		build-inside
+
+build-interactive:
+	docker run \
+		-v $(shell pwd):/root \
+		-it \
+		southclaws/restful-build
 
 build-inside:
-	cd build && cmake .. && make
+	mkdir build-linux && cd build-linux && cmake .. && make

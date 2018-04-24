@@ -44,7 +44,7 @@ server_log.txt
 *.sublime-workspace
 *.sublime-project
 
-build/
+build*/
 .vs/
 *.so
 *.o
