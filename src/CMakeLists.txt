@@ -28,4 +28,5 @@ add_samp_plugin(restful
 	plugin.def
 )
 
-target_link_libraries(restful PRIVATE cpprestsdk::cpprest)
+target_link_libraries(restful cpprestsdk::cpprest)
+target_link_libraries(restful ${Boost_LIBRARIES})
