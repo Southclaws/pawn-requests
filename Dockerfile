@@ -49,7 +49,7 @@ RUN git clone https://github.com/Microsoft/cpprestsdk.git casablanca
 RUN cd casablanca/Release && \
     mkdir build && \
     cd build && \
-    cmake .. -DBUILD_TESTS=OFF -DWERROR=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m32 -Wno-error -fpermissive" -DBUILD_SHARED_LIBS=0 -DBoost_USE_STATIC_LIBS=ON -DBoost_DEBUG=ON && \
+    cmake .. -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DWERROR=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m32 -Wno-error -fpermissive" -DBUILD_SHARED_LIBS=0 -DBoost_USE_STATIC_LIBS=ON -DBoost_DEBUG=ON && \
     make && \
     make install && \
     cd /root
