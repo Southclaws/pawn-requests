@@ -20,7 +20,7 @@ RUN wget http://prdownloads.sourceforge.net/libpng/zlib-1.2.11.tar.gz && \
 RUN wget https://www.openssl.org/source/openssl-1.0.2o.tar.gz && \
     tar -xzf openssl-1.0.2o.tar.gz
 RUN cd openssl-1.0.2o && \
-    setarch i386 ./config -m32 && \
+    setarch i386 ./config -m32 no-shared && \
     make && make install && \
     cd ..
 ENV OPENSSL_ROOT_DIR=/root/openssl-1.0.2o
@@ -46,7 +46,14 @@ RUN git clone https://github.com/Microsoft/cpprestsdk.git casablanca
 RUN cd casablanca/Release && \
     mkdir build && \
     cd build && \
-    cmake .. -DBUILD_SAMPLES=OFF -DBUILD_TESTS=OFF -DWERROR=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m32 -Wno-error -fpermissive" -DBUILD_SHARED_LIBS=0 -DBoost_USE_STATIC_LIBS=ON -DBoost_DEBUG=ON && \
+    cmake .. \
+    -DBUILD_SAMPLES=OFF \
+    -DBUILD_TESTS=OFF \
+    -DWERROR=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_FLAGS="-m32 -Wno-error -fpermissive" \
+    -DBUILD_SHARED_LIBS=0 \
+    -DBoost_USE_STATIC_LIBS=ON && \
     make && \
     make install && \
     cd /root

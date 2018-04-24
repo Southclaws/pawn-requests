@@ -33,7 +33,7 @@ test-windows-release:
 
 test-linux:
 	sampctl package build
-	cd test && sampctl server run
+	cd test && sampctl server run --container
 
 # -
 # Build (Linux)
