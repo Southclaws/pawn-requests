@@ -28,12 +28,14 @@ using namespace concurrency::streams; // Asynchronous streams
 
 namespace Impl {
 int RestfulClient(std::string endpoint, int headers);
-int RestfulGetData(int id, std::string endpoint, std::string callback, int headers);
-int RestfulPostData(int id, std::string endpoint, std::string callback, char* data, int headers);
-int RestfulGetJSON(int id, std::string endpoint, std::string callback, int headers);
-int RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, int headers);
+int RestfulGetData(int id, std::string path, std::string callback, int headers);
+int RestfulPostData(int id, std::string path, std::string callback, char* data, int headers);
+int RestfulGetJSON(int id, std::string path, std::string callback, int headers);
+int RestfulPostJSON(int id, std::string path, std::string callback, web::json::object json, int headers);
 int RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers);
 int RestfulHeadersCleanup(int id);
+
+int doRequest(int id, std::string path, std::string callback, RequestData data);
 
 extern int requestCounter;
 
@@ -41,18 +43,21 @@ enum E_TASK_TYPE {
     string,
     json
 };
-struct CallbackTask {
+struct RequestData {
+    // shared fields
     int id;
     std::string callback;
-    int status;
+
+    // response fields
     E_TASK_TYPE type;
+    int status;
     std::string string;
     json::value json;
 };
-extern std::stack<CallbackTask> taskStack;
+extern std::stack<RequestData> taskStack;
 extern std::mutex taskStackLock;
 // gatherTasks is called by the Natives to get a list of callbacks to call
-std::vector<CallbackTask> gatherTasks();
+std::vector<RequestData> gatherTasks();
 
 struct ClientData {
     http_client* client;

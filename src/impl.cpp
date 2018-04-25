@@ -13,7 +13,7 @@ log-core by maddinat0r.
 
 int Impl::requestCounter = 0;
 
-std::stack<Impl::CallbackTask> Impl::taskStack;
+std::stack<Impl::RequestData> Impl::taskStack;
 std::mutex Impl::taskStackLock;
 
 std::unordered_map<int, Impl::ClientData> Impl::clientsTable;
@@ -31,6 +31,36 @@ int Impl::RestfulClient(std::string endpoint, int headers)
 }
 
 int Impl::RestfulGetData(int id, std::string path, std::string callback, int headers)
+{
+    int ret = doRequest(id, path, callback, [=]() {
+        RequestData t;
+        t.id = requestCounter;
+        t.callback = callback;
+        t.type = E_TASK_TYPE::string;
+        return t;
+    }());
+    if (ret < 0) {
+        return ret;
+    }
+    return requestCounter++;
+}
+
+int Impl::RestfulPostData(int id, std::string endpoint, std::string callback, char* data, int headers)
+{
+    return requestCounter++;
+}
+
+int Impl::RestfulGetJSON(int id, std::string endpoint, std::string callback, int headers)
+{
+    return requestCounter++;
+}
+
+int Impl::RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, int headers)
+{
+    return requestCounter++;
+}
+
+int Impl::doRequest(int id, std::string path, std::string callback, Impl::RequestData data)
 {
     ClientData cd;
     try {
@@ -52,38 +82,18 @@ int Impl::RestfulGetData(int id, std::string path, std::string callback, int hea
     }
     request.set_request_uri(utility::conversions::to_string_t(path));
 
-    int requestID = requestCounter;
     cd.client->request(request).then([=](http_response response) {
         taskStackLock.lock();
-        taskStack.push([=]() {
-            CallbackTask t;
-            t.id = requestID;
-            t.callback = callback;
-            t.type = E_TASK_TYPE::string;
-            t.status = response.status_code();
-            t.string = response.extract_utf8string().get();
-            return t;
-        }());
+
+        data.type = E_TASK_TYPE::string;
+        data.status = response.status_code();
+        data.string = response.extract_utf8string().get();
+        taskStack.push(data);
+
         taskStackLock.unlock();
-        return;
     });
 
-    return requestCounter++;
-}
-
-int Impl::RestfulPostData(int id, std::string endpoint, std::string callback, char* data, int headers)
-{
-    return requestCounter++;
-}
-
-int Impl::RestfulGetJSON(int id, std::string endpoint, std::string callback, int headers)
-{
-    return requestCounter++;
-}
-
-int Impl::RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, int headers)
-{
-    return requestCounter++;
+    return 0;
 }
 
 int Impl::RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers)
@@ -99,13 +109,13 @@ int Impl::RestfulHeadersCleanup(int id)
     return 0;
 }
 
-std::vector<Impl::CallbackTask> Impl::gatherTasks()
+std::vector<Impl::RequestData> Impl::gatherTasks()
 {
-    std::vector<CallbackTask> tasks;
+    std::vector<RequestData> tasks;
 
     // if we can't lock the mutex, don't block, just return and try next tick
     if (taskStackLock.try_lock()) {
-        CallbackTask cbt;
+        RequestData cbt;
         while (!taskStack.empty()) {
             cbt = taskStack.top();
             tasks.push_back(cbt);
