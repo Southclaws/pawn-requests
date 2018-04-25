@@ -10,26 +10,99 @@ main() {
 }
 
 Test:NewClient() {
-    new Restful:client = RestfulClient("https://httpbin.org/");
+    new Restful:client = RestfulClient("http://httpbin.org/");
     printf("new restful client: %d", _:client);
 }
 
-new Request:OnNewClientWithHeaders_ID;
-Test:NewClientWithHeaders() {
-    new Restful:client = RestfulClient("https://httpbin.org/", RestfulHeaders(
+
+// -
+// RestfulGetData - basic HTTP GET on basic text data
+// -
+
+
+new Request:OnGetData_ID;
+Test:GetData() {
+    new Restful:client = RestfulClient("http://httpbin.org/", RestfulHeaders());
+    OnGetData_ID = RestfulGetData(client, "robots.txt", "OnGetData", RestfulHeaders());
+}
+forward OnGetData(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnGetData(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    print("*** Test OnGetData\n");
+
+    ASSERT(id == OnGetData_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    print(data);
+
+    print("\nPASS!");
+}
+
+new Request:OnGetDataSSL_ID;
+Test:GetDataSSL() {
+    new Restful:client = RestfulClient("https://httpbin.org/", RestfulHeaders());
+    OnGetDataSSL_ID = RestfulGetData(client, "robots.txt", "OnGetDataSSL", RestfulHeaders());
+}
+forward OnGetDataSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnGetDataSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    print("*** Test OnGetDataSSL\n");
+
+    ASSERT(id == OnGetDataSSL_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    print(data);
+
+    print("\nPASS!");
+}
+
+
+// -
+// RestfulGetData - basic HTTP GET with headers test
+// -
+
+
+new Request:OnGetDataWithHeaders_ID;
+Test:GetDataWithHeaders() {
+    new Restful:client = RestfulClient("http://httpbin.org/", RestfulHeaders(
         "X-Pawn-Restful", "YES"
     ));
-    OnNewClientWithHeaders_ID = RestfulGetData(client, "headers", "OnNewClientWithHeaders", RestfulHeaders(
+    OnGetDataWithHeaders_ID = RestfulGetData(client, "headers", "OnGetDataWithHeaders", RestfulHeaders(
         "X-Pawn-Restful-Embedded", "YES"
     ));
 }
-forward OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen);
-public OnNewClientWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
-    ASSERT(id == OnNewClientWithHeaders_ID);
+forward OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    print("*** Test OnGetDataWithHeaders\n");
+
+    ASSERT(id == OnGetDataWithHeaders_ID);
     ASSERT(status == HTTP_STATUS_OK);
-    ASSERT(dataLen == 186);
     print(data);
+
+    print("\nPASS!");
 }
+
+new Request:OnGetDataWithHeadersSSL_ID;
+Test:GetDataWithHeadersSSL() {
+    new Restful:client = RestfulClient("https://httpbin.org/", RestfulHeaders(
+        "X-Pawn-Restful", "YES"
+    ));
+    OnGetDataWithHeadersSSL_ID = RestfulGetData(client, "headers", "OnGetDataWithHeadersSSL", RestfulHeaders(
+        "X-Pawn-Restful-Embedded", "YES"
+    ));
+}
+forward OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    print("*** Test OnGetDataWithHeadersSSL\n");
+
+    ASSERT(id == OnGetDataWithHeadersSSL_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    print(data);
+
+    print("\nPASS!");
+}
+
+
+// -
+// JSON Tests
+// -
+
 
 Test:JsonObjectEmpty() {
     new Node:node = JsonObject();

@@ -36,7 +36,7 @@ int Impl::RestfulGetData(int id, std::string path, std::string callback, int hea
     try {
         cd = clientsTable[id];
     } catch (std::exception e) {
-        return 1;
+        return -1;
     }
 
     http_request request(methods::GET);
