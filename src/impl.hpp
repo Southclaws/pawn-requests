@@ -58,10 +58,10 @@ struct ResponseData {
     std::string rawBody;
 };
 
-int RestfulClient(std::string endpoint, int headers);
-int RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers);
-int RestfulRequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers);
-int RestfulRequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers);
+int RequestsClient(std::string endpoint, int headers);
+int RequestHeaders(std::vector<std::pair<std::string, std::string>> headers);
+int RequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers);
+int RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers);
 
 int headersCleanup(int id);
 int doRequest(int id, RequestData data);

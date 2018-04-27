@@ -87,6 +87,7 @@
         "__hash_table": "cpp",
         "__tree": "cpp",
         "__tuple": "cpp",
-        "*.dat": "cpp"
+        "*.dat": "cpp",
+        "__split_buffer": "cpp"
     }
 }

@@ -19,7 +19,7 @@ Include in your code and begin using the library:
 
 ## Usage
 
-### Restful Client
+### Requests Client
 
 ### JSON
 

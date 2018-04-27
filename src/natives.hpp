@@ -18,10 +18,10 @@ Contains all the `PAWN_NATIVE_DECL` for native function declarations.
 // #include "plugin-natives\NativeFunc.hpp" // must be included last
 
 namespace Natives {
-int RestfulClient(AMX* amx, cell* params);
-int RestfulHeaders(AMX* amx, cell* params);
-int RestfulRequestText(AMX* amx, cell* params);
-int RestfulRequestJSON(AMX* amx, cell* params);
+int RequestsClient(AMX* amx, cell* params);
+int RequestHeaders(AMX* amx, cell* params);
+int RequestText(AMX* amx, cell* params);
+int RequestJSON(AMX* amx, cell* params);
 
 void processTick(AMX* amx);
 

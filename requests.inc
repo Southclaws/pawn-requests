@@ -29,21 +29,21 @@ enum E_CONTENT_TYPE {
     CONTENT_TYPE_JSON
 }
 
-// RestfulClient initialises a new Restful client with an endpoint. The endpoint
+// RequestsClient initialises a new Requests client with an endpoint. The endpoint
 // must include a scheme (http or https) and must not contain a path. Any
 // headers set on the client are sent with every request from the client but may
 // be overwritten on a per-request basis.
-native Restful:RestfulClient(const endpoint[], Headers:headers = Headers:-1);
+native Requests:RequestsClient(const endpoint[], Headers:headers = Headers:-1);
 
-// RestfulHeaders constructs a headers object and returns a handle ID. This
+// RequestHeaders constructs a headers object and returns a handle ID. This
 // function is designed to only ever be used as an argument to functions that
 // take `Headers:` values as those functions handle the garbage collection of
 // resources allocated on the heap.
-native Headers:RestfulHeaders(...);
+native Headers:RequestHeaders(...);
 
-// RestfulGetText performs a request to send or receive text data
-native Request:RestfulRequestText(
-    Restful:id,
+// RequestText performs a request to send or receive text data
+native Request:RequestText(
+    Requests:id,
     const path[],
     E_HTTP_METHOD:method,
     E_CONTENT_TYPE:responseType,
@@ -52,14 +52,14 @@ native Request:RestfulRequestText(
     Headers:headers = Headers:-1
 );
 
-// RestfulPostData performs a request to send or receive JSON data
-native Request:RestfulRequestJSON(
-    Restful:id,
+// RequestJSON performs a request to send or receive JSON data
+native Request:RequestJSON(
+    Requests:id,
     const path[],
     E_HTTP_METHOD:method,
     E_CONTENT_TYPE:responseType,
     callback[],
-    Node:json = -1,
+    Node:json = Node:-1,
     Headers:headers = Headers:-1
 );
 

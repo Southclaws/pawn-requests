@@ -20,10 +20,10 @@ The "main" source file with most of the boilerplate code. Includes the
 logprintf_t logprintf;
 
 extern "C" AMX_NATIVE_INFO amx_Natives[] = {
-    { "RestfulClient", Natives::RestfulClient },
-    { "RestfulHeaders", Natives::RestfulHeaders },
-    { "RestfulRequestText", Natives::RestfulRequestText },
-    { "RestfulRequestJSON", Natives::RestfulRequestJSON },
+    { "RequestsClient", Natives::RequestsClient },
+    { "RequestHeaders", Natives::RequestHeaders },
+    { "RequestText", Natives::RequestText },
+    { "RequestJSON", Natives::RequestJSON },
 
     { "JsonObject", Natives::JSON::Object },
     { "JsonInt", Natives::JSON::Int },

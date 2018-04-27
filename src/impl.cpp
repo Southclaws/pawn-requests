@@ -22,7 +22,7 @@ int Impl::clientsTableCounter = 0;
 std::unordered_map<int, std::vector<std::pair<std::string, std::string>>> Impl::headersTable;
 int Impl::headersTableCounter = 0;
 
-int Impl::RestfulClient(std::string endpoint, int headers)
+int Impl::RequestsClient(std::string endpoint, int headers)
 {
     int id = clientsTableCounter++;
     http_client* client = new http_client(utility::conversions::to_string_t(endpoint));
@@ -30,7 +30,14 @@ int Impl::RestfulClient(std::string endpoint, int headers)
     return id;
 }
 
-int Impl::RestfulRequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers)
+int Impl::RequestHeaders(std::vector<std::pair<std::string, std::string>> headers)
+{
+    int id = headersTableCounter++;
+    headersTable[id] = headers;
+    return id;
+}
+
+int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers)
 {
     RequestData requestData;
     requestData.id = requestCounter;
@@ -47,7 +54,7 @@ int Impl::RestfulRequestText(int id, std::string path, E_HTTP_METHOD method, E_R
     return requestCounter++;
 }
 
-int Impl::RestfulRequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers)
+int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers)
 {
     return requestCounter++;
 }
@@ -114,13 +121,6 @@ web::http::method Impl::methodName(E_HTTP_METHOD id)
         return web::http::methods::PATCH;
     }
     return "";
-}
-
-int Impl::RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers)
-{
-    int id = headersTableCounter++;
-    headersTable[id] = headers;
-    return id;
 }
 
 int Impl::headersCleanup(int id)

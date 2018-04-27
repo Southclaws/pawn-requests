@@ -15,13 +15,13 @@ The code here acts as the translation between AMX data types and native types.
 std::unordered_map<int, web::json::value*> Natives::JSON::nodeTable;
 int Natives::JSON::jsonPoolCounter = 0;
 
-int Natives::RestfulClient(AMX* amx, cell* params)
+int Natives::RequestsClient(AMX* amx, cell* params)
 {
     std::string endpoint = amx_GetCppString(amx, params[1]);
-    return Impl::RestfulClient(endpoint, params[2]);
+    return Impl::RequestsClient(endpoint, params[2]);
 }
 
-int Natives::RestfulHeaders(AMX* amx, cell* params)
+int Natives::RequestHeaders(AMX* amx, cell* params)
 {
     std::vector<std::pair<std::string, std::string>> headers;
     std::string key;
@@ -33,10 +33,10 @@ int Natives::RestfulHeaders(AMX* amx, cell* params)
             headers.push_back(std::make_pair(key, header));
         }
     }
-    return Impl::RestfulHeaders(headers);
+    return Impl::RequestHeaders(headers);
 }
 
-int Natives::RestfulRequestText(AMX* amx, cell* params)
+int Natives::RequestText(AMX* amx, cell* params)
 {
     int id = params[1];
     std::string path = amx_GetCppString(amx, params[2]);
@@ -48,10 +48,10 @@ int Natives::RestfulRequestText(AMX* amx, cell* params)
     // std::string data = amx_GetCppString(amx, params[6]);
     int headers = params[7];
 
-    return Impl::RestfulRequestText(id, path, method, responseType, callback, data, headers);
+    return Impl::RequestText(id, path, method, responseType, callback, data, headers);
 }
 
-int Natives::RestfulRequestJSON(AMX* amx, cell* params)
+int Natives::RequestJSON(AMX* amx, cell* params)
 {
     // int id = params[1];
     // std::string path = amx_GetCppString(amx, params[2]);
@@ -61,7 +61,7 @@ int Natives::RestfulRequestJSON(AMX* amx, cell* params)
     // std::string data = amx_GetCppString(amx, params[6]);
     // int headers = params[7];
 
-    // return Impl::RestfulRequestText(id, path, callback, method, responseType, callback, data, headers);
+    // return Impl::RequestJSON(id, path, callback, method, responseType, callback, data, headers);
     return 0;
 };
 
