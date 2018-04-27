@@ -19,11 +19,9 @@ Contains all the `PAWN_NATIVE_DECL` for native function declarations.
 
 namespace Natives {
 int RestfulClient(AMX* amx, cell* params);
-int RestfulGetData(AMX* amx, cell* params);
-int RestfulPostData(AMX* amx, cell* params);
-int RestfulGetJSON(AMX* amx, cell* params);
-int RestfulPostJSON(AMX* amx, cell* params);
 int RestfulHeaders(AMX* amx, cell* params);
+int RestfulRequestText(AMX* amx, cell* params);
+int RestfulRequestJSON(AMX* amx, cell* params);
 
 void processTick(AMX* amx);
 

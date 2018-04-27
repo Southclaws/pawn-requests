@@ -21,11 +21,9 @@ logprintf_t logprintf;
 
 extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "RestfulClient", Natives::RestfulClient },
-    { "RestfulGetData", Natives::RestfulGetData },
-    { "RestfulPostData", Natives::RestfulPostData },
-    { "RestfulGetJSON", Natives::RestfulGetJSON },
-    { "RestfulPostJSON", Natives::RestfulPostJSON },
     { "RestfulHeaders", Natives::RestfulHeaders },
+    { "RestfulRequestText", Natives::RestfulRequestText },
+    { "RestfulRequestJSON", Natives::RestfulRequestJSON },
 
     { "JsonObject", Natives::JSON::Object },
     { "JsonInt", Natives::JSON::Int },

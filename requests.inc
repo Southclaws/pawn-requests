@@ -35,6 +35,12 @@ enum E_CONTENT_TYPE {
 // be overwritten on a per-request basis.
 native Restful:RestfulClient(const endpoint[], Headers:headers = Headers:-1);
 
+// RestfulHeaders constructs a headers object and returns a handle ID. This
+// function is designed to only ever be used as an argument to functions that
+// take `Headers:` values as those functions handle the garbage collection of
+// resources allocated on the heap.
+native Headers:RestfulHeaders(...);
+
 // RestfulGetText performs a request to send or receive text data
 native Request:RestfulRequestText(
     Restful:id,
@@ -56,12 +62,6 @@ native Request:RestfulRequestJSON(
     Node:json = -1,
     Headers:headers = Headers:-1
 );
-
-// RestfulHeaders constructs a headers object and returns a handle ID. This
-// function is designed to only ever be used as an argument to functions that
-// take `Headers:` values as those functions handle the garbage collection of
-// resources allocated on the heap.
-native Headers:RestfulHeaders(...);
 
 // -
 // JSON API

@@ -21,28 +21,6 @@ int Natives::RestfulClient(AMX* amx, cell* params)
     return Impl::RestfulClient(endpoint, params[2]);
 }
 
-int Natives::RestfulGetData(AMX* amx, cell* params)
-{
-    std::string endpoint = amx_GetCppString(amx, params[2]);
-    std::string callback = amx_GetCppString(amx, params[3]);
-    return Impl::RestfulGetData(params[1], endpoint, callback, params[4]);
-}
-
-int Natives::RestfulPostData(AMX* amx, cell* params)
-{
-    return 0;
-}
-
-int Natives::RestfulGetJSON(AMX* amx, cell* params)
-{
-    return 0;
-}
-
-int Natives::RestfulPostJSON(AMX* amx, cell* params)
-{
-    return 0;
-}
-
 int Natives::RestfulHeaders(AMX* amx, cell* params)
 {
     std::vector<std::pair<std::string, std::string>> headers;
@@ -57,6 +35,33 @@ int Natives::RestfulHeaders(AMX* amx, cell* params)
     }
     return Impl::RestfulHeaders(headers);
 }
+
+int Natives::RestfulRequestText(AMX* amx, cell* params)
+{
+    int id = params[1];
+    std::string path = amx_GetCppString(amx, params[2]);
+    int method = params[3];
+    int responseType = params[4];
+    std::string callback = amx_GetCppString(amx, params[5]);
+    std::string data = amx_GetCppString(amx, params[6]);
+    int headers = params[7];
+
+    return Impl::RestfulRequestText(id, path, callback, method, responseType, callback, data, headers);
+}
+
+int Natives::RestfulRequestJSON(AMX* amx, cell* params)
+{
+    // int id = params[1];
+    // std::string path = amx_GetCppString(amx, params[2]);
+    // int method = params[3];
+    // int responseType = params[4];
+    // std::string callback = amx_GetCppString(amx, params[5]);
+    // std::string data = amx_GetCppString(amx, params[6]);
+    // int headers = params[7];
+
+    // return Impl::RestfulRequestText(id, path, callback, method, responseType, callback, data, headers);
+    return 0;
+};
 
 void Natives::processTick(AMX* amx)
 {
@@ -215,100 +220,100 @@ int Natives::JSON::GetObject(AMX* amx, cell* params)
 
 int Natives::JSON::GetInt(AMX* amx, cell* params)
 {
-	web::json::value obj = Get(params[1], false);
-	std::string key = amx_GetCppString(amx, params[2]);
-	if (!obj.is_object()) {
-		return 1;
-	}
+    web::json::value obj = Get(params[1], false);
+    std::string key = amx_GetCppString(amx, params[2]);
+    if (!obj.is_object()) {
+        return 1;
+    }
 
-	web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-	if (!target.is_integer()) {
-		return 2;
-	}
+    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
+    if (!target.is_integer()) {
+        return 2;
+    }
 
-	cell* addr = nullptr;
-	amx_GetAddr(amx, params[3], &addr);
-	*addr = target.as_integer();
+    cell* addr = nullptr;
+    amx_GetAddr(amx, params[3], &addr);
+    *addr = target.as_integer();
 
-	return 0;
+    return 0;
 }
 
 int Natives::JSON::GetFloat(AMX* amx, cell* params)
 {
-	web::json::value obj = Get(params[1], false);
-	std::string key = amx_GetCppString(amx, params[2]);
-	if (!obj.is_object()) {
-		return 1;
-	}
+    web::json::value obj = Get(params[1], false);
+    std::string key = amx_GetCppString(amx, params[2]);
+    if (!obj.is_object()) {
+        return 1;
+    }
 
-	web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-	if (!target.is_double()) {
-		return 2;
-	}
+    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
+    if (!target.is_double()) {
+        return 2;
+    }
 
-	cell* addr = nullptr;
-	amx_GetAddr(amx, params[3], &addr);
-	float d = static_cast<float>(target.as_double());
-	*addr = amx_ftoc(d);
+    cell* addr = nullptr;
+    amx_GetAddr(amx, params[3], &addr);
+    float d = static_cast<float>(target.as_double());
+    *addr = amx_ftoc(d);
 
-	return 0;
+    return 0;
 }
 
 int Natives::JSON::GetBool(AMX* amx, cell* params)
 {
-	web::json::value obj = Get(params[1], false);
-	std::string key = amx_GetCppString(amx, params[2]);
-	if (!obj.is_object()) {
-		return 1;
-	}
+    web::json::value obj = Get(params[1], false);
+    std::string key = amx_GetCppString(amx, params[2]);
+    if (!obj.is_object()) {
+        return 1;
+    }
 
-	web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-	if (!target.is_boolean()) {
-		return 2;
-	}
-	
-	cell* addr = nullptr;
-	amx_GetAddr(amx, params[3], &addr);
-	*addr = target.as_bool();
-	
-	return 0;
+    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
+    if (!target.is_boolean()) {
+        return 2;
+    }
+
+    cell* addr = nullptr;
+    amx_GetAddr(amx, params[3], &addr);
+    *addr = target.as_bool();
+
+    return 0;
 }
 
 int Natives::JSON::GetString(AMX* amx, cell* params)
 {
-	web::json::value obj = Get(params[1], false);
-	std::string key = amx_GetCppString(amx, params[2]);
-	if (!obj.is_object()) {
-		return 1;
-	}
+    web::json::value obj = Get(params[1], false);
+    std::string key = amx_GetCppString(amx, params[2]);
+    if (!obj.is_object()) {
+        return 1;
+    }
 
-	web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-	if (!target.is_string()) {
-		return 2;
-	}
-	
-	return amx_SetCppString(amx, params[3], utility::conversions::to_utf8string(target.as_string()).c_str(), params[4]);
+    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
+    if (!target.is_string()) {
+        return 2;
+    }
+
+    return amx_SetCppString(amx, params[3], utility::conversions::to_utf8string(target.as_string()).c_str(), params[4]);
 }
 
 int Natives::JSON::GetArray(AMX* amx, cell* params)
 {
-	web::json::value obj = Get(params[1], false);
-	std::string key = amx_GetCppString(amx, params[2]);
-	if (!obj.is_object()) {
-		return 1;
-	}
+    web::json::value obj = Get(params[1], false);
+    std::string key = amx_GetCppString(amx, params[2]);
+    if (!obj.is_object()) {
+        return 1;
+    }
 
-	web::json::value* target = new web::json::value;
-	*target = obj.as_object().at(utility::conversions::to_string_t(key));
-	if (!target->is_array()) {
-		return 2;
-	}
-	
-	 cell* addr = nullptr;
-	 amx_GetAddr(amx, params[3], &addr);
-	 *addr = Alloc(target);
+    web::json::value* target = new web::json::value;
+    *target = obj.as_object().at(utility::conversions::to_string_t(key));
+    if (!target->is_array()) {
+        return 2;
+    }
 
-	 return 0;
+    cell* addr = nullptr;
+    amx_GetAddr(amx, params[3], &addr);
+    *addr = Alloc(target);
+
+    return 0;
 }
 
 int Natives::JSON::ArrayObject(AMX* amx, cell* params)

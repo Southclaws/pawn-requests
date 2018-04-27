@@ -30,7 +30,7 @@ int Impl::RestfulClient(std::string endpoint, int headers)
     return id;
 }
 
-int Impl::RestfulGetData(int id, std::string path, std::string callback, int headers)
+int Impl::RestfulRequestText(int id, std::string path, int method, int responseType, std::string callback, char* data, int headers)
 {
     int ret = doRequest(id, path, callback, [=]() {
         RequestData t;
@@ -45,17 +45,7 @@ int Impl::RestfulGetData(int id, std::string path, std::string callback, int hea
     return requestCounter++;
 }
 
-int Impl::RestfulPostData(int id, std::string endpoint, std::string callback, char* data, int headers)
-{
-    return requestCounter++;
-}
-
-int Impl::RestfulGetJSON(int id, std::string endpoint, std::string callback, int headers)
-{
-    return requestCounter++;
-}
-
-int Impl::RestfulPostJSON(int id, std::string endpoint, std::string callback, web::json::object json, int headers)
+int RestfulRequestJSON(int id, std::string path, int method, int responseType, std::string callback, web::json::value json, int headers)
 {
     return requestCounter++;
 }

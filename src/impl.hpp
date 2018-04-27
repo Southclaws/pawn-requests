@@ -28,13 +28,11 @@ using namespace concurrency::streams; // Asynchronous streams
 
 namespace Impl {
 int RestfulClient(std::string endpoint, int headers);
-int RestfulGetData(int id, std::string path, std::string callback, int headers);
-int RestfulPostData(int id, std::string path, std::string callback, char* data, int headers);
-int RestfulGetJSON(int id, std::string path, std::string callback, int headers);
-int RestfulPostJSON(int id, std::string path, std::string callback, web::json::object json, int headers);
 int RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers);
-int RestfulHeadersCleanup(int id);
+int RestfulRequestText(int id, std::string path, int method, int responseType, std::string callback, char* data, int headers);
+int RestfulRequestJSON(int id, std::string path, int method, int responseType, std::string callback, web::json::value json, int headers);
 
+int RestfulHeadersCleanup(int id);
 int doRequest(int id, std::string path, std::string callback, RequestData data);
 
 extern int requestCounter;
