@@ -7,5 +7,17 @@
   "dev_dependencies": ["pawn-lang/YSI-Includes"],
   "runtime": {
     "plugins": ["Southclaws/pawn-restful"]
-  }
+  },
+  "resources": [
+    {
+      "name": "restful.so",
+      "archive": false,
+      "platform": "linux"
+    },
+    {
+      "name": "restful.dll",
+      "archive": false,
+      "platform": "windows"
+    }
+  ]
 }
