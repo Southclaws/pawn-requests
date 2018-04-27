@@ -4,8 +4,8 @@
 Contains all the `PAWN_NATIVE_DECL` for native function declarations.
 */
 
-#ifndef RESTFUL_NATIVES_H
-#define RESTFUL_NATIVES_H
+#ifndef REQUESTS_NATIVES_H
+#define REQUESTS_NATIVES_H
 
 #include <set>
 #include <string>

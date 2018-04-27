@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(restful)
+project(requests)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/cmake-modules")
 

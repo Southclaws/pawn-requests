@@ -1,21 +1,21 @@
 {
   "user": "Southclaws",
-  "repo": "pawn-restful",
+  "repo": "pawn-requests",
   "entry": "test.pwn",
   "output": "test/gamemodes/test.amx",
   "dependencies": ["Southclaws/samp-stdlib"],
   "dev_dependencies": ["pawn-lang/YSI-Includes"],
   "runtime": {
-    "plugins": ["Southclaws/pawn-restful"]
+    "plugins": ["Southclaws/pawn-requests"]
   },
   "resources": [
     {
-      "name": "restful.so",
+      "name": "requests.so",
       "archive": false,
       "platform": "linux"
     },
     {
-      "name": "restful.dll",
+      "name": "requests.dll",
       "archive": false,
       "platform": "windows"
     }

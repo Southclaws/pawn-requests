@@ -1,6 +1,6 @@
 {
   "gamemodes": ["test"],
-  "plugins": ["restful"],
+  "plugins": ["requests"],
   "rcon_password": ";,JoTh856/:?",
   "port": 7777,
   "hostname": "test",

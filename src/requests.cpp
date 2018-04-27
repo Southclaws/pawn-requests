@@ -1,5 +1,5 @@
 /*
-# restful.cpp
+# requests.cpp
 
 The "main" source file with most of the boilerplate code. Includes the
 `NativesMain` header for initialising plugin-natives.

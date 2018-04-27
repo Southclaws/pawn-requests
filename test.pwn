@@ -3,7 +3,7 @@
 #include <a_samp>
 #include <YSI\y_testing>
 
-#include "restful.inc"
+#include "requests.inc"
 
 main() {
     //
@@ -11,7 +11,7 @@ main() {
 
 Test:NewClient() {
     new Restful:client = RestfulClient("http://httpbin.org/");
-    printf("new restful client: %d", _:client);
+    printf("new requests client: %d", _:client);
 }
 
 

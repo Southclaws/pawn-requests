@@ -11,7 +11,7 @@ test-setup:
 # -
 
 test-windows-debug:
-	-cp test/plugins/Debug/restful.dll test/plugins/restful.dll
+	-cp test/plugins/Debug/requests.dll test/plugins/requests.dll
 	-cp test/plugins/Debug/boost_date_time-vc141-mt-gd-x32-1_66.dll test/boost_date_time-vc141-mt-gd-x32-1_66.dll
 	-cp test/plugins/Debug/boost_system-vc141-mt-gd-x32-1_66.dll test/boost_system-vc141-mt-gd-x32-1_66.dll
 	-cp test/plugins/Debug/cpprest_2_10d.dll test/cpprest_2_10d.dll
@@ -21,7 +21,7 @@ test-windows-debug:
 	sampctl package build
 	cd test && sampctl server run
 test-windows-release:
-	-cp test/plugins/Release/restful.dll test/plugins/restful.dll
+	-cp test/plugins/Release/requests.dll test/plugins/requests.dll
 	-cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_66.dll test/boost_date_time-vc141-mt-x32-1_66.dll
 	-cp test/plugins/Release/boost_system-vc141-mt-x32-1_66.dll test/boost_system-vc141-mt-x32-1_66.dll
 	-cp test/plugins/Release/cpprest_2_10.dll test/cpprest_2_10.dll
@@ -41,19 +41,19 @@ test-linux:
 
 build-linux:
 	rm -rf build
-	docker build -t southclaws/restful-build .
+	docker build -t southclaws/requests-build .
 	docker run \
-		-v $(shell pwd):/root/restful \
+		-v $(shell pwd):/root/requests \
 		--entrypoint make \
-		--workdir /root/restful \
-		southclaws/restful-build \
+		--workdir /root/requests \
+		southclaws/requests-build \
 		build-inside
 
 build-interactive:
 	docker run \
-		-v $(shell pwd):/root/restful \
+		-v $(shell pwd):/root/requests \
 		-it \
-		southclaws/restful-build
+		southclaws/requests-build
 
 build-inside:
 	mkdir build-linux && cd build-linux && cmake .. && make

@@ -8,7 +8,7 @@ include_directories(
 	${SAMPSDK_INCLUDE_DIR}
 )
 
-add_samp_plugin(restful
+add_samp_plugin(requests
 	${SAMPSDK_DIR}/amxplugin.cpp
 	${SAMPSDK_DIR}/amxplugin2.cpp
 	${SAMPSDK_DIR}/amx/getch.c
@@ -20,7 +20,7 @@ add_samp_plugin(restful
 	plugin-natives/Internal/NativeFuncImpl.hpp
 	plugin-natives/Internal/NativeHookImpl.hpp
 	common.hpp
-	restful.cpp
+	requests.cpp
 	impl.cpp
 	impl.hpp
 	natives.cpp
@@ -28,5 +28,5 @@ add_samp_plugin(restful
 	plugin.def
 )
 
-target_link_libraries(restful cpprestsdk::cpprest)
-target_link_libraries(restful ${Boost_LIBRARIES})
+target_link_libraries(requests cpprestsdk::cpprest)
+target_link_libraries(requests ${Boost_LIBRARIES})

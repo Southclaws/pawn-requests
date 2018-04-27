@@ -23,8 +23,8 @@ using namespace web::http; // Common HTTP functionality
 using namespace web::http::client; // HTTP client features
 using namespace concurrency::streams; // Asynchronous streams
 
-#ifndef RESTFUL_IMPL_H
-#define RESTFUL_IMPL_H
+#ifndef REQUESTS_IMPL_H
+#define REQUESTS_IMPL_H
 
 namespace Impl {
 int RestfulClient(std::string endpoint, int headers);

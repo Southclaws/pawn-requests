@@ -1,19 +1,20 @@
-# pawn-restful
+# pawn-requests
 
-restful provides an API for interacting with RESTful HTTP(S) JSON APIs.
+This package provides an API for interacting with HTTP(S) APIs with support for
+text and JSON data types.
 
 ## Installation
 
 Simply install to your project:
 
 ```bash
-sampctl package install Southclaws/pawn-restful
+sampctl package install Southclaws/pawn-requests
 ```
 
 Include in your code and begin using the library:
 
 ```pawn
-#include <restful>
+#include <requests>
 ```
 
 ## Usage
@@ -113,7 +114,7 @@ new Node:node = JsonObject(
 ```
 
 See the
-[unit tests](https://github.com/Southclaws/pawn-restful/blob/master/test.pwn)
+[unit tests](https://github.com/Southclaws/pawn-requests/blob/master/test.pwn)
 for more examples of JSON builders.
 
 #### Accessing Data
@@ -122,7 +123,7 @@ When you request JSON data, it's provided as a `Node:` in the callback. Most of
 the time, you'll get an object back but depending on the application that
 responded this could differ.
 
-**Note:** _the signature for response callbacks is in a comment in restful.inc_
+**Note:** _the signature for response callbacks is in a comment in requests.inc_
 
 Lets assume this request responds with the following data:
 

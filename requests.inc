@@ -1,8 +1,33 @@
-// restful provides an API for interacting with RESTful HTTP(S) JSON APIs.
+// built-in include guard removal
+// just in case the user has a local dependency with the same file name
+#if defined _inc_requests
+	#undef _inc_requests
+#endif
+// custom include-guard to ensure we don't duplicate
+#if defined _requests_included
+	#endinput
+#endif
+#define _requests_included
 
 
 #include "status_codes"
+#include "http_methods"
 
+
+// -
+// Request API
+// -
+
+// E_CONTENT_TYPE represents the possible response types for a request.
+// Response callback signatures in requests are dependent on "Content-Type":
+// - CONTENT_TYPE_TEXT:
+//   (Request:id, E_HTTP_STATUS:status, data[], dataLen)
+// - CONTENT_TYPE_JSON:
+//   (Request:id, E_HTTP_STATUS:status, Node:json)
+enum E_CONTENT_TYPE {
+    CONTENT_TYPE_TEXT,
+    CONTENT_TYPE_JSON
+}
 
 // RestfulClient initialises a new Restful client with an endpoint. The endpoint
 // must include a scheme (http or https) and must not contain a path. Any
@@ -10,35 +35,27 @@
 // be overwritten on a per-request basis.
 native Restful:RestfulClient(const endpoint[], Headers:headers = Headers:-1);
 
-// -
-// Callback information:
-// Response callback signatures are dependent on "Content-Type":
-// - text/plain, application/octet-stream:
-//   (Request:id, E_HTTP_STATUS:status, data[], dataLen)
-// - application/json
-//   (Request:id, E_HTTP_STATUS:status, Node:json)
-// If the expected content 
-// -
+// RestfulGetText performs a request to send or receive text data
+native Request:RestfulRequestText(
+    Restful:id,
+    const path[],
+    E_HTTP_METHOD:method,
+    E_CONTENT_TYPE:responseType,
+    callback[],
+    data[] = "",
+    Headers:headers = Headers:-1
+);
 
-// -
-// Binary/text/generic data
-// -
-
-// RestfulGetData performs a HTTP GET to the Restful client's endpoint+path.
-native Request:RestfulGetData(Restful:id, const path[], callback[], Headers:headers = Headers:-1);
-
-// RestfulPostData performs a HTTP POST to the Restful client's endpoint+path.
-native Request:RestfulPostData(Restful:id, const path[], callback[], data[], Headers:headers = Headers:-1);
-
-// -
-// JSON nodes
-// -
-
-// RestfulGetJSON performs a HTTP GET to the Restful client's endpoint+path.
-native Request:RestfulGetJSON(Restful:id, const path[], callback[], Headers:headers = Headers:-1);
-
-// RestfulGetJSON performs a HTTP POST to the Restful client's endpoint+path.
-native Request:RestfulPostJSON(Restful:id, const path[], callback[], Node:json, Headers:headers = Headers:-1);
+// RestfulPostData performs a request to send or receive JSON data
+native Request:RestfulRequestJSON(
+    Restful:id,
+    const path[],
+    E_HTTP_METHOD:method,
+    E_CONTENT_TYPE:responseType,
+    callback[],
+    Node:json = -1,
+    Headers:headers = Headers:-1
+);
 
 // RestfulHeaders constructs a headers object and returns a handle ID. This
 // function is designed to only ever be used as an argument to functions that
@@ -47,7 +64,7 @@ native Request:RestfulPostJSON(Restful:id, const path[], callback[], Node:json, 
 native Headers:RestfulHeaders(...);
 
 // -
-// JSON
+// JSON API
 // -
 
 enum JSON_NODE {

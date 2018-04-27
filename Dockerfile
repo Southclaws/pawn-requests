@@ -60,6 +60,6 @@ RUN cd casablanca/Release && \
 
 
 # -
-# Build restful plugin by mounting repo directory into container and executing
+# Build requests plugin by mounting repo directory into container and executing
 # `make build-inside` as the entrypoint.
 # -
