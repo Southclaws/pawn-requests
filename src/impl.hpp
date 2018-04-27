@@ -27,35 +27,51 @@ using namespace concurrency::streams; // Asynchronous streams
 #define REQUESTS_IMPL_H
 
 namespace Impl {
-int RestfulClient(std::string endpoint, int headers);
-int RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers);
-int RestfulRequestText(int id, std::string path, int method, int responseType, std::string callback, char* data, int headers);
-int RestfulRequestJSON(int id, std::string path, int method, int responseType, std::string callback, web::json::value json, int headers);
-
-int RestfulHeadersCleanup(int id);
-int doRequest(int id, std::string path, std::string callback, RequestData data);
-
-extern int requestCounter;
-
-enum E_TASK_TYPE {
+enum E_HTTP_METHOD {
+    HTTP_METHOD_GET = 0,
+    HTTP_METHOD_HEAD,
+    HTTP_METHOD_POST,
+    HTTP_METHOD_PUT,
+    HTTP_METHOD_DELETE,
+    HTTP_METHOD_CONNECT,
+    HTTP_METHOD_OPTIONS,
+    HTTP_METHOD_TRACE,
+    HTTP_METHOD_PATCH
+};
+enum E_RESPONSE_TYPE {
     string,
     json
 };
 struct RequestData {
-    // shared fields
     int id;
     std::string callback;
-
-    // response fields
-    E_TASK_TYPE type;
-    int status;
-    std::string string;
-    json::value json;
+    std::string path;
+    E_HTTP_METHOD method;
+    E_RESPONSE_TYPE responseType;
+    int headers;
 };
-extern std::stack<RequestData> taskStack;
+struct ResponseData {
+    int id;
+    std::string callback;
+    int status;
+    E_RESPONSE_TYPE responseType;
+    std::string rawBody;
+};
+
+int RestfulClient(std::string endpoint, int headers);
+int RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers);
+int RestfulRequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers);
+int RestfulRequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers);
+
+int headersCleanup(int id);
+int doRequest(int id, RequestData data);
+web::http::method methodName(E_HTTP_METHOD id);
+
+extern int requestCounter;
+extern std::stack<ResponseData> taskStack;
 extern std::mutex taskStackLock;
 // gatherTasks is called by the Natives to get a list of callbacks to call
-std::vector<RequestData> gatherTasks();
+std::vector<ResponseData> gatherTasks();
 
 struct ClientData {
     http_client* client;

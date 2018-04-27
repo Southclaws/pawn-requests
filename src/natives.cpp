@@ -40,13 +40,15 @@ int Natives::RestfulRequestText(AMX* amx, cell* params)
 {
     int id = params[1];
     std::string path = amx_GetCppString(amx, params[2]);
-    int method = params[3];
-    int responseType = params[4];
+    Impl::E_HTTP_METHOD method = static_cast<Impl::E_HTTP_METHOD>(params[3]);
+    Impl::E_RESPONSE_TYPE responseType = static_cast<Impl::E_RESPONSE_TYPE>(params[4]);
     std::string callback = amx_GetCppString(amx, params[5]);
-    std::string data = amx_GetCppString(amx, params[6]);
+    char* data;
+    amx_GetCString(amx, params[6], data);
+    // std::string data = amx_GetCppString(amx, params[6]);
     int headers = params[7];
 
-    return Impl::RestfulRequestText(id, path, callback, method, responseType, callback, data, headers);
+    return Impl::RestfulRequestText(id, path, method, responseType, callback, data, headers);
 }
 
 int Natives::RestfulRequestJSON(AMX* amx, cell* params)
@@ -65,7 +67,7 @@ int Natives::RestfulRequestJSON(AMX* amx, cell* params)
 
 void Natives::processTick(AMX* amx)
 {
-    std::vector<Impl::CallbackTask> tasks = Impl::gatherTasks();
+    std::vector<Impl::ResponseData> tasks = Impl::gatherTasks();
     for (auto task : tasks) {
         int error;
         int amx_idx;
@@ -73,8 +75,8 @@ void Natives::processTick(AMX* amx)
         cell amx_ret;
         cell* phys_addr;
 
-        switch (task.type) {
-        case Impl::E_TASK_TYPE::string: {
+        switch (task.responseType) {
+        case Impl::E_RESPONSE_TYPE::string: {
             error = amx_FindPublic(amx, task.callback.c_str(), &amx_idx);
             if (error != AMX_ERR_NONE) {
                 logprintf("ERROR: failed to locate public function '%s' in amx, error: %d", task.callback.c_str(), error);
@@ -82,8 +84,8 @@ void Natives::processTick(AMX* amx)
             }
 
             // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
-            amx_Push(amx, task.string.length());
-            amx_PushString(amx, &amx_addr, &phys_addr, task.string.c_str(), 0, 0);
+            amx_Push(amx, task.rawBody.length());
+            amx_PushString(amx, &amx_addr, &phys_addr, task.rawBody.c_str(), 0, 0);
             amx_Push(amx, task.status);
             amx_Push(amx, task.id);
 
@@ -93,9 +95,24 @@ void Natives::processTick(AMX* amx)
             break;
         }
 
-        case Impl::E_TASK_TYPE::json: {
-            json::value* obj = new json::value(task.json);
+        case Impl::E_RESPONSE_TYPE::json: {
+            json::value* obj = new json::value;
+            *obj = json::value::parse(utility::conversions::to_string_t(task.rawBody));
             cell id = JSON::Alloc(obj);
+
+            error = amx_FindPublic(amx, task.callback.c_str(), &amx_idx);
+            if (error != AMX_ERR_NONE) {
+                logprintf("ERROR: failed to locate public function '%s' in amx, error: %d", task.callback.c_str(), error);
+                continue;
+            }
+
+            // (Request:id, E_HTTP_STATUS:status, Node:node)
+            amx_Push(amx, id);
+            amx_Push(amx, task.status);
+            amx_Push(amx, task.id);
+
+            amx_Exec(amx, &amx_ret, amx_idx);
+            amx_Release(amx, amx_addr);
 
             JSON::Erase(id);
             break;

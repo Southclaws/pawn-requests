@@ -56,4 +56,5 @@ build-interactive:
 		southclaws/requests-build
 
 build-inside:
-	mkdir build-linux && cd build-linux && cmake .. && make
+	-mkdir build-container
+	cd build-container && cmake .. && make

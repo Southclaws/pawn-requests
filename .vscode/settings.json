@@ -81,6 +81,12 @@
         "xutility": "cpp",
         "stack": "cpp",
         "string_view": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "__functional_base": "cpp",
+        "__functional_base_03": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "__tuple": "cpp",
+        "*.dat": "cpp"
     }
 }

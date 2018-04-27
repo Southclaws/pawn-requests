@@ -13,7 +13,7 @@ log-core by maddinat0r.
 
 int Impl::requestCounter = 0;
 
-std::stack<Impl::RequestData> Impl::taskStack;
+std::stack<Impl::ResponseData> Impl::taskStack;
 std::mutex Impl::taskStackLock;
 
 std::unordered_map<int, Impl::ClientData> Impl::clientsTable;
@@ -30,27 +30,29 @@ int Impl::RestfulClient(std::string endpoint, int headers)
     return id;
 }
 
-int Impl::RestfulRequestText(int id, std::string path, int method, int responseType, std::string callback, char* data, int headers)
+int Impl::RestfulRequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers)
 {
-    int ret = doRequest(id, path, callback, [=]() {
-        RequestData t;
-        t.id = requestCounter;
-        t.callback = callback;
-        t.type = E_TASK_TYPE::string;
-        return t;
-    }());
+    RequestData requestData;
+    requestData.id = requestCounter;
+    requestData.callback = callback;
+    requestData.path = path;
+    requestData.method = method;
+    requestData.responseType = responseType;
+    requestData.headers = headers;
+
+    int ret = doRequest(id, requestData);
     if (ret < 0) {
         return ret;
     }
     return requestCounter++;
 }
 
-int RestfulRequestJSON(int id, std::string path, int method, int responseType, std::string callback, web::json::value json, int headers)
+int Impl::RestfulRequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers)
 {
     return requestCounter++;
 }
 
-int Impl::doRequest(int id, std::string path, std::string callback, Impl::RequestData data)
+int Impl::doRequest(int id, RequestData requestData)
 {
     ClientData cd;
     try {
@@ -59,31 +61,59 @@ int Impl::doRequest(int id, std::string path, std::string callback, Impl::Reques
         return -1;
     }
 
-    http_request request(methods::GET);
+    http_request request(methodName(requestData.method));
     for (auto h : cd.headers) {
         request.headers().add(
             utility::conversions::to_string_t(h.first),
             utility::conversions::to_string_t(h.second));
     }
-    for (auto h : headersTable[headers]) {
+    for (auto h : headersTable[requestData.headers]) {
         request.headers().add(
             utility::conversions::to_string_t(h.first),
             utility::conversions::to_string_t(h.second));
     }
-    request.set_request_uri(utility::conversions::to_string_t(path));
+    request.set_request_uri(utility::conversions::to_string_t(requestData.path));
 
     cd.client->request(request).then([=](http_response response) {
+        ResponseData responseData;
+
+        responseData.id = requestData.id;
+        responseData.callback = requestData.callback;
+        responseData.status = response.status_code();
+        responseData.responseType = requestData.responseType;
+        responseData.rawBody = response.extract_utf8string().get();
+
         taskStackLock.lock();
-
-        data.type = E_TASK_TYPE::string;
-        data.status = response.status_code();
-        data.string = response.extract_utf8string().get();
-        taskStack.push(data);
-
+        taskStack.push(responseData);
         taskStackLock.unlock();
     });
 
     return 0;
+}
+
+web::http::method Impl::methodName(E_HTTP_METHOD id)
+{
+    switch (id) {
+    case E_HTTP_METHOD::HTTP_METHOD_GET:
+        return web::http::methods::GET;
+    case E_HTTP_METHOD::HTTP_METHOD_HEAD:
+        return web::http::methods::HEAD;
+    case E_HTTP_METHOD::HTTP_METHOD_POST:
+        return web::http::methods::POST;
+    case E_HTTP_METHOD::HTTP_METHOD_PUT:
+        return web::http::methods::PUT;
+    case E_HTTP_METHOD::HTTP_METHOD_DELETE:
+        return web::http::methods::DEL;
+    case E_HTTP_METHOD::HTTP_METHOD_CONNECT:
+        return web::http::methods::CONNECT;
+    case E_HTTP_METHOD::HTTP_METHOD_OPTIONS:
+        return web::http::methods::OPTIONS;
+    case E_HTTP_METHOD::HTTP_METHOD_TRACE:
+        return web::http::methods::TRCE;
+    case E_HTTP_METHOD::HTTP_METHOD_PATCH:
+        return web::http::methods::PATCH;
+    }
+    return "";
 }
 
 int Impl::RestfulHeaders(std::vector<std::pair<std::string, std::string>> headers)
@@ -93,19 +123,19 @@ int Impl::RestfulHeaders(std::vector<std::pair<std::string, std::string>> header
     return id;
 }
 
-int Impl::RestfulHeadersCleanup(int id)
+int Impl::headersCleanup(int id)
 {
     headersTable.erase(id);
     return 0;
 }
 
-std::vector<Impl::RequestData> Impl::gatherTasks()
+std::vector<Impl::ResponseData> Impl::gatherTasks()
 {
-    std::vector<RequestData> tasks;
+    std::vector<ResponseData> tasks;
 
     // if we can't lock the mutex, don't block, just return and try next tick
     if (taskStackLock.try_lock()) {
-        RequestData cbt;
+        ResponseData cbt;
         while (!taskStack.empty()) {
             cbt = taskStack.top();
             tasks.push_back(cbt);
