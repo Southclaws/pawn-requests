@@ -37,15 +37,17 @@ int Impl::RequestHeaders(std::vector<std::pair<std::string, std::string>> header
     return id;
 }
 
-int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, char* data, int headers)
+int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_TYPE responseType, std::string callback, char* data, int headers)
 {
     RequestData requestData;
     requestData.id = requestCounter;
     requestData.callback = callback;
     requestData.path = path;
     requestData.method = method;
+    requestData.requestType = E_CONTENT_TYPE::string;
     requestData.responseType = responseType;
     requestData.headers = headers;
+    requestData.bodyString = data;
 
     int ret = doRequest(id, requestData);
     if (ret < 0) {
@@ -54,8 +56,22 @@ int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE
     return requestCounter++;
 }
 
-int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_RESPONSE_TYPE responseType, std::string callback, web::json::value json, int headers)
+int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_TYPE responseType, std::string callback, web::json::value json, int headers)
 {
+    RequestData requestData;
+    requestData.id = requestCounter;
+    requestData.callback = callback;
+    requestData.path = path;
+    requestData.method = method;
+    requestData.requestType = E_CONTENT_TYPE::json;
+    requestData.responseType = responseType;
+    requestData.headers = headers;
+    requestData.bodyJson = json;
+
+    int ret = doRequest(id, requestData);
+    if (ret < 0) {
+        return ret;
+    }
     return requestCounter++;
 }
 
@@ -68,6 +84,16 @@ int Impl::doRequest(int id, RequestData requestData)
         return -1;
     }
 
+    //std::thread t(doRequestThread, cd, requestData);
+    //t.join();
+	doRequestThread(cd, requestData);
+
+    return 0;
+}
+
+void Impl::doRequestThread(ClientData cd, RequestData requestData)
+{
+    logprintf("doRequestThread");
     http_request request(methodName(requestData.method));
     for (auto h : cd.headers) {
         request.headers().add(
@@ -81,21 +107,33 @@ int Impl::doRequest(int id, RequestData requestData)
     }
     request.set_request_uri(utility::conversions::to_string_t(requestData.path));
 
-    cd.client->request(request).then([=](http_response response) {
-        ResponseData responseData;
+    switch (requestData.requestType) {
+    case E_CONTENT_TYPE::json: {
+        request.set_body(requestData.bodyJson);
+        break;
+    }
+    case E_CONTENT_TYPE::string: {
+        request.set_body(requestData.bodyString);
+        break;
+    }
+    }
 
-        responseData.id = requestData.id;
-        responseData.callback = requestData.callback;
-        responseData.status = response.status_code();
-        responseData.responseType = requestData.responseType;
-        responseData.rawBody = response.extract_utf8string().get();
+    logprintf("cd.client->request(request)");
+	cd.client->request(request).then([requestData](http_response response) {
+		auto t = response.extract_utf8string();
+		std::string body = t.get();
 
-        taskStackLock.lock();
-        taskStack.push(responseData);
-        taskStackLock.unlock();
-    });
+		ResponseData responseData;
+		responseData.id = requestData.id;
+		responseData.callback = requestData.callback;
+		responseData.status = response.status_code();
+		responseData.responseType = requestData.responseType;
+		responseData.rawBody = body;
 
-    return 0;
+		taskStackLock.lock();
+		taskStack.push(responseData);
+		taskStackLock.unlock();
+	});
 }
 
 web::http::method Impl::methodName(E_HTTP_METHOD id)
@@ -129,7 +167,7 @@ int Impl::headersCleanup(int id)
     return 0;
 }
 
-std::vector<Impl::ResponseData> Impl::gatherTasks()
+std::vector<Impl::ResponseData> Impl::gatherResponses()
 {
     std::vector<ResponseData> tasks;
 
@@ -137,12 +175,15 @@ std::vector<Impl::ResponseData> Impl::gatherTasks()
     if (taskStackLock.try_lock()) {
         ResponseData cbt;
         while (!taskStack.empty()) {
+			logprintf("task received");
             cbt = taskStack.top();
-            tasks.push_back(cbt);
+			logprintf("ID: %d", cbt.id);
+			logprintf("St: %d", cbt.status);
+			tasks.push_back(cbt);
             taskStack.pop();
         }
         taskStackLock.unlock();
-    }
+	}
 
     return tasks;
 }
