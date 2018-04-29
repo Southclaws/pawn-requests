@@ -102,25 +102,25 @@ web::http::method Impl::methodName(E_HTTP_METHOD id)
 {
     switch (id) {
     case E_HTTP_METHOD::HTTP_METHOD_GET:
-        return web::http::methods::GET;
+        return utility::conversions::to_string_t("GET");
     case E_HTTP_METHOD::HTTP_METHOD_HEAD:
-        return web::http::methods::HEAD;
+        return utility::conversions::to_string_t("HEAD");
     case E_HTTP_METHOD::HTTP_METHOD_POST:
-        return web::http::methods::POST;
+        return utility::conversions::to_string_t("POST");
     case E_HTTP_METHOD::HTTP_METHOD_PUT:
-        return web::http::methods::PUT;
+        return utility::conversions::to_string_t("PUT");
     case E_HTTP_METHOD::HTTP_METHOD_DELETE:
-        return web::http::methods::DEL;
+        return utility::conversions::to_string_t("DELETE");
     case E_HTTP_METHOD::HTTP_METHOD_CONNECT:
-        return web::http::methods::CONNECT;
+        return utility::conversions::to_string_t("CONNECT");
     case E_HTTP_METHOD::HTTP_METHOD_OPTIONS:
-        return web::http::methods::OPTIONS;
+        return utility::conversions::to_string_t("OPTIONS");
     case E_HTTP_METHOD::HTTP_METHOD_TRACE:
-        return web::http::methods::TRCE;
+        return utility::conversions::to_string_t("TRACE");
     case E_HTTP_METHOD::HTTP_METHOD_PATCH:
-        return web::http::methods::PATCH;
+        return utility::conversions::to_string_t("PATCH");
     }
-    return "";
+    throw std::exception("HTTP method not found in enumerator");
 }
 
 int Impl::headersCleanup(int id)
