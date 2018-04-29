@@ -29,4 +29,7 @@ add_samp_plugin(requests
 )
 
 target_link_libraries(requests cpprestsdk::cpprest)
+
+if(UNIX)
 target_link_libraries(requests ${Boost_LIBRARIES})
+endif()
