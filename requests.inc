@@ -10,6 +10,12 @@
 #define _requests_included
 
 
+// todo: inline support for requests
+#tryinclude <YSI\y_inline>
+#if defined _INC_y_inline
+    #define Y_INLINE_SUPPORT
+#endif
+
 #include "status_codes"
 #include "http_methods"
 
@@ -25,6 +31,7 @@
 // - CONTENT_TYPE_JSON:
 //   (Request:id, E_HTTP_STATUS:status, Node:json)
 enum E_CONTENT_TYPE {
+    CONTENT_TYPE_EMPTY,
     CONTENT_TYPE_TEXT,
     CONTENT_TYPE_JSON
 }

@@ -10,7 +10,6 @@ is for declaring implementation functions for the plugin's core functionality.
 #include <thread>
 #include <utility>
 #include <vector>
-#include <thread>
 
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
@@ -40,7 +39,7 @@ enum E_HTTP_METHOD {
     HTTP_METHOD_PATCH
 };
 enum E_CONTENT_TYPE {
-	empty,
+    empty,
     string,
     json
 };
@@ -49,11 +48,11 @@ struct RequestData {
     std::string callback;
     std::string path;
     E_HTTP_METHOD method;
-	E_CONTENT_TYPE requestType;
-	E_CONTENT_TYPE responseType;
-	int headers;
-	std::string bodyString;
-	web::json::value bodyJson;
+    E_CONTENT_TYPE requestType;
+    E_CONTENT_TYPE responseType;
+    int headers;
+    std::string bodyString;
+    web::json::value bodyJson;
 };
 struct ResponseData {
     int id;
@@ -74,7 +73,7 @@ struct ClientData {
 };
 int headersCleanup(int id);
 int doRequest(int id, RequestData data);
-void doRequestThread(ClientData cd, RequestData requestData);
+void doRequestWithClient(ClientData cd, RequestData requestData);
 web::http::method methodName(E_HTTP_METHOD id);
 
 extern int requestCounter;

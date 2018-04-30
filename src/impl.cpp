@@ -75,6 +75,12 @@ int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_
     return requestCounter++;
 }
 
+int Impl::headersCleanup(int id)
+{
+    headersTable.erase(id);
+    return 0;
+}
+
 int Impl::doRequest(int id, RequestData requestData)
 {
     ClientData cd;
@@ -84,16 +90,21 @@ int Impl::doRequest(int id, RequestData requestData)
         return -1;
     }
 
-    //std::thread t(doRequestThread, cd, requestData);
-    //t.join();
-	doRequestThread(cd, requestData);
+    // note: synchronous for dev/tests, will thread for release
+    // std::thread t(doRequestThread, cd, requestData);
+    // t.join();
+    try {
+        doRequestWithClient(cd, requestData);
+    } catch (std::exception e) {
+        logprintf("exception: '%s'", e.what());
+		return 1;
+    }
 
     return 0;
 }
 
-void Impl::doRequestThread(ClientData cd, RequestData requestData)
+void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
 {
-    logprintf("doRequestThread");
     http_request request(methodName(requestData.method));
     for (auto h : cd.headers) {
         request.headers().add(
@@ -118,22 +129,21 @@ void Impl::doRequestThread(ClientData cd, RequestData requestData)
     }
     }
 
-    logprintf("cd.client->request(request)");
-	cd.client->request(request).then([requestData](http_response response) {
-		auto t = response.extract_utf8string();
-		std::string body = t.get();
+	logprintf("performing request %d", requestData.id);
+    http_response response = cd.client->request(request).get();
+    std::string body = response.extract_utf8string().get();
+	logprintf("got body, len %d", body.length());
 
-		ResponseData responseData;
-		responseData.id = requestData.id;
-		responseData.callback = requestData.callback;
-		responseData.status = response.status_code();
-		responseData.responseType = requestData.responseType;
-		responseData.rawBody = body;
+    ResponseData responseData;
+    responseData.id = requestData.id;
+    responseData.callback = requestData.callback;
+    responseData.status = response.status_code();
+    responseData.responseType = requestData.responseType;
+    responseData.rawBody = body;
 
-		taskStackLock.lock();
-		taskStack.push(responseData);
-		taskStackLock.unlock();
-	});
+    taskStackLock.lock();
+    taskStack.push(responseData);
+    taskStackLock.unlock();
 }
 
 web::http::method Impl::methodName(E_HTTP_METHOD id)
@@ -158,13 +168,7 @@ web::http::method Impl::methodName(E_HTTP_METHOD id)
     case E_HTTP_METHOD::HTTP_METHOD_PATCH:
         return utility::conversions::to_string_t("PATCH");
     }
-    throw std::exception("HTTP method not found in enumerator");
-}
-
-int Impl::headersCleanup(int id)
-{
-    headersTable.erase(id);
-    return 0;
+    throw std::invalid_argument("HTTP method not found in enumerator");
 }
 
 std::vector<Impl::ResponseData> Impl::gatherResponses()
@@ -173,17 +177,14 @@ std::vector<Impl::ResponseData> Impl::gatherResponses()
 
     // if we can't lock the mutex, don't block, just return and try next tick
     if (taskStackLock.try_lock()) {
-        ResponseData cbt;
+        ResponseData response;
         while (!taskStack.empty()) {
-			logprintf("task received");
-            cbt = taskStack.top();
-			logprintf("ID: %d", cbt.id);
-			logprintf("St: %d", cbt.status);
-			tasks.push_back(cbt);
+            response = taskStack.top();
+            tasks.push_back(response);
             taskStack.pop();
         }
         taskStackLock.unlock();
-	}
+    }
 
     return tasks;
 }
