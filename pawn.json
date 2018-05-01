@@ -1,23 +1,37 @@
 {
-  "user": "Southclaws",
-  "repo": "pawn-requests",
-  "entry": "test.pwn",
-  "output": "test/gamemodes/test.amx",
-  "dependencies": ["Southclaws/samp-stdlib"],
-  "dev_dependencies": ["pawn-lang/YSI-Includes"],
-  "runtime": {
-    "plugins": ["Southclaws/pawn-requests"]
-  },
-  "resources": [
-    {
-      "name": "requests.so",
-      "archive": false,
-      "platform": "linux"
+    "user": "Southclaws",
+    "repo": "pawn-requests",
+    "entry": "test.pwn",
+    "output": "test/gamemodes/test.amx",
+    "dependencies": ["Southclaws/samp-stdlib"],
+    "dev_dependencies": ["pawn-lang/YSI-Includes"],
+    "runtime": {
+        "plugins": ["Southclaws/pawn-requests"]
     },
-    {
-      "name": "requests.dll",
-      "archive": false,
-      "platform": "windows"
-    }
-  ]
+    "resources": [
+        {
+            "name": "pawn-requests-linux.zip",
+            "archive": true,
+            "platform": "linux",
+            "includes": ["includes"],
+            "plugins": ["plugins/requests.so"]
+        },
+        {
+            "name": "pawn-requests-windows.zip",
+            "archive": true,
+            "platform": "windows",
+            "includes": ["includes"],
+            "plugins": ["plugins/requests.dll"],
+            "files": {
+                "boost_date_time-vc141-mt-gd-x32-1_66.dll":
+                    "boost_date_time-vc141-mt-gd-x32-1_66.dll",
+                "boost_system-vc141-mt-gd-x32-1_66.dll":
+                    "boost_system-vc141-mt-gd-x32-1_66.dll",
+                "cpprest_2_10d.dll": "cpprest_2_10d.dll",
+                "LIBEAY32.dll": "LIBEAY32.dll",
+                "SSLEAY32.dll": "SSLEAY32.dll",
+                "zlibd1.dll": "zlibd1.dll"
+            }
+        }
+    ]
 }
