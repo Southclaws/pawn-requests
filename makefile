@@ -75,7 +75,7 @@ release-windows:
 	cp test/plugins/Release/LIBEAY32.dll release-windows/dependencies/LIBEAY32.dll
 	cp test/plugins/Release/SSLEAY32.dll release-windows/dependencies/SSLEAY32.dll
 	cp test/plugins/Release/zlibd1.dll release-windows/dependencies/zlibd1.dll
-	cp requests.inc release-windows/includes/requests.inc
+	cp *.inc release-windows/includes/
 	cd release-windows/ && 7z a -r ../pawn-requests-windows.zip *
 
 release-linux:
@@ -83,7 +83,7 @@ release-linux:
 	mkdir release-linux/plugins
 	mkdir release-linux/includes
 	cp test/plugins/requests.so release-linux/plugins/requests.so
-	cp requests.inc release-linux/includes/requests.inc
+	cp *.inc release-linux/includes/
 	cd release-linux/ && 7z a -r ../pawn-requests-linux.zip *
 
 release: release-windows release-linux
