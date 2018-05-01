@@ -95,10 +95,13 @@ int Impl::doRequest(int id, RequestData requestData)
     // t.join();
     try {
         doRequestWithClient(cd, requestData);
-    } catch (std::exception e) {
-        logprintf("exception: '%s'", e.what());
+    } catch (http::http_exception e) {
+        logprintf("http exception: '%s'", e.what());
 		return 1;
-    }
+	} catch (std::exception e) {
+		logprintf("unknown exception: '%s'", e.what());
+		return 2;
+	}
 
     return 0;
 }

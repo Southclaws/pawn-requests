@@ -58,3 +58,32 @@ build-interactive:
 build-inside:
 	-mkdir build-container
 	cd build-container && cmake .. && make
+
+# -
+# Build Release Archives
+# -
+
+release-windows:
+	mkdir release-windows
+	mkdir release-windows/plugins
+	mkdir release-windows/dependencies
+	mkdir release-windows/includes
+	cp test/plugins/Release/requests.dll release-windows/plugins/requests.dll
+	cp test/plugins/Release/boost_date_time-vc141-mt-gd-x32-1_66.dll release-windows/dependencies/boost_date_time-vc141-mt-gd-x32-1_66.dll
+	cp test/plugins/Release/boost_system-vc141-mt-gd-x32-1_66.dll release-windows/dependencies/boost_system-vc141-mt-gd-x32-1_66.dll
+	cp test/plugins/Release/cpprest_2_10d.dll release-windows/dependencies/cpprest_2_10d.dll
+	cp test/plugins/Release/LIBEAY32.dll release-windows/dependencies/LIBEAY32.dll
+	cp test/plugins/Release/SSLEAY32.dll release-windows/dependencies/SSLEAY32.dll
+	cp test/plugins/Release/zlibd1.dll release-windows/dependencies/zlibd1.dll
+	cp requests.inc release-windows/includes/requests.inc
+	cd release-windows/ && 7z a -r ../pawn-requests-windows.zip *
+
+release-linux:
+	mkdir release-linux
+	mkdir release-linux/plugins
+	mkdir release-linux/includes
+	cp test/plugins/requests.so release-linux/plugins/requests.so
+	cp requests.inc release-linux/includes/requests.inc
+	cd release-linux/ && 7z a -r ../pawn-requests-linux.zip *
+
+release: release-windows release-linux
