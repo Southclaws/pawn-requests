@@ -1,5 +1,7 @@
 # pawn-requests
 
+[![GitHub](https://shields.southcla.ws/badge/sampctl-pawn--requests-2f2f2f.svg?style=for-the-badge)](https://github.com/Southclaws/pawn-requests)
+
 This package provides an API for interacting with HTTP(S) APIs with support for
 text and JSON data types.
 
@@ -132,6 +134,35 @@ The `anything` endpoint at httpbin responds with a bunch of related data in JSON
 format. The `method` field contains the method used to perform the request and
 in this case, the method is `GET` so `OnGetJson` will output
 `anything response: 'GET'`.
+
+And you can also send JSON data with a POST method:
+
+```pawn
+RequestJSON(
+    client,
+    "post",
+    HTTP_METHOD_POST,
+    "OnPostJson",
+    JsonObject(
+        "playerName", JsonString("Southclaws"),
+        "kills", JsonInt(5),
+        "topThreeWeapons", JsonArray(
+            JsonString("M4"),
+            JsonString("MP5"),
+            JsonString("Desert Eagle")
+        )
+    ),
+    .headers = RequestHeaders()
+);
+
+public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
+    if(status == HTTP_STATUS_CREATED) {
+        printf("successfully posted JSON!");
+    }
+}
+```
+
+You could quite easily build a JSON-driven storage server backed by MongoDB.
 
 See the JSON section below for examples of manipulating JSON `Node:` objects.
 
