@@ -296,8 +296,6 @@ When you request JSON data, it's provided as a `Node:` in the callback. Most of
 the time, you'll get an object back but depending on the application that
 responded this could differ.
 
-**Note:** _the signature for response callbacks is in a comment in requests.inc_
-
 Lets assume this request responds with the following data:
 
 ```json
