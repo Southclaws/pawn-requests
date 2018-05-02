@@ -19,7 +19,142 @@ Include in your code and begin using the library:
 
 ## Usage
 
-### Requests Client
+### Requests
+
+The Requests API is based on common implementations of similar libraries in
+languages such as Go, Python and JS (Node.js).
+
+There is an example of a basic gamemode that uses requests to store player data
+as JSON [here](https://github.com/Southclaws/pawn-requests-example).
+
+#### Requests Client
+
+First you create a `RequestsClient`, you should store this globally:
+
+```pawn
+new RequestsClient:client;
+
+main() {
+    client = RequestsClient("http://httpbin.org/");
+}
+```
+
+When you create a RequestsClient, you specify the **endpoint** you want to send
+requests to with that client. This means you don't specify the endpoint for each
+individual request.
+
+You can also set headers for the client, these headers will be sent with every
+request. This is useful for setting authentication headers for a private
+endpoint:
+
+```pawn
+new RequestsClient:client;
+
+main() {
+    client = RequestsClient("http://httpbin.org/", RequestHeaders(
+        "Authorization", "Bearer xyz"
+    ));
+}
+```
+
+The `RequestHeaders` function expects an even number of string arguments. It's
+good practice to lay out your headers in a key-value style, like:
+
+```pawn
+RequestHeaders(
+    "Authorization", "Bearer xyz",
+    "Connection", "keep-alive",
+    "Cache-Control", "no-cache"
+)
+```
+
+But don't forget these are just normal arguments to a function so watch out for
+trailing commas!
+
+#### Making Basic Requests
+
+Now you have a client, you can start making requests. If you want to work with
+plain text or any data other than JSON, you use the `Request` function:
+
+```pawn
+Request(
+    client,
+    "robots.txt",
+    HTTP_METHOD_GET,
+    "OnGetData",
+    .headers = RequestHeaders()
+);
+
+public OnGetData(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    printf("status: %d, data: '%s'", _:status, data);
+}
+```
+
+Using the client constructed earlier, this would hit
+`http://httpbin.org/robots.txt` with a GET request and when the request has
+finished, `OnGetData` would be called and print:
+
+```text
+status: 200, data: 'User-agent: *
+Disallow: /deny
+'
+```
+
+The behaviour is similar to the existing SA:MP `HTTP()` function except this
+supports headers, a larger body, more methods, HTTPS and is generally safer in
+terms of error handling.
+
+#### Making JSON Requests
+
+JSON requests allow you to inline construct JSON at the request side as well as
+access JSON objects in the response.
+
+For example, the endpoint `http://httpbin.org/anything` returns JSON data so we
+can access that directly as a `Node:` object in the response callback:
+
+```pawn
+RequestJSON(
+    client,
+    "anything",
+    HTTP_METHOD_GET,
+    "OnGetJson",
+    .headers = RequestHeaders()
+);
+
+public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
+    new output[128];
+    JsonGetString(node, "method", output);
+    printf("anything response: '%s'", output);
+}
+```
+
+The `anything` endpoint at httpbin responds with a bunch of related data in JSON
+format. The `method` field contains the method used to perform the request and
+in this case, the method is `GET` so `OnGetJson` will output
+`anything response: 'GET'`.
+
+See the JSON section below for examples of manipulating JSON `Node:` objects.
+
+See the
+[pawn-requests-example](https://github.com/Southclaws/pawn-requests-example)
+repository for a more full example of using requests and JSON together.
+
+#### Keeping Track of Request IDs
+
+Both `Request` and `RequestJSON` return a `Request:` tagged value. This value is
+the request identifier and is unique during server runtime, same as how
+`SetTimer` returns a unique ID.
+
+Because responses are asynchronous and the data comes back in a callback at a
+later time, most of the time you will have to store this ID so you know which
+request triggered which response.
+
+You cannot simply use the ID as an index to an array because it's an
+automatically incrementing value and thus is unbounded. You should instead use
+BigETI's pawn-map plugin to map request IDs to some other data - such as the
+player/vehicle/house/etc that triggered the request. See the
+[pawn-requests-example](https://github.com/Southclaws/pawn-requests-example) for
+an example of this.
 
 ### JSON
 
@@ -32,14 +167,14 @@ getting into the API.
 This plugin stores JSON values as "Nodes". Each node represents a value of one
 type. Here are some examples of the representations of different node types:
 
-* `{}` - Object that is empty
-* `{"key": "value"}` - Object with one key that points to a String node
-* `"hello"` - String
-* `1` - Number (integer)
-* `1.5` - Number (floating point)
-* `[1, 2, 3]` - Array, of Number nodes
-* `[{}, {}]` - Array of empty Object nodes
-* `true` - Boolean
+*   `{}` - Object that is empty
+*   `{"key": "value"}` - Object with one key that points to a String node
+*   `"hello"` - String
+*   `1` - Number (integer)
+*   `1.5` - Number (floating point)
+*   `[1, 2, 3]` - Array, of Number nodes
+*   `[{}, {}]` - Array of empty Object nodes
+*   `true` - Boolean
 
 The main point here is that everything is a node, even Objects and Arrays that
 contain other nodes.
@@ -74,7 +209,7 @@ This would stringify as:
 
 ```json
 {
-  "key": "value"
+    "key": "value"
 }
 ```
 
@@ -90,9 +225,9 @@ new Node:node = JsonObject(
 
 ```json
 {
-  "key": {
-    "key": "value"
-  }
+    "key": {
+        "key": "value"
+    }
 }
 ```
 
@@ -129,19 +264,19 @@ Lets assume this request responds with the following data:
 
 ```json
 {
-  "name": "Southclaws",
-  "score": 45,
-  "vip": true,
-  "inventory": [
-    {
-      "name": "M4",
-      "ammo": 341
-    },
-    {
-      "name": "Desert Eagle",
-      "ammo": 32
-    }
-  ]
+    "name": "Southclaws",
+    "score": 45,
+    "vip": true,
+    "inventory": [
+        {
+            "name": "M4",
+            "ammo": 341
+        },
+        {
+            "name": "Desert Eagle",
+            "ammo": 32
+        }
+    ]
 }
 ```
 
