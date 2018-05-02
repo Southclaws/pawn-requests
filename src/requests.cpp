@@ -1,13 +1,3 @@
-/*
-# requests.cpp
-
-The "main" source file with most of the boilerplate code. Includes the
-`NativesMain` header for initialising plugin-natives.
-
-- `Supports` declares to the SA:MP server which features this plugin uses.
-- `Load` is called when the plugin loads and sets up the `logprintf` function.
-*/
-
 #include <set>
 
 #include <amx/amx.h>

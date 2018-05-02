@@ -1,12 +1,3 @@
-/*
-# natives.cpp
-
-This source file contains the bridge between natives and implementations. I
-prefer to keep the actual implementation separate. The implementation contains
-no instances of `cell` or `AMX*` and is purely C++ and external library code.
-The code here acts as the translation between AMX data types and native types.
-*/
-
 #include "natives.hpp"
 #include "impl.hpp"
 // #include "plugin-natives\NativeFunc.hpp"
@@ -56,7 +47,7 @@ int Natives::RequestJSON(AMX* amx, cell* params)
     std::string path = amx_GetCppString(amx, params[2]);
     Impl::E_HTTP_METHOD method = static_cast<Impl::E_HTTP_METHOD>(params[3]);
     std::string callback = amx_GetCppString(amx, params[4]);
-	auto obj = JSON::Get(params[5]);
+    auto obj = JSON::Get(params[5]);
     int headers = params[6];
 
     return Impl::RequestJSON(id, path, method, callback, obj, headers);
@@ -110,14 +101,14 @@ void Natives::processTick(AMX* amx)
         }
 
         case Impl::E_CONTENT_TYPE::json: {
-			cell id = -1;
-			try {
-				json::value* obj = new json::value;
-				*obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
-				id = JSON::Alloc(obj);
-			} catch (std::exception e) {
-				logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
-			}
+            cell id = -1;
+            try {
+                json::value* obj = new json::value;
+                *obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
+                id = JSON::Alloc(obj);
+            } catch (std::exception e) {
+                logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
+            }
 
             // (Request:id, E_HTTP_STATUS:status, Node:node)
             amx_Push(amx, id);
@@ -153,7 +144,7 @@ int Natives::JSON::Object(AMX* amx, cell* params)
             int len = 0;
             amx_StrLen(addr, &len);
             if (len <= 0 || len > 512) {
-                logprintf("error: string length in Object out of bounds (%d)", len);
+                logprintf("ERROR: string length in Object out of bounds (%d)", len);
                 return -1;
             }
 
@@ -162,7 +153,7 @@ int Natives::JSON::Object(AMX* amx, cell* params)
         } else {
             web::json::value obj = Get(*addr);
             if (obj == web::json::value::null()) {
-                logprintf("error: value node %d was invalid", *addr);
+                logprintf("ERROR: value node %d was invalid", *addr);
                 return -2;
             }
             fields.push_back(std::make_pair(utility::conversions::to_string_t(key), obj));
@@ -216,7 +207,7 @@ int Natives::JSON::Array(AMX* amx, cell* params)
 
         auto obj = Get(*addr);
         if (obj == web::json::value::null()) {
-            logprintf("error: value node %d was invalid", *addr);
+            logprintf("ERROR: value node %d was invalid", *addr);
             return -2;
         }
         fields.push_back(obj);
@@ -469,9 +460,9 @@ web::json::value Natives::JSON::Get(int id, bool gc)
 
 void Natives::JSON::Erase(int id)
 {
-	if (id < 0 || id > jsonPoolCounter) {
-		return;
-	}
-	delete nodeTable[id];
+    if (id < 0 || id > jsonPoolCounter) {
+        return;
+    }
+    delete nodeTable[id];
     nodeTable.erase(id);
 }

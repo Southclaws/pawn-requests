@@ -31,7 +31,7 @@ forward OnRequestFailure(Request:id, errorCode, errorMessage[], len);
 // must include a scheme (http or https) and must not contain a path. Any
 // headers set on the client are sent with every request from the client but may
 // be overwritten on a per-request basis.
-native Requests:RequestsClient(const endpoint[], Headers:headers = Headers:-1);
+native RequestsClient:RequestsClient(const endpoint[], Headers:headers = Headers:-1);
 
 // RequestHeaders constructs a headers object and returns a handle ID. This
 // function is designed to only ever be used as an argument to functions that
@@ -41,7 +41,7 @@ native Headers:RequestHeaders(...);
 
 // Request performs a request to send or receive text data
 native Request:Request(
-    Requests:id,
+    RequestsClient:id,
     const path[],
     E_HTTP_METHOD:method,
     callback[],
@@ -51,7 +51,7 @@ native Request:Request(
 
 // RequestJSON performs a request to send or receive JSON data
 native Request:RequestJSON(
-    Requests:id,
+    RequestsClient:id,
     const path[],
     E_HTTP_METHOD:method,
     callback[],

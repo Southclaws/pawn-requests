@@ -1,9 +1,3 @@
-/*
-# natives.hpp
-
-Contains all the `PAWN_NATIVE_DECL` for native function declarations.
-*/
-
 #ifndef REQUESTS_NATIVES_H
 #define REQUESTS_NATIVES_H
 

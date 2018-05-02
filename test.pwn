@@ -14,7 +14,7 @@ public OnRequestFailure(Request:id, errorCode, errorMessage[], len) {
 }
 
 Test:NewClient() {
-    new Requests:client = RequestsClient("http://httpbin.org/");
+    new RequestsClient:client = RequestsClient("http://httpbin.org/");
     printf("new requests client: %d", _:client);
 }
 
@@ -26,7 +26,7 @@ Test:NewClient() {
 
 new Request:OnGetData_ID;
 Test:GetData() {
-    new Requests:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
     OnGetData_ID = Request(
         client,
         "robots.txt",
@@ -48,7 +48,7 @@ public OnGetData(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 
 new Request:OnGetDataSSL_ID;
 Test:GetDataSSL() {
-    new Requests:client = RequestsClient("https://httpbin.org/", RequestHeaders());
+    new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders());
     OnGetDataSSL_ID = Request(
         client,
         "robots.txt",
@@ -76,7 +76,7 @@ public OnGetDataSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 
 new Request:OnGetDataWithHeaders_ID;
 Test:GetDataWithHeaders() {
-    new Requests:client = RequestsClient("http://httpbin.org/", RequestHeaders(
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders(
         "X-Pawn-Requests", "YES"
     ));
     OnGetDataWithHeaders_ID = Request(
@@ -102,7 +102,7 @@ public OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 
 new Request:OnGetDataWithHeadersSSL_ID;
 Test:GetDataWithHeadersSSL() {
-    new Requests:client = RequestsClient("https://httpbin.org/", RequestHeaders(
+    new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders(
         "X-Pawn-Requests", "YES"
     ));
     OnGetDataWithHeadersSSL_ID = Request(
@@ -134,7 +134,7 @@ public OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen
 
 new Request:OnGetJson_ID;
 Test:GetJson() {
-    new Requests:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
     OnGetJson_ID = RequestJSON(
         client,
         "anything",

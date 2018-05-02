@@ -1,14 +1,3 @@
-/*
-# impl.cpp
-
-As with the header, this is the actual implementation of the plugin's
-functionality with no AMX specific code or includes.
-
-Including `common.hpp` for access to `logprintf` is useful for debugging but for
-production debug logging, it's best to use a dedicated logging library such as
-log-core by maddinat0r.
-*/
-
 #include "impl.hpp"
 
 int Impl::requestCounter = 0;
@@ -151,9 +140,9 @@ void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& r
 
     switch (requestData.requestType) {
     case E_CONTENT_TYPE::json: {
-		if (!requestData.bodyJson.is_null()) {
-			request.set_body(requestData.bodyJson);
-		}
+        if (!requestData.bodyJson.is_null()) {
+            request.set_body(requestData.bodyJson);
+        }
         break;
     }
     case E_CONTENT_TYPE::string: {
@@ -167,8 +156,7 @@ void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& r
 
     responseData.status = response.status_code();
     responseData.rawBody = body;
-	responseData.responseType = requestData.requestType;
-
+    responseData.responseType = requestData.requestType;
 }
 
 web::http::method Impl::methodName(E_HTTP_METHOD id)
