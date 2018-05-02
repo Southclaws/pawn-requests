@@ -139,6 +139,13 @@ See the
 [pawn-requests-example](https://github.com/Southclaws/pawn-requests-example)
 repository for a more full example of using requests and JSON together.
 
+#### Request Failures
+
+If a request fails for any reason, `OnRequestFailure` is called with the
+following signature: `(Request:id, errorCode, errorMessage[], len)` where
+`errorCode` and `errorMessage` contain information to help you debug the
+request.
+
 #### Keeping Track of Request IDs
 
 Both `Request` and `RequestJSON` return a `Request:` tagged value. This value is
