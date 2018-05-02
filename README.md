@@ -404,16 +404,32 @@ if(ret) {
 
 ## Testing
 
-Run unit tests with:
+To run unit tests for the plugin on Windows, first build the plugin with Visual
+Studio by opening the `CMakeLists.txt` via the `File > Open > CMake` menu and
+then building the project. You will need to pull the dependencies too so make
+sure you've done `git submodule init && git submodule update` or cloned the
+repository recursively.
 
-### Windows
+Once you've done that, the .dll files will be in `./test/plugins/Debug`. There
+is also a `-release` suffixed version of this make command for testing the
+release binaries.
 
 ```powershell
-make test-windows
+make test-windows-debug
 ```
 
-### Linux
+If you want to build and test the Linux version from a Windows machine, make
+sure Docker is installed and run:
 
-```bash
-make test-debian
+```powershell
+make build-linux
 ```
+
+Which will output `requests.so` to `./test/plugins`. To run unit tests on Linux,
+run:
+
+```powershell
+make test-linux
+```
+
+Which will run the tests via sampctl with the `--container` flag set.
