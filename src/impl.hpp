@@ -49,7 +49,6 @@ struct RequestData {
     std::string path;
     E_HTTP_METHOD method;
     E_CONTENT_TYPE requestType;
-    E_CONTENT_TYPE responseType;
     int headers;
     std::string bodyString;
     web::json::value bodyJson;
@@ -64,8 +63,8 @@ struct ResponseData {
 
 int RequestsClient(std::string endpoint, int headers);
 int RequestHeaders(std::vector<std::pair<std::string, std::string>> headers);
-int RequestText(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_TYPE responseType, std::string callback, char* data, int headers);
-int RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_TYPE responseType, std::string callback, web::json::value json, int headers);
+int Request(int id, std::string path, E_HTTP_METHOD method, std::string callback, char* data, int headers);
+int RequestJSON(int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers);
 
 struct ClientData {
     http_client* client;
@@ -74,6 +73,7 @@ struct ClientData {
 int headersCleanup(int id);
 int doRequest(int id, RequestData data);
 void doRequestWithClient(ClientData cd, RequestData requestData);
+void doRequestSync(ClientData cd, RequestData requestData, ResponseData& responseData);
 web::http::method methodName(E_HTTP_METHOD id);
 
 extern int requestCounter;

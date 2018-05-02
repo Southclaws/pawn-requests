@@ -9,6 +9,10 @@ main() {
     //
 }
 
+public OnRequestFailure(Request:id, errorCode, errorMessage[], len) {
+    printf("Request %d failed with %d: '%s'", _:id, errorCode, errorMessage);
+}
+
 Test:NewClient() {
     new Requests:client = RequestsClient("http://httpbin.org/");
     printf("new requests client: %d", _:client);
@@ -16,18 +20,17 @@ Test:NewClient() {
 
 
 // -
-// RequestText - basic HTTP GET on basic text data
+// Request - basic HTTP GET on basic text data
 // -
 
 
 new Request:OnGetData_ID;
 Test:GetData() {
     new Requests:client = RequestsClient("http://httpbin.org/", RequestHeaders());
-    OnGetData_ID = RequestText(
+    OnGetData_ID = Request(
         client,
         "robots.txt",
         HTTP_METHOD_GET,
-        CONTENT_TYPE_TEXT,
         "OnGetData",
         .headers = RequestHeaders()
     );
@@ -46,11 +49,10 @@ public OnGetData(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 new Request:OnGetDataSSL_ID;
 Test:GetDataSSL() {
     new Requests:client = RequestsClient("https://httpbin.org/", RequestHeaders());
-    OnGetDataSSL_ID = RequestText(
+    OnGetDataSSL_ID = Request(
         client,
         "robots.txt",
         HTTP_METHOD_GET,
-        CONTENT_TYPE_TEXT,
         "OnGetDataSSL",
         .headers = RequestHeaders()
     );
@@ -68,7 +70,7 @@ public OnGetDataSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 
 
 // -
-// RequestText - basic HTTP GET with headers test
+// Request - basic HTTP GET with headers test
 // -
 
 
@@ -77,11 +79,10 @@ Test:GetDataWithHeaders() {
     new Requests:client = RequestsClient("http://httpbin.org/", RequestHeaders(
         "X-Pawn-Requests", "YES"
     ));
-    OnGetDataWithHeaders_ID = RequestText(
+    OnGetDataWithHeaders_ID = Request(
         client,
         "headers",
         HTTP_METHOD_GET,
-        CONTENT_TYPE_TEXT,
         "OnGetDataWithHeaders",
         .headers = RequestHeaders(
             "X-Pawn-Requests-Embedded", "YES"
@@ -104,11 +105,10 @@ Test:GetDataWithHeadersSSL() {
     new Requests:client = RequestsClient("https://httpbin.org/", RequestHeaders(
         "X-Pawn-Requests", "YES"
     ));
-    OnGetDataWithHeadersSSL_ID = RequestText(
+    OnGetDataWithHeadersSSL_ID = Request(
         client,
         "headers",
         HTTP_METHOD_GET,
-        CONTENT_TYPE_TEXT,
         "OnGetDataWithHeadersSSL",
         .headers = RequestHeaders(
             "X-Pawn-Requests-Embedded", "YES"
@@ -122,6 +122,49 @@ public OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen
     ASSERT(id == OnGetDataWithHeadersSSL_ID);
     ASSERT(status == HTTP_STATUS_OK);
     print(data);
+
+    print("\nPASS!");
+}
+
+
+// -
+// RequestJSON - basic GET on JSON data
+// -
+
+
+new Request:OnGetJson_ID;
+Test:GetJson() {
+    new Requests:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    OnGetJson_ID = RequestJSON(
+        client,
+        "anything",
+        HTTP_METHOD_GET,
+        "OnGetJson",
+        .headers = RequestHeaders()
+    );
+}
+forward OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node);
+public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
+    print("*** Test OnGetJson\n");
+
+    ASSERT(id == OnGetJson_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    ASSERT(_:node != -1);
+
+    new string[512];
+    JsonStringify(node, string);
+    printf("%s", string);
+
+    new output[128];
+
+    JsonGetString(node, "method", output);
+    ASSERT(!strcmp(output, "GET"));
+
+    JsonGetString(node, "origin", output);
+    ASSERT(strlen(output) > 0);
+
+    JsonGetString(node, "url", output);
+    ASSERT(!strcmp(output, "http://httpbin.org/anything"));
 
     print("\nPASS!");
 }

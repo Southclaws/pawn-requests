@@ -24,17 +24,8 @@
 // Request API
 // -
 
-// E_CONTENT_TYPE represents the possible response types for a request.
-// Response callback signatures in requests are dependent on "Content-Type":
-// - CONTENT_TYPE_TEXT:
-//   (Request:id, E_HTTP_STATUS:status, data[], dataLen)
-// - CONTENT_TYPE_JSON:
-//   (Request:id, E_HTTP_STATUS:status, Node:json)
-enum E_CONTENT_TYPE {
-    CONTENT_TYPE_EMPTY,
-    CONTENT_TYPE_TEXT,
-    CONTENT_TYPE_JSON
-}
+// OnRequestFailure is only called when there is some internal failure/exception
+forward OnRequestFailure(Request:id, errorCode, errorMessage[], len);
 
 // RequestsClient initialises a new Requests client with an endpoint. The endpoint
 // must include a scheme (http or https) and must not contain a path. Any
@@ -48,14 +39,13 @@ native Requests:RequestsClient(const endpoint[], Headers:headers = Headers:-1);
 // resources allocated on the heap.
 native Headers:RequestHeaders(...);
 
-// RequestText performs a request to send or receive text data
-native Request:RequestText(
+// Request performs a request to send or receive text data
+native Request:Request(
     Requests:id,
     const path[],
     E_HTTP_METHOD:method,
-    E_CONTENT_TYPE:responseType,
     callback[],
-    data[] = "",
+    body[] = "",
     Headers:headers = Headers:-1
 );
 
@@ -64,7 +54,6 @@ native Request:RequestJSON(
     Requests:id,
     const path[],
     E_HTTP_METHOD:method,
-    E_CONTENT_TYPE:responseType,
     callback[],
     Node:json = Node:-1,
     Headers:headers = Headers:-1

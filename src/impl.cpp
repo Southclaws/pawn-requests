@@ -37,7 +37,7 @@ int Impl::RequestHeaders(std::vector<std::pair<std::string, std::string>> header
     return id;
 }
 
-int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_TYPE responseType, std::string callback, char* data, int headers)
+int Impl::Request(int id, std::string path, E_HTTP_METHOD method, std::string callback, char* data, int headers)
 {
     RequestData requestData;
     requestData.id = requestCounter;
@@ -45,7 +45,6 @@ int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_
     requestData.path = path;
     requestData.method = method;
     requestData.requestType = E_CONTENT_TYPE::string;
-    requestData.responseType = responseType;
     requestData.headers = headers;
     requestData.bodyString = data;
 
@@ -56,7 +55,7 @@ int Impl::RequestText(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_
     return requestCounter++;
 }
 
-int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_TYPE responseType, std::string callback, web::json::value json, int headers)
+int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers)
 {
     RequestData requestData;
     requestData.id = requestCounter;
@@ -64,7 +63,6 @@ int Impl::RequestJSON(int id, std::string path, E_HTTP_METHOD method, E_CONTENT_
     requestData.path = path;
     requestData.method = method;
     requestData.requestType = E_CONTENT_TYPE::json;
-    requestData.responseType = responseType;
     requestData.headers = headers;
     requestData.bodyJson = json;
 
@@ -90,23 +88,53 @@ int Impl::doRequest(int id, RequestData requestData)
         return -1;
     }
 
-    // note: synchronous for dev/tests, will thread for release
-    // std::thread t(doRequestThread, cd, requestData);
-    // t.join();
     try {
-        doRequestWithClient(cd, requestData);
-    } catch (http::http_exception e) {
-        logprintf("http exception: '%s'", e.what());
-		return 1;
-	} catch (std::exception e) {
-		logprintf("unknown exception: '%s'", e.what());
-		return 2;
-	}
+        std::thread t(doRequestWithClient, cd, requestData);
+        t.detach();
+    } catch (std::exception e) {
+        logprintf("ERROR: failed to dispatch request thread: '%s'", e.what());
+        return -2;
+    }
 
     return 0;
 }
 
 void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
+{
+    ResponseData responseData;
+    responseData.id = requestData.id;
+    responseData.callback = requestData.callback;
+    responseData.responseType = E_CONTENT_TYPE::empty;
+
+    try {
+        doRequestSync(cd, requestData, responseData);
+    } catch (http::http_exception e) {
+        responseData.callback = "OnRequestFailure";
+        responseData.rawBody = e.what();
+        responseData.status = 1;
+    } catch (std::exception e) {
+        responseData.callback = "OnRequestFailure";
+        responseData.rawBody = e.what();
+        responseData.status = 2;
+    } catch (...) {
+        try {
+            auto eptr = std::current_exception();
+            if (eptr) {
+                std::rethrow_exception(eptr);
+            }
+        } catch (const std::exception& e) {
+            responseData.callback = "OnRequestFailure";
+            responseData.rawBody = e.what();
+            responseData.status = 3;
+        }
+    }
+
+    taskStackLock.lock();
+    taskStack.push(responseData);
+    taskStackLock.unlock();
+}
+
+void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& responseData)
 {
     http_request request(methodName(requestData.method));
     for (auto h : cd.headers) {
@@ -123,7 +151,9 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
 
     switch (requestData.requestType) {
     case E_CONTENT_TYPE::json: {
-        request.set_body(requestData.bodyJson);
+		if (!requestData.bodyJson.is_null()) {
+			request.set_body(requestData.bodyJson);
+		}
         break;
     }
     case E_CONTENT_TYPE::string: {
@@ -132,21 +162,13 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
     }
     }
 
-	logprintf("performing request %d", requestData.id);
     http_response response = cd.client->request(request).get();
     std::string body = response.extract_utf8string().get();
-	logprintf("got body, len %d", body.length());
 
-    ResponseData responseData;
-    responseData.id = requestData.id;
-    responseData.callback = requestData.callback;
     responseData.status = response.status_code();
-    responseData.responseType = requestData.responseType;
     responseData.rawBody = body;
+	responseData.responseType = requestData.requestType;
 
-    taskStackLock.lock();
-    taskStack.push(responseData);
-    taskStackLock.unlock();
 }
 
 web::http::method Impl::methodName(E_HTTP_METHOD id)

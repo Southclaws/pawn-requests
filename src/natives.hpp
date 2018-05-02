@@ -20,7 +20,7 @@ Contains all the `PAWN_NATIVE_DECL` for native function declarations.
 namespace Natives {
 int RequestsClient(AMX* amx, cell* params);
 int RequestHeaders(AMX* amx, cell* params);
-int RequestText(AMX* amx, cell* params);
+int Request(AMX* amx, cell* params);
 int RequestJSON(AMX* amx, cell* params);
 
 void processTick(AMX* amx);

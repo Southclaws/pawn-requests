@@ -22,7 +22,7 @@ logprintf_t logprintf;
 extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "RequestsClient", Natives::RequestsClient },
     { "RequestHeaders", Natives::RequestHeaders },
-    { "RequestText", Natives::RequestText },
+    { "Request", Natives::Request },
     { "RequestJSON", Natives::RequestJSON },
 
     { "JsonObject", Natives::JSON::Object },

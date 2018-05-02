@@ -36,40 +36,36 @@ int Natives::RequestHeaders(AMX* amx, cell* params)
     return Impl::RequestHeaders(headers);
 }
 
-int Natives::RequestText(AMX* amx, cell* params)
+int Natives::Request(AMX* amx, cell* params)
 {
     int id = params[1];
     std::string path = amx_GetCppString(amx, params[2]);
     Impl::E_HTTP_METHOD method = static_cast<Impl::E_HTTP_METHOD>(params[3]);
-    Impl::E_CONTENT_TYPE responseType = static_cast<Impl::E_CONTENT_TYPE>(params[4]);
-    std::string callback = amx_GetCppString(amx, params[5]);
+    std::string callback = amx_GetCppString(amx, params[4]);
     char* data;
-    amx_GetCString(amx, params[6], data);
+    amx_GetCString(amx, params[5], data);
     // std::string data = amx_GetCppString(amx, params[6]);
-    int headers = params[7];
+    int headers = params[6];
 
-    return Impl::RequestText(id, path, method, responseType, callback, data, headers);
+    return Impl::Request(id, path, method, callback, data, headers);
 }
 
 int Natives::RequestJSON(AMX* amx, cell* params)
 {
-    // int id = params[1];
-    // std::string path = amx_GetCppString(amx, params[2]);
-    // int method = params[3];
-    // int responseType = params[4];
-    // std::string callback = amx_GetCppString(amx, params[5]);
-    // std::string data = amx_GetCppString(amx, params[6]);
-    // int headers = params[7];
+    int id = params[1];
+    std::string path = amx_GetCppString(amx, params[2]);
+    Impl::E_HTTP_METHOD method = static_cast<Impl::E_HTTP_METHOD>(params[3]);
+    std::string callback = amx_GetCppString(amx, params[4]);
+	auto obj = JSON::Get(params[5]);
+    int headers = params[6];
 
-    // return Impl::RequestJSON(id, path, callback, method, responseType, callback, data, headers);
-    return 0;
-};
+    return Impl::RequestJSON(id, path, method, callback, obj, headers);
+}
 
 void Natives::processTick(AMX* amx)
 {
     std::vector<Impl::ResponseData> responses = Impl::gatherResponses();
     for (auto response : responses) {
-        logprintf("task acquired, %d", response.id);
         int error;
         int amx_idx;
         cell amx_addr;
@@ -83,6 +79,23 @@ void Natives::processTick(AMX* amx)
         }
 
         switch (response.responseType) {
+        default: {
+            logprintf("ERROR: Invalid response object type: %d", response.responseType);
+            break;
+        }
+        case Impl::E_CONTENT_TYPE::empty: {
+            // (Request:id, errorCode, errorMessage[], len)
+            amx_Push(amx, response.rawBody.length());
+            amx_PushString(amx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
+            amx_Push(amx, response.status);
+            amx_Push(amx, response.id);
+
+            amx_Exec(amx, &amx_ret, amx_idx);
+            amx_Release(amx, amx_addr);
+
+            break;
+        }
+
         case Impl::E_CONTENT_TYPE::string: {
             // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
             amx_Push(amx, response.rawBody.length());
@@ -97,9 +110,14 @@ void Natives::processTick(AMX* amx)
         }
 
         case Impl::E_CONTENT_TYPE::json: {
-            json::value* obj = new json::value;
-            *obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
-            cell id = JSON::Alloc(obj);
+			cell id = -1;
+			try {
+				json::value* obj = new json::value;
+				*obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
+				id = JSON::Alloc(obj);
+			} catch (std::exception e) {
+				logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
+			}
 
             // (Request:id, E_HTTP_STATUS:status, Node:node)
             amx_Push(amx, id);
@@ -107,7 +125,6 @@ void Natives::processTick(AMX* amx)
             amx_Push(amx, response.id);
 
             amx_Exec(amx, &amx_ret, amx_idx);
-            amx_Release(amx, amx_addr);
 
             JSON::Erase(id);
             break;
@@ -431,13 +448,12 @@ cell Natives::JSON::Alloc(web::json::value* item)
 web::json::value Natives::JSON::Get(int id, bool gc)
 {
     if (id < 0 || id > jsonPoolCounter) {
-        logprintf("error: id %d out of range %d", id, jsonPoolCounter);
         return web::json::value::null();
     }
 
     web::json::value* ptr = nodeTable[id];
     if (ptr == nullptr) {
-        logprintf("error: attempt to get node from null ID %d", id);
+        logprintf("ERROR: attempt to get node from null ID %d", id);
         return web::json::value::null();
     }
 
@@ -453,6 +469,9 @@ web::json::value Natives::JSON::Get(int id, bool gc)
 
 void Natives::JSON::Erase(int id)
 {
-    delete nodeTable[id];
+	if (id < 0 || id > jsonPoolCounter) {
+		return;
+	}
+	delete nodeTable[id];
     nodeTable.erase(id);
 }
