@@ -3,5 +3,5 @@
 // To update the version number for a new release, run "sampctl package release"
 
 #define PAWN_REQUESTS_VERSION_MAJOR (0)
-#define PAWN_REQUESTS_VERSION_MINOR (1)
-#define PAWN_REQUESTS_VERSION_PATCH (2)
+#define PAWN_REQUESTS_VERSION_MINOR (2)
+#define PAWN_REQUESTS_VERSION_PATCH (0)
