@@ -23,14 +23,12 @@
             "includes": ["includes"],
             "plugins": ["plugins/requests.dll"],
             "files": {
-                "boost_date_time-vc141-mt-gd-x32-1_66.dll":
-                    "boost_date_time-vc141-mt-gd-x32-1_66.dll",
-                "boost_system-vc141-mt-gd-x32-1_66.dll":
-                    "boost_system-vc141-mt-gd-x32-1_66.dll",
-                "cpprest_2_10d.dll": "cpprest_2_10d.dll",
+                "boost_date_time-vc141-mt-x32-1_66.dll": "boost_date_time-vc141-mt-x32-1_66.dll",
+                "boost_system-vc141-mt-x32-1_66.dll": "boost_system-vc141-mt-x32-1_66.dll",
+                "cpprest_2_10.dll": "cpprest_2_10.dll",
                 "LIBEAY32.dll": "LIBEAY32.dll",
                 "SSLEAY32.dll": "SSLEAY32.dll",
-                "zlibd1.dll": "zlibd1.dll"
+                "zlib1.dll": "zlib1.dll"
             }
         }
     ]
