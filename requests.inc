@@ -59,6 +59,17 @@ native Request:RequestJSON(
     Headers:headers = Headers:-1
 );
 
+// WebSocketClient creates a websocket client and establishes a connection at
+// specified address. Received messages are sent to the callback which must have
+// the signature: (WebSocket:ws, const data[], dataLen)
+native WebSocket:WebSocketClient(const address[], const callback[]);
+native WebSocketSend(WebSocket:ws, const data[]);
+
+// JsonWebSockets are the same as above but the callback signature is:
+// (JsonWebSocket:jws, Node:node)
+native JsonWebSocket:JsonWebSocketClient(const address[], const callback[]);
+native JsonWebSocketSend(JsonWebSocket:ws, Node:node);
+
 // -
 // JSON API
 // -

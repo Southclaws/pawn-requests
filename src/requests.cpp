@@ -15,6 +15,11 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "Request", Natives::Request },
     { "RequestJSON", Natives::RequestJSON },
 
+    { "WebSocketClient", Natives::WebSocketClient },
+    { "WebSocketSend", Natives::WebSocketSend },
+    { "JsonWebSocketClient", Natives::JsonWebSocketClient },
+    { "JsonWebSocketSend", Natives::JsonWebSocketSend },
+
     { "JsonObject", Natives::JSON::Object },
     { "JsonInt", Natives::JSON::Int },
     { "JsonFloat", Natives::JSON::Float },

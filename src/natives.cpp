@@ -88,10 +88,18 @@ void Natives::processTick(AMX* amx)
         }
 
         case Impl::E_CONTENT_TYPE::string: {
-            // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
             amx_Push(amx, response.rawBody.length());
             amx_PushString(amx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
-            amx_Push(amx, response.status);
+
+            // signature is either
+            // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
+            // or:
+            // (WebSocket:id, data[], dataLen)
+            // depending on whether the response is from a websocket
+            if (!response.isWebSocket) {
+                amx_Push(amx, response.status);
+            }
+
             amx_Push(amx, response.id);
 
             amx_Exec(amx, &amx_ret, amx_idx);
@@ -110,9 +118,15 @@ void Natives::processTick(AMX* amx)
                 logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
             }
 
-            // (Request:id, E_HTTP_STATUS:status, Node:node)
             amx_Push(amx, id);
-            amx_Push(amx, response.status);
+            // signature is either
+            // (Request:id, E_HTTP_STATUS:status, Node:node)
+            // or:
+            // (WebSocket:id, Node:node)
+            // depending on whether the response is from a websocket
+            if (!response.isWebSocket) {
+                amx_Push(amx, response.status);
+            }
             amx_Push(amx, response.id);
 
             amx_Exec(amx, &amx_ret, amx_idx);
@@ -122,6 +136,34 @@ void Natives::processTick(AMX* amx)
         }
         }
     }
+}
+
+int Natives::WebSocketClient(AMX* amx, cell* params)
+{
+    std::string address = amx_GetCppString(amx, params[1]);
+    std::string callback = amx_GetCppString(amx, params[2]);
+    return Impl::WebSocketClient(address, callback);
+}
+
+int Natives::WebSocketSend(AMX* amx, cell* params)
+{
+    int id = params[1];
+    std::string data = amx_GetCppString(amx, params[2]);
+    return Impl::WebSocketSend(id, data);
+}
+
+int Natives::JsonWebSocketClient(AMX* amx, cell* params)
+{
+    std::string address = amx_GetCppString(amx, params[1]);
+    std::string callback = amx_GetCppString(amx, params[2]);
+    return Impl::JsonWebSocketClient(address, callback);
+}
+
+int Natives::JsonWebSocketSend(AMX* amx, cell* params)
+{
+    int id = params[1];
+    auto obj = JSON::Get(params[2]);
+    return Impl::JsonWebSocketSend(id, obj);
 }
 
 // JSON implementation is directly in the Natives section unlike other API.

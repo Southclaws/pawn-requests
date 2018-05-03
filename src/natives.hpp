@@ -17,6 +17,11 @@ int RequestHeaders(AMX* amx, cell* params);
 int Request(AMX* amx, cell* params);
 int RequestJSON(AMX* amx, cell* params);
 
+int WebSocketClient(AMX* amx, cell* params);
+int WebSocketSend(AMX* amx, cell* params);
+int JsonWebSocketClient(AMX* amx, cell* params);
+int JsonWebSocketSend(AMX* amx, cell* params);
+
 void processTick(AMX* amx);
 
 namespace JSON {

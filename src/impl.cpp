@@ -2,14 +2,17 @@
 
 int Impl::requestCounter = 0;
 
-std::stack<Impl::ResponseData> Impl::taskStack;
-std::mutex Impl::taskStackLock;
+std::stack<Impl::ResponseData> Impl::responseQueue;
+std::mutex Impl::responseQueueLock;
 
 std::unordered_map<int, Impl::ClientData> Impl::clientsTable;
 int Impl::clientsTableCounter = 0;
 
 std::unordered_map<int, std::vector<std::pair<std::string, std::string>>> Impl::headersTable;
 int Impl::headersTableCounter = 0;
+
+std::unordered_map<int, Impl::WebSocketClientData> Impl::websocketClientsTable;
+int Impl::websocketClientsTableCounter = 0;
 
 int Impl::RequestsClient(std::string endpoint, int headers)
 {
@@ -118,9 +121,9 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
         }
     }
 
-    taskStackLock.lock();
-    taskStack.push(responseData);
-    taskStackLock.unlock();
+    responseQueueLock.lock();
+    responseQueue.push(responseData);
+    responseQueueLock.unlock();
 }
 
 void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& responseData)
@@ -189,15 +192,88 @@ std::vector<Impl::ResponseData> Impl::gatherResponses()
     std::vector<ResponseData> tasks;
 
     // if we can't lock the mutex, don't block, just return and try next tick
-    if (taskStackLock.try_lock()) {
+    if (responseQueueLock.try_lock()) {
         ResponseData response;
-        while (!taskStack.empty()) {
-            response = taskStack.top();
+        while (!responseQueue.empty()) {
+            response = responseQueue.top();
             tasks.push_back(response);
-            taskStack.pop();
+            responseQueue.pop();
         }
-        taskStackLock.unlock();
+        responseQueueLock.unlock();
     }
 
     return tasks;
+}
+
+int Impl::WebSocketClient(std::string address, std::string callback)
+{
+    int id = websocketClientsTableCounter++;
+    websocket_callback_client* client = new websocket_callback_client();
+    WebSocketClientData wsc = { id, client, address, callback, false };
+    websocketClientsTable[id] = wsc;
+    startWebSocketListener(wsc);
+
+    return id;
+}
+
+int Impl::WebSocketSend(int id, std::string data)
+{
+    WebSocketClientData wsc;
+    try {
+        wsc = websocketClientsTable[id];
+    } catch (std::exception e) {
+        return -1;
+    }
+
+    websocket_outgoing_message msg;
+    msg.set_utf8_message(data);
+    wsc.client->send(msg);
+
+    return 0;
+}
+
+int Impl::JsonWebSocketClient(std::string address, std::string callback)
+{
+    int id = websocketClientsTableCounter++;
+    websocket_callback_client* client = new websocket_callback_client();
+    WebSocketClientData wsc = { id, client, address, callback, true };
+    websocketClientsTable[id] = wsc;
+    startWebSocketListener(wsc);
+
+    return 0;
+}
+
+int Impl::JsonWebSocketSend(int id, web::json::value json)
+{
+    WebSocketClientData wsc;
+    try {
+        wsc = websocketClientsTable[id];
+    } catch (std::exception e) {
+        return -1;
+    }
+
+    websocket_outgoing_message msg;
+    msg.set_utf8_message(utility::conversions::to_utf8string(json.serialize()));
+    wsc.client->send(msg);
+
+    return 0;
+}
+
+void Impl::startWebSocketListener(WebSocketClientData wsc)
+{
+    wsc.client->set_message_handler([wsc](const websocket_incoming_message& msg) -> void {
+        std::string raw = msg.extract_string().get();
+
+        ResponseData responseData;
+        responseData.id = wsc.id;
+        responseData.callback = wsc.callback;
+        responseData.rawBody = raw;
+        responseData.responseType = wsc.isJson ? E_CONTENT_TYPE::json : E_CONTENT_TYPE::string;
+        responseData.isWebSocket = true;
+
+        responseQueueLock.lock();
+        responseQueue.push(responseData);
+        responseQueueLock.unlock();
+    });
+    wsc.client->connect(utility::conversions::to_string_t(wsc.address)).wait();
 }
