@@ -26,6 +26,7 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "JsonBool", Natives::JSON::Bool },
     { "JsonString", Natives::JSON::String },
     { "JsonArray", Natives::JSON::Array },
+    { "JsonAppend", Natives::JSON::Append },
 
     { "JsonGetObject", Natives::JSON::GetObject },
     { "JsonGetInt", Natives::JSON::GetInt },

@@ -31,6 +31,7 @@ namespace JSON {
     int Float(AMX* amx, cell* params);
     int String(AMX* amx, cell* params);
     int Array(AMX* amx, cell* params);
+    int Append(AMX* amx, cell* params);
 
     int GetObject(AMX* amx, cell* params);
     int GetInt(AMX* amx, cell* params);

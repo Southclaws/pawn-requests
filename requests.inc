@@ -116,6 +116,24 @@ native Node:JsonString(const value[]);
 //
 native Node:JsonArray(Node:...);
 
+// JsonAppend returns a new `Node:` which is the result of appending b to a.
+// This works on both objects and arrays and the two input nodes will be deleted
+// from the global node store. For example:
+//
+// new Node:a = JsonObject("key1", JsonString("value"));
+// new Node:b = JsonObject("key2", JsonString("value"));
+// new Node:c = JsonAppend(a, b);
+//
+// output: {"key1": "value", "key2": "value"}
+//
+// new Node:a = JsonArray(JsonInt(1), JsonInt(2));
+// new Node:a = JsonArray(JsonInt(3));
+// new Node:c = JsonAppend(a, b);
+//
+// output: [1, 2, 3]
+//
+native Node:JsonAppend(Node:a, Node:b);
+
 // JsonGetObject returns the `Node:` stored at `key` in the given `node`.
 // For example:
 //

@@ -260,6 +260,41 @@ int Natives::JSON::Array(AMX* amx, cell* params)
     return Alloc(obj);
 }
 
+int Natives::JSON::Append(AMX* amx, cell* params)
+{
+    web::json::value a = Get(params[1], false);
+    web::json::value b = Get(params[2]);
+    int result;
+
+    if (a.is_object() && b.is_object()) {
+        web::json::value* c = new web::json::value;
+        std::vector<std::pair<utility::string_t, web::json::value>> newObject;
+        for (auto entry : a.as_object()) {
+            newObject.push_back(std::make_pair(entry.first, entry.second));
+        }
+        for (auto entry : b.as_object()) {
+            newObject.push_back(std::make_pair(entry.first, entry.second));
+        }
+        *c = web::json::value::object(newObject);
+        result = Alloc(c);
+    } else if (a.is_array() && b.is_array()) {
+        web::json::value* c = new web::json::value;
+        std::vector<web::json::value> newArray;
+        for (auto entry : a.as_array()) {
+            newArray.push_back(entry);
+        }
+        for (auto entry : b.as_array()) {
+            newArray.push_back(entry);
+        }
+        *c = web::json::value::array(newArray);
+        result = Alloc(c);
+    } else {
+        return -1;
+    }
+
+    return result;
+}
+
 int Natives::JSON::GetObject(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
