@@ -17,8 +17,12 @@ int Impl::websocketClientsTableCounter = 0;
 int Impl::RequestsClient(std::string endpoint, int headers)
 {
     int id = clientsTableCounter++;
-    http_client* client = new http_client(utility::conversions::to_string_t(endpoint));
-    clientsTable[id] = { client, headersTable[headers] };
+    try {
+        http_client* client = new http_client(utility::conversions::to_string_t(endpoint));
+        clientsTable[id] = { client, headersTable[headers] };
+    } catch (std::exception& e) {
+        id = -1;
+    }
     return id;
 }
 
