@@ -687,6 +687,41 @@ Test:JsonGetArray() {
     ASSERT(!strcmp(gotString, "three"));
 }
 
+Test:JsonGetIntInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new gotInt;
+    new ret = JsonGetInt(node, "key4", gotInt);
+    ASSERT(ret == 2);
+}
+
+Test:JsonGetFloatInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new Float:gotFloat;
+    new ret = JsonGetFloat(node, "key4", gotFloat);
+    ASSERT(ret == 2);
+}
+
+Test:JsonGetBoolInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new bool:gotBool;
+    new ret = JsonGetBool(node, "key4", gotBool);
+    ASSERT(ret == 2);
+}
+
+Test:JsonGetStringInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new gotString[1];
+    new ret = JsonGetString(node, "key4", gotString);
+    ASSERT(ret == 2);
+}
+
+Test:JsonGetArrayInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new Node:gotNode;
+    new ret = JsonGetArray(node, "key4", gotNode);
+    ASSERT(ret == 2);
+}
+
 Test:JsonArrayLength() {
     new Node:node = JsonArray(
         JsonString("one"),

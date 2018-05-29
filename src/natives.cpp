@@ -180,7 +180,7 @@ int Natives::JSON::Parse(AMX* amx, cell* params)
     try {
         *obj = web::json::value::parse(utility::conversions::to_string_t(input));
     } catch (std::exception& e) {
-		logprintf("ERROR: JsonParse failed with: %s", e.what());
+        logprintf("ERROR: JsonParse failed with: %s", e.what());
         return 1;
     }
 
@@ -191,10 +191,10 @@ int Natives::JSON::Parse(AMX* amx, cell* params)
 
 int Natives::JSON::NodeType(AMX* amx, cell* params)
 {
-	auto obj = Get(params[1], false);
-	if (obj.is_null()) {
-		return web::json::value::Null;
-	}
+    auto obj = Get(params[1], false);
+    if (obj.is_null()) {
+        return web::json::value::Null;
+    }
     return obj.type();
 }
 
@@ -334,7 +334,11 @@ int Natives::JSON::GetObject(AMX* amx, cell* params)
     std::string key = amx_GetCppString(amx, params[2]);
 
     web::json::value* result = new web::json::value();
-    *result = obj.as_object()[utility::conversions::to_string_t(key)];
+    try {
+        *result = obj.as_object()[utility::conversions::to_string_t(key)];
+    } catch (...) {
+        return 2;
+    }
     cell id = Alloc(result);
 
     cell* addr = nullptr;
@@ -352,9 +356,14 @@ int Natives::JSON::GetInt(AMX* amx, cell* params)
         return 1;
     }
 
-    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-    if (!target.is_integer()) {
+    web::json::value target;
+    try {
+        target = obj.as_object().at(utility::conversions::to_string_t(key));
+    } catch (...) {
         return 2;
+    }
+    if (!target.is_integer()) {
+        return 3;
     }
 
     cell* addr = nullptr;
@@ -372,9 +381,14 @@ int Natives::JSON::GetFloat(AMX* amx, cell* params)
         return 1;
     }
 
-    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-    if (!target.is_double()) {
+    web::json::value target;
+    try {
+        target = obj.as_object().at(utility::conversions::to_string_t(key));
+    } catch (...) {
         return 2;
+    }
+    if (!target.is_double()) {
+        return 3;
     }
 
     cell* addr = nullptr;
@@ -393,9 +407,14 @@ int Natives::JSON::GetBool(AMX* amx, cell* params)
         return 1;
     }
 
-    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-    if (!target.is_boolean()) {
+    web::json::value target;
+    try {
+        target = obj.as_object().at(utility::conversions::to_string_t(key));
+    } catch (...) {
         return 2;
+    }
+    if (!target.is_boolean()) {
+        return 3;
     }
 
     cell* addr = nullptr;
@@ -413,9 +432,14 @@ int Natives::JSON::GetString(AMX* amx, cell* params)
         return 1;
     }
 
-    web::json::value target = obj.as_object().at(utility::conversions::to_string_t(key));
-    if (!target.is_string()) {
+    web::json::value target;
+    try {
+        target = obj.as_object().at(utility::conversions::to_string_t(key));
+    } catch (...) {
         return 2;
+    }
+    if (!target.is_string()) {
+        return 3;
     }
 
     return amx_SetCppString(amx, params[3], utility::conversions::to_utf8string(target.as_string()).c_str(), params[4]);
@@ -430,9 +454,13 @@ int Natives::JSON::GetArray(AMX* amx, cell* params)
     }
 
     web::json::value* target = new web::json::value;
-    *target = obj.as_object().at(utility::conversions::to_string_t(key));
-    if (!target->is_array()) {
+    try {
+        *target = obj.as_object().at(utility::conversions::to_string_t(key));
+    } catch (...) {
         return 2;
+    }
+    if (!target->is_array()) {
+        return 3;
     }
 
     cell* addr = nullptr;
@@ -464,7 +492,11 @@ int Natives::JSON::ArrayObject(AMX* amx, cell* params)
     }
 
     web::json::value* result = new web::json::value();
-    *result = obj.as_array().at(params[2]);
+    try {
+        *result = obj.as_array().at(params[2]);
+    } catch (...) {
+        return 2;
+    }
     cell id = Alloc(result);
 
     cell* addr = nullptr;
