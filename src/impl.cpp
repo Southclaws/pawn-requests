@@ -21,6 +21,7 @@ int Impl::RequestsClient(std::string endpoint, int headers)
         http_client* client = new http_client(utility::conversions::to_string_t(endpoint));
         clientsTable[id] = { client, headersTable[headers] };
     } catch (std::exception& e) {
+        logprintf("ERROR: Failed to create new HTTP client: %s", e.what());
         id = -1;
     }
     return id;
