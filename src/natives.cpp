@@ -178,7 +178,7 @@ int Natives::JSON::Parse(AMX* amx, cell* params)
     web::json::value* obj = new web::json::value;
 
     try {
-        *obj = web::json::value(utility::conversions::to_string_t(input));
+        *obj = web::json::value::parse(utility::conversions::to_string_t(input));
     } catch (std::exception& e) {
 		logprintf("ERROR: JsonParse failed with: %s", e.what());
         return 1;

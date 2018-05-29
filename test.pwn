@@ -237,11 +237,37 @@ public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
 
 
 Test:JsonParse() {
-    // TODO
+    new Node:node;
+    new ret;
+
+    new input[] = "{\"list\":[{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"one\":\"value one\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"two\":\"value two\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"three\":\"value three\"}],\"object\":{\"a_float\":66.599998474121094,\"a_number\":76,\"a_string\":\"a value\",\"nested_object\":{\"a_deeper_float\":66.599998474121094,\"a_deeper_number\":76,\"a_deeper_string\":\"another value\"}}}";
+
+    ret = JsonParse(input, node);
+    ASSERT(ret == 0);
+
+    new output[1024];
+    ret = JsonStringify(node, output);
+    ASSERT(!strcmp(input, output));
 }
 
 Test:JsonNodeType() {
-    // TODO
+    new Node:number = JsonInt(3); // JSON_NODE_NUMBER
+    ASSERT(JsonNodeType(number) ==  JSON_NODE_NUMBER);
+
+    new Node:boolean = JsonBool(true); // JSON_NODE_BOOLEAN
+    ASSERT(JsonNodeType(boolean) ==  JSON_NODE_BOOLEAN);
+
+    new Node:string = JsonString("hi"); // JSON_NODE_STRING
+    ASSERT(JsonNodeType(string) ==  JSON_NODE_STRING);
+
+    new Node:object = JsonObject("k", JsonInt(1)); // JSON_NODE_OBJECT
+    ASSERT(JsonNodeType(object) ==  JSON_NODE_OBJECT);
+
+    new Node:array = JsonArray(JsonInt(1), JsonInt(2)); // JSON_NODE_ARRAY
+    ASSERT(JsonNodeType(array) ==  JSON_NODE_ARRAY);
+
+    new Node:null = Node:-1; // JSON_NODE_NULL
+    ASSERT(JsonNodeType(null) ==  JSON_NODE_NULL);
 }
 
 Test:JsonObjectEmpty() {
