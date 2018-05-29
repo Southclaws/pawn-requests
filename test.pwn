@@ -236,6 +236,14 @@ public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
 // -
 
 
+Test:JsonParse() {
+    // TODO
+}
+
+Test:JsonNodeType() {
+    // TODO
+}
+
 Test:JsonObjectEmpty() {
     new Node:node = JsonObject();
 

@@ -169,6 +169,35 @@ int Natives::JsonWebSocketSend(AMX* amx, cell* params)
 // JSON implementation is directly in the Natives section unlike other API.
 // this is purely to simplify things while working with JSON value types.
 
+int Natives::JSON::Parse(AMX* amx, cell* params)
+{
+    std::string input = amx_GetCppString(amx, params[1]);
+    cell* output;
+    amx_GetAddr(amx, params[2], &output);
+
+    web::json::value* obj = new web::json::value;
+
+    try {
+        *obj = web::json::value(utility::conversions::to_string_t(input));
+    } catch (std::exception& e) {
+		logprintf("ERROR: JsonParse failed with: %s", e.what());
+        return 1;
+    }
+
+    *output = Alloc(obj);
+
+    return 0;
+}
+
+int Natives::JSON::NodeType(AMX* amx, cell* params)
+{
+	auto obj = Get(params[1], false);
+	if (obj.is_null()) {
+		return web::json::value::Null;
+	}
+    return obj.type();
+}
+
 int Natives::JSON::Object(AMX* amx, cell* params)
 {
     std::string key;

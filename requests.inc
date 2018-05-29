@@ -83,8 +83,11 @@ enum JSON_NODE {
     JSON_NODE_NULL,
 }
 
+// JsonParse decodes JSON and stores the root node in the output.
+native JsonParse(const string[], &Node:output);
+
 // JsonNodeType returns the type of a node from the above enumerator.
-JSON_NODE:JsonNodeType(Node:node);
+native JSON_NODE:JsonNodeType(Node:node);
 
 // JsonObject allocates a node from a set of key-value pairs where each key must
 // be a string and each value must be a `Node:` value. For example:

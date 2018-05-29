@@ -25,6 +25,9 @@ int JsonWebSocketSend(AMX* amx, cell* params);
 void processTick(AMX* amx);
 
 namespace JSON {
+    int Parse(AMX* amx, cell* params);
+    int NodeType(AMX* amx, cell* params);
+
     int Object(AMX* amx, cell* params);
     int Bool(AMX* amx, cell* params);
     int Int(AMX* amx, cell* params);
