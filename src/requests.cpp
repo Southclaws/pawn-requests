@@ -34,6 +34,7 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "JsonGetBool", Natives::JSON::GetBool },
     { "JsonGetString", Natives::JSON::GetString },
     { "JsonGetArray", Natives::JSON::GetArray },
+    { "JsonArrayLength", Natives::JSON::ArrayLength },
     { "JsonArrayObject", Natives::JSON::ArrayObject },
 
     { "JsonGetNodeInt", Natives::JSON::GetNodeInt },

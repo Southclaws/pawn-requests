@@ -39,6 +39,7 @@ namespace JSON {
     int GetBool(AMX* amx, cell* params);
     int GetString(AMX* amx, cell* params);
     int GetArray(AMX* amx, cell* params);
+    int ArrayLength(AMX* amx, cell* params);
     int ArrayObject(AMX* amx, cell* params);
 
     int GetNodeInt(AMX* amx, cell* params);

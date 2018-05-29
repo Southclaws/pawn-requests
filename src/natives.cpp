@@ -413,6 +413,20 @@ int Natives::JSON::GetArray(AMX* amx, cell* params)
     return 0;
 }
 
+int Natives::JSON::ArrayLength(AMX* amx, cell* params)
+{
+    web::json::value obj = Get(params[1], false);
+    if (!obj.is_array()) {
+        return 1;
+    }
+
+    cell* addr = nullptr;
+    amx_GetAddr(amx, params[2], &addr);
+    *addr = obj.as_array().size();
+
+    return 0;
+}
+
 int Natives::JSON::ArrayObject(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);

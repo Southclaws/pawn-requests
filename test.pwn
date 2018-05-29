@@ -653,6 +653,21 @@ Test:JsonGetArray() {
     ASSERT(!strcmp(gotString, "three"));
 }
 
+Test:JsonArrayLength() {
+    new Node:node = JsonArray(
+        JsonString("one"),
+        JsonString("two"),
+        JsonString("three")
+    );
+
+    new length;
+    new ret;
+    ret = JsonArrayLength(node, length);
+    printf("ret %d length %d", ret, length);
+    ASSERT(ret == 0);
+    ASSERT(length == 3);
+}
+
 Test:JsonArrayObject() {
     new Node:node = JsonArray(
         JsonString("one"),
