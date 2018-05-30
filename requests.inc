@@ -217,3 +217,19 @@ stock operator~(Node:nodes[], len) {
         JsonCleanup(nodes[i]);
     }
 }
+
+// -
+// Helpers
+// -
+
+// IsValidRequestsClient is for checking if the client ID returned by
+// `RequestsClient` is valid and safe for use.
+stock bool:IsValidRequestsClient(RequestsClient:id) {
+    return (id >= RequestsClient:0);
+}
+
+// IsValidRequest is for checking if the ID returned by `Request` or
+// `RequestJSON` is valid. If it is invalid, no request was sent.
+stock bool:IsValidRequest(Request:id) {
+    return (id >= Request:0);
+}

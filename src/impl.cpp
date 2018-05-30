@@ -80,8 +80,9 @@ int Impl::doRequest(int id, RequestData requestData)
 {
     ClientData cd;
     try {
-        cd = clientsTable[id];
-    } catch (std::exception e) {
+        cd = clientsTable.at(id);
+    } catch (...) {
+		logprintf("ERROR: invalid client ID %d used", id);
         return -1;
     }
 
@@ -106,11 +107,13 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
     try {
         doRequestSync(cd, requestData, responseData);
     } catch (http::http_exception e) {
+		logprintf("ERROR: HTTP error %s", e.what());
         responseData.callback = "OnRequestFailure";
         responseData.rawBody = e.what();
         responseData.status = 1;
     } catch (std::exception e) {
-        responseData.callback = "OnRequestFailure";
+		logprintf("ERROR: General error %s", e.what());
+		responseData.callback = "OnRequestFailure";
         responseData.rawBody = e.what();
         responseData.status = 2;
     } catch (...) {
@@ -120,7 +123,8 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
                 std::rethrow_exception(eptr);
             }
         } catch (const std::exception& e) {
-            responseData.callback = "OnRequestFailure";
+			logprintf("ERROR: Unknown error %s", e.what());
+			responseData.callback = "OnRequestFailure";
             responseData.rawBody = e.what();
             responseData.status = 3;
         }

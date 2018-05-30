@@ -15,6 +15,19 @@ public OnRequestFailure(Request:id, errorCode, errorMessage[], len) {
 
 Test:NewClient() {
     new RequestsClient:client = RequestsClient("http://httpbin.org/");
+    ASSERT(IsValidRequestsClient(client));
+    printf("new requests client: %d", _:client);
+}
+
+Test:NewClientInvalid() {
+    new RequestsClient:client = RequestsClient("ssh://httpbin.org/");
+    ASSERT(!IsValidRequestsClient(client));
+    printf("new requests client: %d", _:client);
+}
+
+Test:NewClientIP() {
+    new RequestsClient:client = RequestsClient("1.1.1.1");
+    ASSERT(!IsValidRequestsClient(client));
     printf("new requests client: %d", _:client);
 }
 
@@ -167,6 +180,22 @@ public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
     ASSERT(!strcmp(output, "http://httpbin.org/anything"));
 
     print("\nPASS!");
+}
+
+
+// -
+// RequestJSON - failure cases
+// -
+
+
+Test:InvalidClient() {
+    new Request:id = RequestJSON(
+        RequestsClient:-1,
+        "",
+        HTTP_METHOD_GET,
+        ""
+    );
+    ASSERT(!IsValidRequest(id));
 }
 
 
