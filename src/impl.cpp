@@ -78,13 +78,11 @@ int Impl::headersCleanup(int id)
 
 int Impl::doRequest(int id, RequestData requestData)
 {
-    ClientData cd;
-    try {
-        cd = clientsTable.at(id);
-    } catch (...) {
+	if(clientsTable.find(id) == clientsTable.end()) {
 		logprintf("ERROR: invalid client ID %d used", id);
         return -1;
     }
+	ClientData cd = clientsTable[id];
 
     try {
         std::thread t(doRequestWithClient, cd, requestData);
