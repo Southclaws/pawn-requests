@@ -259,6 +259,16 @@ public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
     print("\nPASS!");
 }
 
+Test:WebSocketFail() {
+    new WebSocket:id = WebSocketClient("wss://example.com", "OnWebSocket");
+    ASSERT(_:id == -1);
+}
+
+Test:JsonWebSocketFail() {
+    new JsonWebSocket:id = JsonWebSocketClient("wss://example.com", "OnWebSocket");
+    ASSERT(_:id == -1);
+}
+
 
 // -
 // JSON Tests

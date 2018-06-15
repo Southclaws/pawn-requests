@@ -78,11 +78,11 @@ int Impl::headersCleanup(int id)
 
 int Impl::doRequest(int id, RequestData requestData)
 {
-	if(clientsTable.find(id) == clientsTable.end()) {
-		logprintf("ERROR: invalid client ID %d used", id);
+    if (clientsTable.find(id) == clientsTable.end()) {
+        logprintf("ERROR: invalid client ID %d used", id);
         return -1;
     }
-	ClientData cd = clientsTable[id];
+    ClientData cd = clientsTable[id];
 
     try {
         std::thread t(doRequestWithClient, cd, requestData);
@@ -105,13 +105,13 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
     try {
         doRequestSync(cd, requestData, responseData);
     } catch (http::http_exception e) {
-		logprintf("ERROR: HTTP error %s", e.what());
+        logprintf("ERROR: HTTP error %s", e.what());
         responseData.callback = "OnRequestFailure";
         responseData.rawBody = e.what();
         responseData.status = 1;
     } catch (std::exception e) {
-		logprintf("ERROR: General error %s", e.what());
-		responseData.callback = "OnRequestFailure";
+        logprintf("ERROR: General error %s", e.what());
+        responseData.callback = "OnRequestFailure";
         responseData.rawBody = e.what();
         responseData.status = 2;
     } catch (...) {
@@ -121,8 +121,8 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
                 std::rethrow_exception(eptr);
             }
         } catch (const std::exception& e) {
-			logprintf("ERROR: Unknown error %s", e.what());
-			responseData.callback = "OnRequestFailure";
+            logprintf("ERROR: Unknown error %s", e.what());
+            responseData.callback = "OnRequestFailure";
             responseData.rawBody = e.what();
             responseData.status = 3;
         }
@@ -215,10 +215,20 @@ std::vector<Impl::ResponseData> Impl::gatherResponses()
 int Impl::WebSocketClient(std::string address, std::string callback)
 {
     int id = websocketClientsTableCounter++;
+
     websocket_callback_client* client = new websocket_callback_client();
+    if (client == nullptr) {
+        return -1;
+    }
+
     WebSocketClientData wsc = { id, client, address, callback, false };
     websocketClientsTable[id] = wsc;
-    startWebSocketListener(wsc);
+    try {
+        startWebSocketListener(wsc);
+    } catch (std::exception& e) {
+        logprintf("ERROR: WebSocketClient failed: %s", e.what());
+        return -1;
+    }
 
     return id;
 }
@@ -242,12 +252,22 @@ int Impl::WebSocketSend(int id, std::string data)
 int Impl::JsonWebSocketClient(std::string address, std::string callback)
 {
     int id = websocketClientsTableCounter++;
+
     websocket_callback_client* client = new websocket_callback_client();
+    if (client == nullptr) {
+        return -1;
+    }
+
     WebSocketClientData wsc = { id, client, address, callback, true };
     websocketClientsTable[id] = wsc;
-    startWebSocketListener(wsc);
+    try {
+        startWebSocketListener(wsc);
+    } catch (std::exception& e) {
+        logprintf("ERROR: JsonWebSocketClient failed: %s", e.what());
+        return -1;
+    }
 
-    return 0;
+    return id;
 }
 
 int Impl::JsonWebSocketSend(int id, web::json::value json)
