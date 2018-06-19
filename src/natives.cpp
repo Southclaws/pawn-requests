@@ -2,8 +2,8 @@
 #include "impl.hpp"
 // #include "plugin-natives\NativeFunc.hpp"
 
-// identToNode maps numeric identifiers to JSON node pointers.
-std::unordered_map<int, web::json::value*> Natives::JSON::nodeTable;
+// nodeTable maps numeric identifiers to JSON node pointers.
+std::unordered_map<int, Natives::JSON::node> Natives::JSON::nodeTable;
 int Natives::JSON::jsonPoolCounter = 0;
 
 int Natives::RequestsClient(AMX* amx, cell* params)
@@ -185,6 +185,16 @@ int Natives::JSON::Parse(AMX* amx, cell* params)
     }
 
     *output = Alloc(obj);
+
+    return 0;
+}
+
+int Natives::JSON::Stringify(AMX* amx, cell* params)
+{
+    auto obj = Get(params[1], false);
+    std::string s = utility::conversions::to_utf8string(obj.serialize());
+
+    amx_SetCppString(amx, params[2], s, params[3]);
 
     return 0;
 }
@@ -559,21 +569,28 @@ int Natives::JSON::GetNodeString(AMX* amx, cell* params)
     return amx_SetCppString(amx, params[2], utility::conversions::to_utf8string(obj.as_string()).c_str(), params[3]);
 }
 
-int Natives::JSON::Stringify(AMX* amx, cell* params)
+int Natives::JSON::ToggleGC(AMX* amx, cell* params)
 {
-    auto obj = Get(params[1], false);
-    std::string s = utility::conversions::to_utf8string(obj.serialize());
+    auto n = nodeTable.find(params[1]);
+    if (n == nodeTable.end()) {
+        return 1;
+    }
 
-    amx_SetCppString(amx, params[2], s, params[3]);
+    n->second.gc = params[2];
 
     return 0;
 }
 
 int Natives::JSON::Cleanup(AMX* amx, cell* params)
 {
-    web::json::value* ptr = nodeTable[params[1]];
-    if (ptr == nullptr) {
+    auto n = nodeTable.find(params[1]);
+    if (n == nodeTable.end()) {
+        logprintf("ERROR: attempt to cleanup node from invalid ID %d", params[1]);
         return 1;
+    }
+
+    if (!n->second.gc && params[2]) {
+        return 2;
     }
 
     Erase(params[1]);
@@ -584,24 +601,20 @@ int Natives::JSON::Cleanup(AMX* amx, cell* params)
 cell Natives::JSON::Alloc(web::json::value* item)
 {
     int id = jsonPoolCounter++;
-    nodeTable[id] = item;
+    nodeTable[id] = { item, true };
     return id;
 }
 
 web::json::value Natives::JSON::Get(int id, bool gc)
 {
-    if (id < 0 || id > jsonPoolCounter) {
-        return web::json::value::null();
-    }
-
-    web::json::value* ptr = nodeTable[id];
-    if (ptr == nullptr) {
-        logprintf("ERROR: attempt to get node from null ID %d", id);
+    auto n = nodeTable.find(id);
+    if (n == nodeTable.end()) {
+        logprintf("ERROR: attempt to get node from invalid ID %d", id);
         return web::json::value::null();
     }
 
     // deref the node into a local copy for returning
-    web::json::value copy = *ptr;
+    web::json::value copy = *(n->second.value);
     if (gc) {
         // if gc, then delete the heap copy
         Erase(id);
@@ -612,9 +625,10 @@ web::json::value Natives::JSON::Get(int id, bool gc)
 
 void Natives::JSON::Erase(int id)
 {
-    if (id < 0 || id > jsonPoolCounter) {
+    auto n = nodeTable.find(id);
+    if (n == nodeTable.end()) {
         return;
     }
-    delete nodeTable[id];
+    delete n->second.value;
     nodeTable.erase(id);
 }

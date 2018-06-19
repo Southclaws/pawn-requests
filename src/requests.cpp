@@ -21,6 +21,7 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "JsonWebSocketSend", Natives::JsonWebSocketSend },
 
     { "JsonParse", Natives::JSON::Parse },
+    { "JsonStringify", Natives::JSON::Stringify },
     { "JsonNodeType", Natives::JSON::NodeType },
     { "JsonObject", Natives::JSON::Object },
     { "JsonInt", Natives::JSON::Int },
@@ -44,8 +45,9 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "JsonGetNodeBool", Natives::JSON::GetNodeBool },
     { "JsonGetNodeString", Natives::JSON::GetNodeString },
 
-    { "JsonStringify", Natives::JSON::Stringify },
+    { "JsonToggleGC", Natives::JSON::ToggleGC },
     { "JsonCleanup", Natives::JSON::Cleanup },
+
     { 0, 0 }
 };
 

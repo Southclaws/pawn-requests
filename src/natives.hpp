@@ -26,6 +26,7 @@ void processTick(AMX* amx);
 
 namespace JSON {
     int Parse(AMX* amx, cell* params);
+    int Stringify(AMX* amx, cell* params);
     int NodeType(AMX* amx, cell* params);
 
     int Object(AMX* amx, cell* params);
@@ -50,10 +51,14 @@ namespace JSON {
     int GetNodeBool(AMX* amx, cell* params);
     int GetNodeString(AMX* amx, cell* params);
 
-    int Stringify(AMX* amx, cell* params);
+    int ToggleGC(AMX* amx, cell* params);
     int Cleanup(AMX* amx, cell* params);
 
-    extern std::unordered_map<int, web::json::value*> nodeTable;
+    struct node {
+        web::json::value* value;
+        bool gc;
+    };
+    extern std::unordered_map<int, node> nodeTable;
     extern int jsonPoolCounter;
     int Alloc(web::json::value* item);
     web::json::value Get(int id, bool gc = true);

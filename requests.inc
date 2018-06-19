@@ -83,8 +83,11 @@ enum JSON_NODE {
     JSON_NODE_NULL,
 }
 
-// JsonParse decodes JSON and stores the root node in the output.
+// JsonParse decodes JSON and stores the root node into `output`.
 native JsonParse(const string[], &Node:output);
+
+// JsonStringify encodes a JSON node into `buf`.
+native JsonStringify(Node:node, buf[], len = sizeof(buf));
 
 // JsonNodeType returns the type of a node from the above enumerator.
 native JSON_NODE:JsonNodeType(Node:node);
@@ -199,8 +202,23 @@ native JsonGetNodeFloat(Node:node, &Float:output);
 native JsonGetNodeBool(Node:node, &bool:output);
 native JsonGetNodeString(Node:node, output[], len = sizeof(output));
 
-// JsonStringify serialises a JSON node into its textual representation.
-native JsonStringify(Node:node, buf[], len = sizeof(buf));
+// JsonToggleGC toggles garbage collection for a node. This prevents
+// `JsonCleanup` from deleting nodes if `auto` is true. In other words,
+// disabling garbage collection for a node will prevent it from being deleted
+// automatically when it leaves scope. This is useful for when you want to pass
+// a node through function calls or store it for a longer period of time.
+// Be very careful with this function as losing a node pointer will result in a
+// classic memory leak. For example:
+//
+// new Node:n = JsonObject();
+// JsonToggleGC(n, false);
+// CallLocalFunction("FillJsonObject", "d", _:n);
+// JsonToggleGC(n, true);
+//
+// This will ensure that each hook of `FillJsonObject` does not delete `n` when
+// it leaves scope.
+//
+native JsonToggleGC(Node:node, bool:toggle);
 
 // -
 // Internal
@@ -208,13 +226,15 @@ native JsonStringify(Node:node, buf[], len = sizeof(buf));
 
 // JsonCleanup is an internal function for cleaning up `Node:` objects. This is
 // necessary because each of the object builder functions above allocate nodes
-// in a pool to be passed between internal function calls.
-native JsonCleanup(Node:node);
+// in a pool to be passed between internal function calls. If called manually,
+// leave `auto` as the default value of false which will ignore a garbage
+// collection disable done with `JsonToggleGC`.
+native JsonCleanup(Node:node, auto = false);
 
 // cleans up nodes once they go out of scope.
 stock operator~(Node:nodes[], len) {
     for(new i; i < len; ++i) {
-        JsonCleanup(nodes[i]);
+        JsonCleanup(nodes[i], true);
     }
 }
 

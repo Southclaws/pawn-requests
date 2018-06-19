@@ -857,3 +857,21 @@ Test:JsonGetNodeString() {
     ASSERT(ret == 0);
     ASSERT(!strcmp(got, "value"));
 }
+
+Test:JsonScopeGC() {
+    new Node:node = JsonObject();
+    scopeNodeGC(node);
+    ASSERT(JsonCleanup(node) == 1);
+}
+
+Test:JsonToggleGC() {
+    new Node:node = JsonObject();
+    JsonToggleGC(node, false);
+    scopeNodeGC(node);
+    ASSERT(JsonCleanup(node) == 0);
+    ASSERT(JsonCleanup(node) == 1);
+}
+
+scopeNodeGC(Node:node) {
+    #pragma unused node
+}
