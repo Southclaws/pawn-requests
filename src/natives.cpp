@@ -334,6 +334,91 @@ int Natives::JSON::Append(AMX* amx, cell* params)
     return result;
 }
 
+int Natives::JSON::SetObject(AMX* amx, cell* params)
+{
+    web::json::value* obj = GetPointer(params[1]);
+    if (obj == nullptr) {
+        return 1;
+    }
+    if (!obj->is_object()) {
+        return 2;
+    }
+
+    web::json::value value = Get(params[3]);
+    if (value == web::json::value::null()) {
+        return 3;
+    }
+
+    utility::string_t key = utility::conversions::to_string_t(amx_GetCppString(amx, params[2]));
+    obj->as_object()[key] = value;
+
+    return 0;
+}
+
+int Natives::JSON::SetInt(AMX* amx, cell* params)
+{
+    web::json::value* obj = GetPointer(params[1]);
+    if (obj == nullptr) {
+        return 1;
+    }
+    if (!obj->is_object()) {
+        return 2;
+    }
+
+    utility::string_t key = utility::conversions::to_string_t(amx_GetCppString(amx, params[2]));
+    obj->as_object()[key] = json::value::number(params[3]);
+
+    return 0;
+}
+
+int Natives::JSON::SetFloat(AMX* amx, cell* params)
+{
+    web::json::value* obj = GetPointer(params[1]);
+    if (obj == nullptr) {
+        return 1;
+    }
+    if (!obj->is_object()) {
+        return 2;
+    }
+
+    utility::string_t key = utility::conversions::to_string_t(amx_GetCppString(amx, params[2]));
+    obj->as_object()[key] = json::value::number(amx_ctof(params[3]));
+
+    return 0;
+}
+
+int Natives::JSON::SetBool(AMX* amx, cell* params)
+{
+    web::json::value* obj = GetPointer(params[1]);
+    if (obj == nullptr) {
+        return 1;
+    }
+    if (!obj->is_object()) {
+        return 2;
+    }
+
+    utility::string_t key = utility::conversions::to_string_t(amx_GetCppString(amx, params[2]));
+    obj->as_object()[key] = json::value::boolean(params[3]);
+
+    return 0;
+}
+
+int Natives::JSON::SetString(AMX* amx, cell* params)
+{
+    web::json::value* obj = GetPointer(params[1]);
+    if (obj == nullptr) {
+        return 1;
+    }
+    if (!obj->is_object()) {
+        return 2;
+    }
+
+    utility::string_t key = utility::conversions::to_string_t(amx_GetCppString(amx, params[2]));
+    obj->as_object()[key] = json::value::string(utility::conversions::to_string_t(amx_GetCppString(amx, params[3])));
+
+    return 0;
+}
+
 int Natives::JSON::GetObject(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
@@ -585,7 +670,9 @@ int Natives::JSON::Cleanup(AMX* amx, cell* params)
 {
     auto n = nodeTable.find(params[1]);
     if (n == nodeTable.end()) {
-        logprintf("ERROR: attempt to cleanup node from invalid ID %d", params[1]);
+        if (!params[2]) {
+            logprintf("ERROR: attempt to cleanup node from invalid ID %d", params[1]);
+        }
         return 1;
     }
 
@@ -621,6 +708,16 @@ web::json::value Natives::JSON::Get(int id, bool gc)
     }
     // and return the copy
     return copy;
+}
+
+web::json::value* Natives::JSON::GetPointer(int id)
+{
+    auto n = nodeTable.find(id);
+    if (n == nodeTable.end()) {
+        logprintf("ERROR: attempt to get node from invalid ID %d", id);
+        return nullptr;
+    }
+    return n->second.value;
 }
 
 void Natives::JSON::Erase(int id)

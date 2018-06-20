@@ -140,6 +140,13 @@ native Node:JsonArray(Node:...);
 //
 native Node:JsonAppend(Node:a, Node:b);
 
+// JsonSet* functions directly modify nodes by inserting or modifying keys.
+native JsonSetObject(Node:node, const key[], Node:object);
+native JsonSetInt(Node:node, const key[], output);
+native JsonSetFloat(Node:node, const key[], Float:output);
+native JsonSetBool(Node:node, const key[], bool:output);
+native JsonSetString(Node:node, const key[], output[], len = sizeof(output));
+
 // JsonGetObject returns the `Node:` stored at `key` in the given `node`.
 // For example:
 //
@@ -157,8 +164,8 @@ native Node:JsonAppend(Node:a, Node:b);
 //
 native JsonGetObject(Node:node, const key[], &Node:output);
 
-// JsonGetObject* functions extract a native type from an object
-// these functions are shorthand for:
+// JsonGet* functions extract a native type from an object these functions are
+// shorthand for:
 //
 // new Node:output;
 // JsonGetObject(node, "key", output);

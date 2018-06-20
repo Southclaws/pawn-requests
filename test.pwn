@@ -436,42 +436,6 @@ Test:JsonStringArray() {
     print(buf);
 }
 
-Test:JsonAppendObject() {
-    new Node:a = JsonObject(
-        "key1", JsonString("value1"),
-        "key2", JsonString("value2")
-    );
-    new Node:b = JsonObject(
-        "key3", JsonString("value3")
-    );
-
-    new Node:c = JsonAppend(a, b);
-
-    new buf[128];
-    new ret = JsonStringify(c, buf);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
-    print(buf);
-}
-
-Test:JsonAppendArray() {
-    new Node:a = JsonArray(
-        JsonInt(1),
-        JsonInt(2)
-    );
-    new Node:b = JsonArray(
-        JsonInt(3)
-    );
-
-    new Node:c = JsonAppend(a, b);
-
-    new buf[128];
-    new ret = JsonStringify(c, buf);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(buf, "[1,2,3]"));
-    print(buf);
-}
-
 Test:JsonIntArray() {
     new Node:node = JsonArray(
         JsonInt(1),
@@ -593,6 +557,102 @@ Test:JsonObjectComplex() {
     new ret = JsonStringify(node, buf);
     ASSERT(ret == 0);
     ASSERT(!strcmp(buf, "{\"list\":[{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"one\":\"value one\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"two\":\"value two\"},{\"a_listobj_float\":66.599998474121094,\"a_listobj_number\":76,\"a_listobj_string\":\"another value\",\"three\":\"value three\"}],\"object\":{\"a_float\":66.599998474121094,\"a_number\":76,\"a_string\":\"a value\",\"nested_object\":{\"a_deeper_float\":66.599998474121094,\"a_deeper_number\":76,\"a_deeper_string\":\"another value\"}}}"));
+    print(buf);
+}
+
+Test:JsonAppendObject() {
+    new Node:a = JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value2")
+    );
+    new Node:b = JsonObject(
+        "key3", JsonString("value3")
+    );
+
+    new Node:c = JsonAppend(a, b);
+
+    new buf[128];
+    new ret = JsonStringify(c, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
+    print(buf);
+}
+
+Test:JsonAppendArray() {
+    new Node:a = JsonArray(
+        JsonInt(1),
+        JsonInt(2)
+    );
+    new Node:b = JsonArray(
+        JsonInt(3)
+    );
+
+    new Node:c = JsonAppend(a, b);
+
+    new buf[128];
+    new ret = JsonStringify(c, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "[1,2,3]"));
+    print(buf);
+}
+
+Test:JsonSetObject() {
+    new Node:node = JsonObject();
+    new ret = JsonSetObject(node, "key", JsonObject("key", JsonString("value")));
+    ASSERT(ret == 0);
+
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":{\"key\":\"value\"}}"));
+    print(buf);
+}
+
+Test:JsonSetInt() {
+    new Node:node = JsonObject();
+    new ret = JsonSetInt(node, "key", 5);
+    ASSERT(ret == 0);
+
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":5}"));
+    print(buf);
+}
+
+Test:JsonSetFloat() {
+    new Node:node = JsonObject();
+    new ret = JsonSetFloat(node, "key", 5.5);
+    ASSERT(ret == 0);
+
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":5.5}"));
+    print(buf);
+}
+
+Test:JsonSetBool() {
+    new Node:node = JsonObject();
+    new ret = JsonSetBool(node, "key", true);
+    ASSERT(ret == 0);
+
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":true}"));
+    print(buf);
+}
+
+Test:JsonSetString() {
+    new Node:node = JsonObject();
+    new ret = JsonSetString(node, "key", "value");
+    ASSERT(ret == 0);
+
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
     print(buf);
 }
 

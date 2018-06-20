@@ -30,7 +30,11 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { "JsonString", Natives::JSON::String },
     { "JsonArray", Natives::JSON::Array },
     { "JsonAppend", Natives::JSON::Append },
-
+    { "JsonSetObject", Natives::JSON::SetObject },
+    { "JsonSetInt", Natives::JSON::SetInt },
+    { "JsonSetFloat", Natives::JSON::SetFloat },
+    { "JsonSetBool", Natives::JSON::SetBool },
+    { "JsonSetString", Natives::JSON::SetString },
     { "JsonGetObject", Natives::JSON::GetObject },
     { "JsonGetInt", Natives::JSON::GetInt },
     { "JsonGetFloat", Natives::JSON::GetFloat },

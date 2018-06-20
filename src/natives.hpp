@@ -36,7 +36,11 @@ namespace JSON {
     int String(AMX* amx, cell* params);
     int Array(AMX* amx, cell* params);
     int Append(AMX* amx, cell* params);
-
+    int SetObject(AMX* amx, cell* params);
+    int SetInt(AMX* amx, cell* params);
+    int SetFloat(AMX* amx, cell* params);
+    int SetBool(AMX* amx, cell* params);
+    int SetString(AMX* amx, cell* params);
     int GetObject(AMX* amx, cell* params);
     int GetInt(AMX* amx, cell* params);
     int GetFloat(AMX* amx, cell* params);
@@ -62,6 +66,7 @@ namespace JSON {
     extern int jsonPoolCounter;
     int Alloc(web::json::value* item);
     web::json::value Get(int id, bool gc = true);
+    web::json::value* GetPointer(int id);
     void Erase(int id);
 }
 }
