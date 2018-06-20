@@ -677,6 +677,9 @@ Test:JsonGetInt() {
     ret = JsonGetInt(node, "key3", got);
     ASSERT(ret == 0);
     ASSERT(got == 3);
+
+    ret = JsonGetInt(node, "key4", got);
+    ASSERT(ret == 2);
 }
 
 Test:JsonGetFloat() {
@@ -700,6 +703,9 @@ Test:JsonGetFloat() {
     ret = JsonGetFloat(node, "key3", got);
     ASSERT(ret == 0);
     ASSERT(got == 3.5);
+
+    ret = JsonGetFloat(node, "key4", got);
+    ASSERT(ret == 2);
 }
 
 Test:JsonGetBool() {
@@ -723,6 +729,9 @@ Test:JsonGetBool() {
     ret = JsonGetBool(node, "key3", got);
     ASSERT(ret == 0);
     ASSERT(got == false);
+
+    ret = JsonGetBool(node, "key4", got);
+    ASSERT(ret == 2);
 }
 
 Test:JsonGetString() {
@@ -746,6 +755,9 @@ Test:JsonGetString() {
     ret = JsonGetString(node, "key3", got);
     ASSERT(ret == 0);
     ASSERT(!strcmp(got, "value3"));
+
+    ret = JsonGetString(node, "key4", got);
+    ASSERT(ret == 2);
 }
 
 Test:JsonGetArray() {

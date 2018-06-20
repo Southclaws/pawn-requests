@@ -422,7 +422,7 @@ int Natives::JSON::SetString(AMX* amx, cell* params)
 int Natives::JSON::GetObject(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
-    if (!obj.is_object()) {
+    if (obj == web::json::value::null()) {
         return 1;
     }
 
@@ -446,10 +446,10 @@ int Natives::JSON::GetObject(AMX* amx, cell* params)
 int Natives::JSON::GetInt(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    std::string key = amx_GetCppString(amx, params[2]);
-    if (!obj.is_object()) {
+    if (obj == web::json::value::null()) {
         return 1;
     }
+    std::string key = amx_GetCppString(amx, params[2]);
 
     web::json::value target;
     try {
@@ -471,10 +471,10 @@ int Natives::JSON::GetInt(AMX* amx, cell* params)
 int Natives::JSON::GetFloat(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    std::string key = amx_GetCppString(amx, params[2]);
-    if (!obj.is_object()) {
+    if (obj == web::json::value::null()) {
         return 1;
     }
+    std::string key = amx_GetCppString(amx, params[2]);
 
     web::json::value target;
     try {
@@ -497,10 +497,10 @@ int Natives::JSON::GetFloat(AMX* amx, cell* params)
 int Natives::JSON::GetBool(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    std::string key = amx_GetCppString(amx, params[2]);
-    if (!obj.is_object()) {
+    if (obj == web::json::value::null()) {
         return 1;
     }
+    std::string key = amx_GetCppString(amx, params[2]);
 
     web::json::value target;
     try {
@@ -522,10 +522,10 @@ int Natives::JSON::GetBool(AMX* amx, cell* params)
 int Natives::JSON::GetString(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    std::string key = amx_GetCppString(amx, params[2]);
-    if (!obj.is_object()) {
+    if (obj == web::json::value::null()) {
         return 1;
     }
+    std::string key = amx_GetCppString(amx, params[2]);
 
     web::json::value target;
     try {
@@ -543,10 +543,10 @@ int Natives::JSON::GetString(AMX* amx, cell* params)
 int Natives::JSON::GetArray(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    std::string key = amx_GetCppString(amx, params[2]);
-    if (!obj.is_object()) {
+    if (obj == web::json::value::null()) {
         return 1;
     }
+    std::string key = amx_GetCppString(amx, params[2]);
 
     web::json::value* target = new web::json::value;
     try {
@@ -568,7 +568,7 @@ int Natives::JSON::GetArray(AMX* amx, cell* params)
 int Natives::JSON::ArrayLength(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    if (!obj.is_array()) {
+    if (!obj.is_array() || obj == web::json::value::null()) {
         return 1;
     }
 
@@ -582,7 +582,7 @@ int Natives::JSON::ArrayLength(AMX* amx, cell* params)
 int Natives::JSON::ArrayObject(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1], false);
-    if (!obj.is_array()) {
+    if (!obj.is_array() || obj == web::json::value::null()) {
         return 1;
     }
 
@@ -604,7 +604,7 @@ int Natives::JSON::ArrayObject(AMX* amx, cell* params)
 int Natives::JSON::GetNodeInt(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
-    if (!obj.is_integer()) {
+    if (!obj.is_integer() || obj == web::json::value::null()) {
         return 1;
     }
 
@@ -618,7 +618,7 @@ int Natives::JSON::GetNodeInt(AMX* amx, cell* params)
 int Natives::JSON::GetNodeFloat(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
-    if (!obj.is_double()) {
+    if (!obj.is_double() || obj == web::json::value::null()) {
         return 1;
     }
 
@@ -633,7 +633,7 @@ int Natives::JSON::GetNodeFloat(AMX* amx, cell* params)
 int Natives::JSON::GetNodeBool(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
-    if (!obj.is_boolean()) {
+    if (!obj.is_boolean() || obj == web::json::value::null()) {
         return 1;
     }
 
@@ -647,7 +647,7 @@ int Natives::JSON::GetNodeBool(AMX* amx, cell* params)
 int Natives::JSON::GetNodeString(AMX* amx, cell* params)
 {
     web::json::value obj = Get(params[1]);
-    if (!obj.is_string()) {
+    if (!obj.is_string() || obj == web::json::value::null()) {
         return 1;
     }
 
@@ -696,7 +696,6 @@ web::json::value Natives::JSON::Get(int id, bool gc)
 {
     auto n = nodeTable.find(id);
     if (n == nodeTable.end()) {
-        logprintf("ERROR: attempt to get node from invalid ID %d", id);
         return web::json::value::null();
     }
 
@@ -714,7 +713,6 @@ web::json::value* Natives::JSON::GetPointer(int id)
 {
     auto n = nodeTable.find(id);
     if (n == nodeTable.end()) {
-        logprintf("ERROR: attempt to get node from invalid ID %d", id);
         return nullptr;
     }
     return n->second.value;
