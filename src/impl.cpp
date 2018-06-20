@@ -153,6 +153,7 @@ void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& r
         if (!requestData.bodyJson.is_null()) {
             request.set_body(requestData.bodyJson);
         }
+        request.headers().set_content_type(U("application/json"));
         break;
     }
     case E_CONTENT_TYPE::string: {

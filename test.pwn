@@ -139,6 +139,32 @@ public OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen
     print("\nPASS!");
 }
 
+new Request:OnGetJsonWithHeaders_ID;
+Test:GetJsonWithHeaders() {
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders(
+        "X-Pawn-Requests", "YES"
+    ));
+    OnGetJsonWithHeaders_ID = RequestJSON(
+        client,
+        "headers",
+        HTTP_METHOD_GET,
+        "OnGetJsonWithHeaders"
+    );
+}
+forward OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node);
+public OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node) {
+    print("*** Test OnGetJsonWithHeaders\n");
+
+    ASSERT(id == OnGetJsonWithHeaders_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+
+    new string[512];
+    JsonStringify(node, string);
+    printf("%s", string);
+
+    print("\nPASS!");
+}
+
 
 // -
 // RequestJSON - basic GET on JSON data
