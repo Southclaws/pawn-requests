@@ -139,6 +139,7 @@ native Node:JsonArray(Node:...);
 // output: [1, 2, 3]
 //
 native Node:JsonAppend(Node:a, Node:b);
+native Node:operator+(Node:a, Node:b) = JsonAppend;
 
 // JsonSet* functions directly modify nodes by inserting or modifying keys.
 native JsonSetObject(Node:node, const key[], Node:object);
