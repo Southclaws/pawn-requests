@@ -956,20 +956,25 @@ Test:JsonGetNodeString() {
     ASSERT(!strcmp(got, "value"));
 }
 
-Test:JsonScopeGC() {
-    new Node:node = JsonObject();
-    scopeNodeGC(node);
-    ASSERT(JsonCleanup(node) == 1);
-}
+// Test:JsonScopeGC() {
+//     new Node:node = JsonObject();
+//     scopeNodeGC(node);
+//     ASSERT(JsonCleanup(node) == 1);
+// }
 
 Test:JsonToggleGC() {
-    new Node:node = JsonObject();
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
     JsonToggleGC(node, false);
     scopeNodeGC(node);
+    new value[6];
+    JsonGetString(node, "key", value);
+    ASSERT(!strcmp(value, "value"));
     ASSERT(JsonCleanup(node) == 0);
     ASSERT(JsonCleanup(node) == 1);
 }
 
 scopeNodeGC(Node:node) {
-    #pragma unused node
+    printf("scoped %d", _:node);
 }

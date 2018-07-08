@@ -701,7 +701,7 @@ web::json::value Natives::JSON::Get(int id, bool gc)
 
     // deref the node into a local copy for returning
     web::json::value copy = *(n->second.value);
-    if (gc) {
+    if (gc && n->second.gc) {
         // if gc, then delete the heap copy
         Erase(id);
     }
