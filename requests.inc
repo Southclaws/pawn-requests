@@ -240,7 +240,7 @@ native JsonToggleGC(Node:node, bool:toggle);
 native JsonCleanup(Node:node, auto = false);
 
 // cleans up nodes once they go out of scope.
-stock operator~(Node:nodes[], len) {
+stock operator~(const Node:nodes[], len) {
     for(new i; i < len; ++i) {
         JsonCleanup(nodes[i], true);
     }
