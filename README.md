@@ -433,3 +433,58 @@ make test-linux
 ```
 
 Which will run the tests via sampctl with the `--container` flag set.
+
+## Development
+
+To set up the development environment, first install
+[`vcpkg`](https://github.com/Microsoft/vcpkg) then
+[cpprestsdk](https://github.com/Microsoft/cpprestsdk).
+
+Open Visual Studio (A recent version with CMake support) and File > Open the
+project `CMakeLists.txt`. VS will fail on the first attempt as it won't be able
+to find cpprestsdk. To resolve this, edit `.vs/CMakeSettings.json` to contain
+the necessary environment variables for a Debug and Release configuration:
+
+```json
+{
+  "configurations": [
+    {
+      "name": "x86-Release",
+      "generator": "Visual Studio 15 2017",
+      "configurationType": "Release",
+      "buildRoot":
+        "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-m -v:minimal",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:/Users/Southclaws/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        }
+      ]
+    },
+    {
+      "name": "x86-Debug",
+      "generator": "Visual Studio 15 2017",
+      "configurationType": "Debug",
+      "buildRoot":
+        "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-m -v:minimal",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:/Users/Southclaws/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The configuration file may change depending on VS version or other things, as
+long as the `CMAKE_TOOLCHAIN_FILE` variables are passed to CMake properly, the
+build should succeed.
+
+Once this is done, VS should start indexing all the dependencies. Once it has
+finihed, in the menu bar, hit CMake > Build All and it should spit out a `.dll`.
