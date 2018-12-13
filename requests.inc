@@ -11,7 +11,7 @@
 
 
 // todo: inline support for requests
-#tryinclude <YSI\y_inline>
+#tryinclude <YSI_Coding\y_inline>
 #if defined _INC_y_inline
     #define Y_INLINE_SUPPORT
 #endif
