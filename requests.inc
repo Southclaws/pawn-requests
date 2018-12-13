@@ -9,13 +9,6 @@
 #endif
 #define _requests_included
 
-
-// todo: inline support for requests
-#tryinclude <YSI\y_inline>
-#if defined _INC_y_inline
-    #define Y_INLINE_SUPPORT
-#endif
-
 #include "status_codes"
 #include "http_methods"
 
