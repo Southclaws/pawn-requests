@@ -9,8 +9,8 @@
 #include <cpprest/json.h>
 #include <cpprest/ws_client.h>
 
-#include <amx/amx2.h>
 #include "common.hpp"
+#include <amx/amx2.h>
 
 using namespace utility; // Common utilities like string conversions
 using namespace web; // Common features like URIs.
@@ -40,7 +40,7 @@ enum E_CONTENT_TYPE {
     json
 };
 struct RequestData {
-	AMX* amx;
+    AMX* amx;
     int id;
     std::string callback;
     std::string path;
@@ -51,7 +51,7 @@ struct RequestData {
     web::json::value bodyJson;
 };
 struct ResponseData {
-	AMX* amx;
+    AMX* amx;
     int id;
     std::string callback;
     int status;

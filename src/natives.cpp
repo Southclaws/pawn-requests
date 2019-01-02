@@ -57,9 +57,9 @@ void Natives::processTick(AMX* amx)
 {
     std::vector<Impl::ResponseData> responses = Impl::gatherResponses();
     for (auto response : responses) {
-		if (response.amx != amx) {
-			continue;
-		}
+        if (response.amx != amx) {
+            continue;
+        }
 
         int error;
         int amx_idx;
