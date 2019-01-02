@@ -12,8 +12,8 @@ test-setup:
 
 test-windows-debug:
 	-cp test/plugins/Debug/requests.dll test/plugins/requests.dll
-	-cp test/plugins/Debug/boost_date_time-vc141-mt-gd-x32-1_66.dll test/boost_date_time-vc141-mt-gd-x32-1_66.dll
-	-cp test/plugins/Debug/boost_system-vc141-mt-gd-x32-1_66.dll test/boost_system-vc141-mt-gd-x32-1_66.dll
+	-cp test/plugins/Debug/boost_date_time-vc141-mt-gd-x32-1_68.dll test/boost_date_time-vc141-mt-gd-x32-1_68.dll
+	-cp test/plugins/Debug/boost_system-vc141-mt-gd-x32-1_68.dll test/boost_system-vc141-mt-gd-x32-1_68.dll
 	-cp test/plugins/Debug/cpprest_2_10d.dll test/cpprest_2_10d.dll
 	-cp test/plugins/Debug/LIBEAY32.dll test/LIBEAY32.dll
 	-cp test/plugins/Debug/SSLEAY32.dll test/SSLEAY32.dll
@@ -22,8 +22,8 @@ test-windows-debug:
 	cd test && sampctl server run
 test-windows-release:
 	-cp test/plugins/Release/requests.dll test/plugins/requests.dll
-	-cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_66.dll test/boost_date_time-vc141-mt-x32-1_66.dll
-	-cp test/plugins/Release/boost_system-vc141-mt-x32-1_66.dll test/boost_system-vc141-mt-x32-1_66.dll
+	-cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_68.dll test/boost_date_time-vc141-mt-x32-1_68.dll
+	-cp test/plugins/Release/boost_system-vc141-mt-x32-1_68.dll test/boost_system-vc141-mt-x32-1_68.dll
 	-cp test/plugins/Release/cpprest_2_10.dll test/cpprest_2_10.dll
 	-cp test/plugins/Release/LIBEAY32.dll test/LIBEAY32.dll
 	-cp test/plugins/Release/SSLEAY32.dll test/SSLEAY32.dll
@@ -69,8 +69,8 @@ release-windows:
 	mkdir release-windows/dependencies
 	mkdir release-windows/includes
 	cp test/plugins/Release/requests.dll release-windows/plugins/requests.dll
-	cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_66.dll release-windows/dependencies/boost_date_time-vc141-mt-x32-1_66.dll
-	cp test/plugins/Release/boost_system-vc141-mt-x32-1_66.dll release-windows/dependencies/boost_system-vc141-mt-x32-1_66.dll
+	cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_68.dll release-windows/dependencies/boost_date_time-vc141-mt-x32-1_68.dll
+	cp test/plugins/Release/boost_system-vc141-mt-x32-1_68.dll release-windows/dependencies/boost_system-vc141-mt-x32-1_68.dll
 	cp test/plugins/Release/cpprest_2_10.dll release-windows/dependencies/cpprest_2_10.dll
 	cp test/plugins/Release/LIBEAY32.dll release-windows/dependencies/LIBEAY32.dll
 	cp test/plugins/Release/SSLEAY32.dll release-windows/dependencies/SSLEAY32.dll
