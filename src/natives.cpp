@@ -38,7 +38,7 @@ int Natives::Request(AMX* amx, cell* params)
     // std::string data = amx_GetCppString(amx, params[6]);
     int headers = params[6];
 
-    return Impl::Request(id, path, method, callback, data, headers);
+    return Impl::Request(amx, id, path, method, callback, data, headers);
 }
 
 int Natives::RequestJSON(AMX* amx, cell* params)
@@ -50,13 +50,17 @@ int Natives::RequestJSON(AMX* amx, cell* params)
     auto obj = JSON::Get(params[5]);
     int headers = params[6];
 
-    return Impl::RequestJSON(id, path, method, callback, obj, headers);
+    return Impl::RequestJSON(amx, id, path, method, callback, obj, headers);
 }
 
 void Natives::processTick(AMX* amx)
 {
     std::vector<Impl::ResponseData> responses = Impl::gatherResponses();
     for (auto response : responses) {
+		if (response.amx != amx) {
+			continue;
+		}
+
         int error;
         int amx_idx;
         cell amx_addr;
