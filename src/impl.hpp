@@ -10,6 +10,7 @@
 #include <cpprest/ws_client.h>
 
 #include "common.hpp"
+#include <amx/amx2.h>
 
 using namespace utility; // Common utilities like string conversions
 using namespace web; // Common features like URIs.
@@ -39,6 +40,7 @@ enum E_CONTENT_TYPE {
     json
 };
 struct RequestData {
+    AMX* amx;
     int id;
     std::string callback;
     std::string path;
@@ -49,6 +51,7 @@ struct RequestData {
     web::json::value bodyJson;
 };
 struct ResponseData {
+    AMX* amx;
     int id;
     std::string callback;
     int status;
@@ -59,8 +62,8 @@ struct ResponseData {
 
 int RequestsClient(std::string endpoint, int headers);
 int RequestHeaders(std::vector<std::pair<std::string, std::string>> headers);
-int Request(int id, std::string path, E_HTTP_METHOD method, std::string callback, char* data, int headers);
-int RequestJSON(int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers);
+int Request(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, char* data, int headers);
+int RequestJSON(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers);
 
 int WebSocketClient(std::string address, std::string callback);
 int WebSocketSend(int id, std::string data);
