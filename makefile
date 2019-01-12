@@ -1,63 +1,53 @@
 # -
-# Setup test requirements
+# Development
 # -
 
-test-setup:
+prepare:
 	cd test && sampctl server ensure
 	sampctl package ensure
+
+toolchain-win32:
+	rustup default stable-i686-pc-windows-msvc
+
+build-win32-release: toolchain-win32
+	cargo +stable-i686-pc-windows-msvc build --release
+	cp target/release/pawn_templates.dll test/plugins/templates.dll
+
+build-win32-debug: toolchain-win32
+	cargo +stable-i686-pc-windows-msvc build
+	cp target/debug/pawn_templates.dll test/plugins/templates.dll
+
+toolchain-linux:
+	rustup default stable-i686-unknown-linux-gnu
+
+build-linux-release: toolchain-linux
+	cargo +stable-i686-unknown-linux-gnu build --release
+	cp target/release/libpawn_templates.so test/plugins/templates.so
+
+build-linux-debug: toolchain-linux
+	cargo +stable-i686-unknown-linux-gnu build
+	cp target/debug/libpawn_templates.so test/plugins/templates.so
 
 # -
 # Run Tests
 # -
 
-test-windows-debug:
-	-cp test/plugins/Debug/requests.dll test/plugins/requests.dll
-	-cp test/plugins/Debug/boost_date_time-vc141-mt-gd-x32-1_68.dll test/boost_date_time-vc141-mt-gd-x32-1_68.dll
-	-cp test/plugins/Debug/boost_system-vc141-mt-gd-x32-1_68.dll test/boost_system-vc141-mt-gd-x32-1_68.dll
-	-cp test/plugins/Debug/cpprest_2_10d.dll test/cpprest_2_10d.dll
-	-cp test/plugins/Debug/LIBEAY32.dll test/LIBEAY32.dll
-	-cp test/plugins/Debug/SSLEAY32.dll test/SSLEAY32.dll
-	-cp test/plugins/Debug/zlibd1.dll test/zlibd1.dll
-	sampctl package build
-	cd test && sampctl server run
-test-windows-release:
-	-cp test/plugins/Release/requests.dll test/plugins/requests.dll
-	-cp test/plugins/Release/boost_date_time-vc141-mt-x32-1_68.dll test/boost_date_time-vc141-mt-x32-1_68.dll
-	-cp test/plugins/Release/boost_system-vc141-mt-x32-1_68.dll test/boost_system-vc141-mt-x32-1_68.dll
-	-cp test/plugins/Release/cpprest_2_10.dll test/cpprest_2_10.dll
-	-cp test/plugins/Release/LIBEAY32.dll test/LIBEAY32.dll
-	-cp test/plugins/Release/SSLEAY32.dll test/SSLEAY32.dll
-	-cp test/plugins/Release/zlib1.dll test/zlib1.dll
+test-native:
 	sampctl package build
 	cd test && sampctl server run
 
-test-linux:
+test-container:
 	sampctl package build
 	cd test && sampctl server run --container
 
 # -
-# Build (Linux)
+# Build inside container
 # -
 
-build-linux:
+build-container:
 	rm -rf build
-	docker build -t southclaws/requests-build .
-	docker run \
-		-v $(shell pwd):/root/requests \
-		--entrypoint make \
-		--workdir /root/requests \
-		southclaws/requests-build \
-		build-inside
-
-build-interactive:
-	docker run \
-		-v $(shell pwd):/root/requests \
-		-it \
-		southclaws/requests-build
-
-build-inside:
-	-mkdir build-container
-	cd build-container && cmake .. && make
+	docker build -t southclaws/templates-build .
+	docker run -v $(shell pwd)/test/plugins:/root/test/plugins southclaws/templates-build
 
 # -
 # Build Release Archives

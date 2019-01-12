@@ -50,3 +50,5 @@ build*/
 *.o
 
 release-*/
+/target
+**/*.rs.bk

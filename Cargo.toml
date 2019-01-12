@@ -1,0 +1,12 @@
+[package]
+name = "pawn-requests"
+authors = ["Southclaws <hello@southcla.ws>"]
+version = "0.9.0"
+
+[lib]
+name = "pawn_requests"
+crate-type = ["dylib"]
+
+[dependencies]
+samp-sdk = { git="https://github.com/ZOTTCE/samp-sdk" }
+reqwest = "0.9.8"
