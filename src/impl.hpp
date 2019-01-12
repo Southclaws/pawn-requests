@@ -57,7 +57,7 @@ struct ResponseData {
     int status;
     E_CONTENT_TYPE responseType;
     std::string rawBody;
-    bool isWebSocket = 0;
+    bool isWebSocket = false;
 };
 
 int RequestsClient(std::string endpoint, int headers);
