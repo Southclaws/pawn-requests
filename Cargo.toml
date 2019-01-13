@@ -10,3 +10,8 @@ crate-type = ["dylib"]
 [dependencies]
 samp-sdk = { git="https://github.com/ZOTTCE/samp-sdk" }
 reqwest = "0.9.8"
+enum_primitive = "0.1.1"
+num-traits = "0.1.43"
+futures = "0.1.25"
+tokio = "0.1.14"
+url = "1.2"

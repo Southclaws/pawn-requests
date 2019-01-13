@@ -1,8 +1,11 @@
+use futures::Future;
+use reqwest::header::HeaderMap;
 use samp_sdk::amx::{AmxResult, AMX};
 use samp_sdk::args;
 use samp_sdk::consts::*;
 use samp_sdk::types::Cell;
 
+use method::Method;
 use pool::Pool;
 use request_client::RequestClient;
 
@@ -15,7 +18,7 @@ define_native!(
     do_request,
     request_client_id: Cell,
     path: String,
-    method: Cell,
+    method: Method,
     callback: String,
     body: String,
     headers: Cell
@@ -89,7 +92,8 @@ impl Plugin {
     // Natives
 
     pub fn requests_client(&mut self, _: &AMX, endpoint: String, headers: i32) -> AmxResult<Cell> {
-        let rqc = RequestClient::new(endpoint, headers);
+        let header_map = HeaderMap::new();
+        let rqc = RequestClient::new(endpoint, header_map);
         Ok(self.request_clients.alloc(rqc))
     }
 
@@ -98,7 +102,7 @@ impl Plugin {
         _: &AMX,
         request_client_id: Cell,
         path: String,
-        method: Cell,
+        method: Method,
         callback: String,
         body: String,
         headers: Cell,
@@ -109,7 +113,23 @@ impl Plugin {
                 return Ok(1);
             }
         };
-        Ok(0)
+
+        let header_map = HeaderMap::new();
+
+        match client.request(path, reqwest::Method::from(method), header_map) {
+            Ok(v) => {
+                v.then(|response| {
+                    println!("{:?}", response);
+                    futures::future::ok(0)
+                });
+
+                Ok(0)
+            }
+            Err(e) => {
+                log!("{}", e);
+                Ok(1)
+            }
+        }
     }
 }
 
