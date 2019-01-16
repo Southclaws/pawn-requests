@@ -4,16 +4,21 @@ use samp_sdk::amx::{AmxResult, AMX};
 use samp_sdk::args;
 use samp_sdk::consts::*;
 use samp_sdk::types::Cell;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use tokio::runtime::Runtime;
 
 use method::Method;
 use pool::Pool;
-use request_client::RequestClient;
+use request_client::{RequestClient, Response};
 
 pub struct Plugin {
+    runtime: Runtime,
     request_clients: Pool<RequestClient>,
+    response_sender: Sender<Response>,
+    response_receiver: Receiver<Response>,
 }
 
-define_native!(requests_client, endpoint: String, headers: i32);
+define_native!(new_requests_client, endpoint: String, headers: i32);
 define_native!(
     do_request,
     request_client_id: Cell,
@@ -35,10 +40,10 @@ impl Plugin {
 
     pub fn amx_load(&self, amx: &AMX) -> Cell {
         let natives = natives! {
-            "RequestsClient" => requests_client
+            "RequestsClient" => new_requests_client,
+            "Request" => do_request
         };
         // "RequestHeaders" => request_headers,
-        // "Request" => request,
         // "RequestJSON" => request_json,
         // "WebSocketClient" => web_socket_client,
         // "WebSocketSend" => web_socket_send,
@@ -91,14 +96,19 @@ impl Plugin {
 
     // Natives
 
-    pub fn requests_client(&mut self, _: &AMX, endpoint: String, headers: i32) -> AmxResult<Cell> {
+    pub fn new_requests_client(
+        &mut self,
+        _: &AMX,
+        endpoint: String,
+        headers: i32,
+    ) -> AmxResult<Cell> {
         let header_map = HeaderMap::new();
         let rqc = RequestClient::new(endpoint, header_map);
         Ok(self.request_clients.alloc(rqc))
     }
 
     pub fn do_request(
-        &self,
+        &mut self,
         _: &AMX,
         request_client_id: Cell,
         path: String,
@@ -116,27 +126,44 @@ impl Plugin {
 
         let header_map = HeaderMap::new();
 
-        match client.request(path, reqwest::Method::from(method), header_map) {
-            Ok(v) => {
-                v.then(|response| {
-                    println!("{:?}", response);
-                    futures::future::ok(0)
-                });
-
-                Ok(0)
-            }
+        let v = match client.request(path, reqwest::Method::from(method), header_map) {
+            Ok(v) => v,
             Err(e) => {
                 log!("{}", e);
-                Ok(1)
+                return Ok(1);
             }
-        }
+        };
+
+        let id = v.0;
+        let req = v.1;
+
+        self.runtime.spawn(
+            req.map(|response| {
+                // self.response_sender.send(Response {});
+            })
+            .map_err(|e| println!("{}", e)),
+        );
+
+        Ok(id)
     }
 }
 
 impl Default for Plugin {
     fn default() -> Self {
-        Plugin {
-            request_clients: Pool::default(),
+        let (tx, rx) = channel::<Response>();
+        let rt = match Runtime::new() {
+            Ok(v) => v,
+            Err(e) => {
+                panic!("Failed to create Tokio runtime: {}", e);
+            }
+        };
+        {
+            Plugin {
+                runtime: rt,
+                request_clients: Pool::default(),
+                response_sender: tx,
+                response_receiver: rx,
+            }
         }
     }
 }
