@@ -2,7 +2,7 @@ use samp_sdk::types::Cell;
 use std::collections::HashMap;
 
 pub struct Pool<T> {
-    active: HashMap<Cell, T>,
+    pub active: HashMap<Cell, T>,
     current: Cell,
 }
 
@@ -20,8 +20,7 @@ impl<T> Pool<T> {
         self.active.insert(self.current, t);
         self.current
     }
-    pub fn get(&self, id: i32) -> Option<&T> {
-        self.active.get(&id)
+    pub fn get(&mut self, id: i32) -> Option<&mut T> {
+        self.active.get_mut(&id)
     }
 }
-

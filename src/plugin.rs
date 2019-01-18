@@ -1,21 +1,15 @@
-use futures::Future;
+use futures::{Async, Stream};
 use reqwest::header::HeaderMap;
 use samp_sdk::amx::{AmxResult, AMX};
-use samp_sdk::args;
 use samp_sdk::consts::*;
 use samp_sdk::types::Cell;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use tokio::runtime::Runtime;
 
 use method::Method;
 use pool::Pool;
-use request_client::{RequestClient, Response};
+use request_client::{Request, RequestClient, Response};
 
 pub struct Plugin {
-    runtime: Runtime,
     request_clients: Pool<RequestClient>,
-    response_sender: Sender<Response>,
-    response_receiver: Receiver<Response>,
 }
 
 define_native!(new_requests_client, endpoint: String, headers: i32);
@@ -92,18 +86,41 @@ impl Plugin {
         return AMX_ERR_NONE;
     }
 
-    pub fn process_tick(&mut self) {}
+    pub fn process_tick(&mut self) {
+        for (_, rc) in self.request_clients.active.iter_mut() {
+            let r: Async<Option<Response>> = match rc.poll() {
+                Ok(v) => v,
+                Err(e) => {
+                    log!("{:?}", e);
+                    return;
+                }
+            };
+
+            if r.is_not_ready() {
+                continue;
+            }
+
+            r.map(|o| {
+                let response: Response = match o {
+                    Some(v) => v,
+                    None => return,
+                };
+
+                // exec_public!(response.amx, "OnPlayerNameChanged"; old_name => string, new_name => string);
+            });
+        }
+    }
 
     // Natives
 
     pub fn new_requests_client(
         &mut self,
-        _: &AMX,
+        amx: &AMX,
         endpoint: String,
-        headers: i32,
+        _headers: i32, // TODO
     ) -> AmxResult<Cell> {
         let header_map = HeaderMap::new();
-        let rqc = RequestClient::new(endpoint, header_map);
+        let rqc = RequestClient::new(*amx.clone(), endpoint, header_map);
         Ok(self.request_clients.alloc(rqc))
     }
 
@@ -114,8 +131,8 @@ impl Plugin {
         path: String,
         method: Method,
         callback: String,
-        body: String,
-        headers: Cell,
+        _body: String,  // TODO
+        _headers: Cell, // TODO
     ) -> AmxResult<Cell> {
         let client = match self.request_clients.get(request_client_id) {
             Some(v) => v,
@@ -126,7 +143,13 @@ impl Plugin {
 
         let header_map = HeaderMap::new();
 
-        let v = match client.request(path, reqwest::Method::from(method), header_map) {
+        let id = match client.request(Request {
+            callback: callback,
+            path: path,
+            method: Method::from(method),
+            headers: header_map,
+            request_type: 0,
+        }) {
             Ok(v) => v,
             Err(e) => {
                 log!("{}", e);
@@ -134,55 +157,35 @@ impl Plugin {
             }
         };
 
-        let id = v.0;
-        let req = v.1;
-
-        self.runtime.spawn(
-            req.map(|response| {
-                // self.response_sender.send(Response {});
-            })
-            .map_err(|e| println!("{}", e)),
-        );
-
         Ok(id)
     }
 }
 
 impl Default for Plugin {
     fn default() -> Self {
-        let (tx, rx) = channel::<Response>();
-        let rt = match Runtime::new() {
-            Ok(v) => v,
-            Err(e) => {
-                panic!("Failed to create Tokio runtime: {}", e);
-            }
-        };
         {
             Plugin {
-                runtime: rt,
                 request_clients: Pool::default(),
-                response_sender: tx,
-                response_receiver: rx,
             }
         }
     }
 }
 
-fn get_arg_ref<T: Clone>(amx: &AMX, parser: &mut args::Parser, out_ref: &mut T) -> i32 {
-    expand_args!(@amx, parser, tmp_ref: ref T);
-    *out_ref = tmp_ref.clone();
-    return 1;
-}
+// fn get_arg_ref<T: Clone>(amx: &AMX, parser: &mut args::Parser, out_ref: &mut T) -> i32 {
+//     expand_args!(@amx, parser, tmp_ref: ref T);
+//     *out_ref = tmp_ref.clone();
+//     return 1;
+// }
 
-fn get_arg_string(amx: &AMX, parser: &mut args::Parser, out_str: &mut String) -> i32 {
-    expand_args!(@amx, parser, tmp_str: String);
-    match samp_sdk::cp1251::decode_to(&tmp_str.into_bytes(), out_str) {
-        Ok(_) => {
-            return 1;
-        }
-        Err(e) => {
-            log!("{}", e);
-            return 0;
-        }
-    }
-}
+// fn get_arg_string(amx: &AMX, parser: &mut args::Parser, out_str: &mut String) -> i32 {
+//     expand_args!(@amx, parser, tmp_str: String);
+//     match samp_sdk::cp1251::decode_to(&tmp_str.into_bytes(), out_str) {
+//         Ok(_) => {
+//             return 1;
+//         }
+//         Err(e) => {
+//             log!("{}", e);
+//             return 0;
+//         }
+//     }
+// }

@@ -1,5 +1,5 @@
 enum_from_primitive! {
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Method {
     HTTP_METHOD_GET,
     HTTP_METHOD_HEAD,
