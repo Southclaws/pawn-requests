@@ -100,13 +100,22 @@ impl Plugin {
                 continue;
             }
 
+            // let amx = rc.amx;
+
             r.map(|o| {
                 let response: Response = match o {
                     Some(v) => v,
                     None => return,
                 };
 
-                // exec_public!(response.amx, "OnPlayerNameChanged"; old_name => string, new_name => string);
+                println!("{}: {}", response.id, response.request.callback)
+
+                // TODO:
+                // exec_public!(
+                //     amx,
+                //     &response.request.callback;
+                //     response.id,
+                //     response.status);
             });
         }
     }
@@ -120,7 +129,7 @@ impl Plugin {
         _headers: i32, // TODO
     ) -> AmxResult<Cell> {
         let header_map = HeaderMap::new();
-        let rqc = RequestClient::new(*amx.clone(), endpoint, header_map);
+        let rqc = RequestClient::new(amx, endpoint, header_map);
         Ok(self.request_clients.alloc(rqc))
     }
 

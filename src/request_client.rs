@@ -9,7 +9,7 @@ use tokio::runtime::Runtime;
 use method::Method;
 
 pub struct RequestClient {
-    amx: AMX,
+    pub amx: AMX,
     runtime: Runtime,
     endpoint: String,
     headers: HeaderMap,
@@ -31,7 +31,6 @@ pub struct Request {
 pub struct Response {
     pub request: Request,
 
-    pub amx: AMX,
     pub id: i32,
     pub body: String,
     pub status: StatusCode,
@@ -50,7 +49,7 @@ impl Stream for RequestClient {
 }
 
 impl RequestClient {
-    pub fn new(amx: AMX, endpoint: String, headers: HeaderMap) -> RequestClient {
+    pub fn new(amx: &AMX, endpoint: String, headers: HeaderMap) -> RequestClient {
         let rt = match Runtime::new() {
             Ok(v) => v,
             Err(e) => {
@@ -58,10 +57,12 @@ impl RequestClient {
             }
         };
 
+        let a = &*amx.to_owned();
+
         let (send, recv) = mpsc::channel(4096);
 
         RequestClient {
-            amx: amx,
+            amx: a,
             runtime: rt,
             endpoint: endpoint,
             headers: headers,
@@ -91,7 +92,6 @@ impl RequestClient {
             .and_then(move |response| {
                 sender
                     .send(Response {
-                        amx: self.amx,
                         request: request_copy,
                         id: id,
                         body: String::from(""),
