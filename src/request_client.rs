@@ -2,14 +2,12 @@ use futures::{sync::mpsc, Future, Poll, Sink, Stream};
 use reqwest::async::Client;
 use reqwest::header::HeaderMap;
 use reqwest::StatusCode;
-use samp_sdk::amx::AMX;
 use std::error::Error;
 use tokio::runtime::Runtime;
 
 use method::Method;
 
 pub struct RequestClient {
-    pub amx: AMX,
     runtime: Runtime,
     endpoint: String,
     headers: HeaderMap,
@@ -49,7 +47,7 @@ impl Stream for RequestClient {
 }
 
 impl RequestClient {
-    pub fn new(amx: &AMX, endpoint: String, headers: HeaderMap) -> RequestClient {
+    pub fn new(endpoint: String, headers: HeaderMap) -> RequestClient {
         let rt = match Runtime::new() {
             Ok(v) => v,
             Err(e) => {
@@ -57,12 +55,9 @@ impl RequestClient {
             }
         };
 
-        let a = &*amx.to_owned();
-
         let (send, recv) = mpsc::channel(4096);
 
         RequestClient {
-            amx: a,
             runtime: rt,
             endpoint: endpoint,
             headers: headers,

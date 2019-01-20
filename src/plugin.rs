@@ -3,6 +3,7 @@ use reqwest::header::HeaderMap;
 use samp_sdk::amx::{AmxResult, AMX};
 use samp_sdk::consts::*;
 use samp_sdk::types::Cell;
+use std::collections::HashMap;
 
 use method::Method;
 use pool::Pool;
@@ -10,6 +11,7 @@ use request_client::{Request, RequestClient, Response};
 
 pub struct Plugin {
     request_clients: Pool<RequestClient>,
+    request_client_amx: HashMap<i32, usize>,
 }
 
 define_native!(new_requests_client, endpoint: String, headers: i32);
@@ -82,40 +84,53 @@ impl Plugin {
         }
     }
 
-    pub fn amx_unload(&self, _: &AMX) -> Cell {
+    pub fn amx_unload(&mut self, _amx: &AMX) -> Cell {
+        // let mut to_clear = Vec::new();
+        // for (id, amx_ptr) in self.request_client_amx.iter() {
+        //     if amx.amx as usize == *amx_ptr {
+        //         to_clear.push(id);
+        //     }
+        // }
+        // for id in to_clear.iter() {
+        //     self.request_client_amx.remove(id);
+        // }
         return AMX_ERR_NONE;
     }
 
     pub fn process_tick(&mut self) {
-        for (_, rc) in self.request_clients.active.iter_mut() {
+        for (id, rc) in self.request_clients.active.iter_mut() {
             let r: Async<Option<Response>> = match rc.poll() {
                 Ok(v) => v,
-                Err(e) => {
-                    log!("{:?}", e);
-                    return;
-                }
+                Err(_) => continue,
             };
 
             if r.is_not_ready() {
                 continue;
             }
 
-            // let amx = rc.amx;
+            let raw = match self.request_client_amx.get(&id) {
+                Some(v) => v,
+                None => {
+                    log!("orphan request client: lost handle to amx");
+                    continue;
+                }
+            };
+            let amx = cast_amx(raw);
 
             r.map(|o| {
                 let response: Response = match o {
                     Some(v) => v,
                     None => return,
                 };
+                let _public = match amx.find_public(&response.request.callback) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        log!("{}", e);
+                        return;
+                    }
+                };
 
-                println!("{}: {}", response.id, response.request.callback)
-
-                // TODO:
-                // exec_public!(
-                //     amx,
-                //     &response.request.callback;
-                //     response.id,
-                //     response.status);
+                println!("{}: {}", response.id, response.request.callback);
             });
         }
     }
@@ -129,8 +144,10 @@ impl Plugin {
         _headers: i32, // TODO
     ) -> AmxResult<Cell> {
         let header_map = HeaderMap::new();
-        let rqc = RequestClient::new(amx, endpoint, header_map);
-        Ok(self.request_clients.alloc(rqc))
+        let rqc = RequestClient::new(endpoint, header_map);
+        let id = self.request_clients.alloc(rqc);
+        self.request_client_amx.insert(id, amx.amx as usize);
+        Ok(id)
     }
 
     pub fn do_request(
@@ -175,9 +192,14 @@ impl Default for Plugin {
         {
             Plugin {
                 request_clients: Pool::default(),
+                request_client_amx: HashMap::new(),
             }
         }
     }
+}
+
+fn cast_amx(raw: &usize) -> AMX {
+    AMX::new(*raw as *mut _)
 }
 
 // fn get_arg_ref<T: Clone>(amx: &AMX, parser: &mut args::Parser, out_ref: &mut T) -> i32 {
