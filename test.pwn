@@ -58,7 +58,7 @@ public OnGetData(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 
     print("\nPASS!");
 }
-
+#endinput
 new Request:OnGetDataSSL_ID;
 Test:GetDataSSL() {
     new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders());
