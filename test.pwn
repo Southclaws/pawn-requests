@@ -6,11 +6,11 @@
 #include "requests.inc"
 
 main() {
-    SetTimer("exit", 10000, false);
+    SetTimer("timeout", 10000, false);
 }
 
-forward exit();
-public exit() {
+forward timeout();
+public timeout() {
     SendRconCommand("exit");
 }
 
