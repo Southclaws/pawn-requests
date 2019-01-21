@@ -1,0 +1,42 @@
+version: "{build}"
+image: Visual Studio 2015
+
+environment:
+  matrix:
+    - TARGET: i686-pc-windows-msvc
+      CHANNEL: stable
+
+install:
+  - ps: iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+  - scoop bucket add southclaws https://github.com/Southclaws/scoops.git; scoop install sampctl
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs
+  - rustup-init.exe --default-host %TARGET% --default-toolchain %CHANNEL% -y
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -Vv
+  - cargo -V
+  - cd test && sampctl server ensure && cd ..
+
+build_script:
+  - cargo build --release
+  - dir .\target\release
+  - cp .\target\release\pawn_requests.dll .\test\plugins\requests.dll
+
+test_script:
+  - sampctl package ensure
+  - cd test
+  - sampctl package run
+
+artifacts:
+  - path: test\plugins\requests.dll
+    name: Plugin
+
+deploy:
+  - provider: BinTray
+    username: southclaws
+    api_key:
+      secure: Bdfem9a83asj2HOeyqxivFLgVJP0VAnWzlxZhJ46buc8imYqegz+fycY/jYim5po
+    subject: southclaws
+    repo: pawn-requests
+    package: builds
+    publish: true
+    override: true

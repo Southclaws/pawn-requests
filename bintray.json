@@ -1,0 +1,23 @@
+{
+    "package": {
+      "name": "builds",
+      "repo": "pawn-requests",
+      "subject": "southclaws",
+      "vcs_url": "https://github.com/Southclaws/pawn-requests",
+      "licenses": ["MIT"]
+    },
+    "version": {
+      "name": "latest"
+    },
+    "files": [
+      {
+        "includePattern": "test/plugins/requests.so",
+        "uploadPattern": "requests.so",
+        "matrixParams": {
+          "override": 1
+        }
+      }
+    ],
+    "publish": true
+  }
+  

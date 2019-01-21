@@ -1,0 +1,34 @@
+language: rust
+cache: cargo
+notifications:
+  email: false
+
+addons:
+  apt:
+    packages:
+      - gcc-multilib
+      - g++-multilib
+
+before_install:
+  - cd $HOME && curl -Ls
+    https://github.com/Southclaws/sampctl/releases/download/1.8.37/sampctl_1.8.37_linux_amd64.tar.gz -o ./bin/tmp.tar.gz
+  - cd bin && tar xzf tmp.tar.gz && rm tmp.tar.gz
+  - alias sampctl=$HOME/bin/sampctl
+  - cd $HOME/build/Southclaws/pawn-requests
+
+before_script:
+  - make prepare
+
+script:
+  - make build-linux-release
+  - make test-native
+
+deploy:
+  on:
+    all_branches: true
+  provider: bintray
+  file: bintray.json
+  user: southclaws
+  key:
+    secure: F8WglAscfPZsItKT63IpZQ0H5JEk/mBF9q42Oqhk6OerTwfKL+4CH6BFyIqLuNAWDrMgeSf0KMpJ0VZKFVcGSsgVerDqB/OkfDOkgkzZ6yL9oIf6KHB/SKQNqyX83C8PmN7XOjinNyOLcazR5bAT+XYvZ4K6FyPgUXigghREFddBx1AMlEPosr3EVv8WKJfp2xbpmzrU+Slva4Q/qG3Y946hla/BIQoOCHQ/n+xLbe4UQ9KKMOam4+FCXUFgWe7jdVFUW8dsWAgHJ/aiUHoQBCwHgMv89zF+uCipMu5ypzWuK0DPPd9UUeOdArGn7mYa1+ixrgWUUqApOk8lCgY4fHG/P9YEjRxFWV/9xgKRYQnLEmEHqSI8EiWxW8zj3CsId3FJ2eKmOgfZWGJN75sp6eSbFK0kspnUcARAlD3VCIrHJkgISqUU45ArUq4mAmnG2N+Jy42tUb0jnLkgA88FwdGGRgXd9I0AT18UTMSNycVEM6v+ksO0XcEX/E8ra7TnrhJkkYz7i2dKShvtgKuuNY0uv8uXlf8jzWMeSf9Q6Lb50xsSgoM3OqeP4soaMXrG7VCoBI7ChGMNY70q/zYaBe6RqS5GlK3h6/ZEaXizbeuqOepqNIcN8GcwJ7YZdcYGpj/ReIo9rTLoQ4IIwO8wQa6c+o6dXK2DrpO7UI2vGQM=
+  skip_cleanup: true
