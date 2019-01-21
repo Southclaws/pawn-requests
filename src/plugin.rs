@@ -24,6 +24,41 @@ define_native!(
     body: String,
     headers: Cell
 );
+define_native!(request_headers);
+define_native!(request_json);
+define_native!(web_socket_client);
+define_native!(web_socket_send);
+define_native!(json_web_socket_client);
+define_native!(json_web_socket_send);
+define_native!(json_parse);
+define_native!(json_stringify);
+define_native!(json_node_type);
+define_native!(json_object);
+define_native!(json_int);
+define_native!(json_bool);
+define_native!(json_float);
+define_native!(json_string);
+define_native!(json_array);
+define_native!(json_append);
+define_native!(json_set_object);
+define_native!(json_set_int);
+define_native!(json_set_float);
+define_native!(json_set_bool);
+define_native!(json_set_string);
+define_native!(json_get_object);
+define_native!(json_get_int);
+define_native!(json_get_float);
+define_native!(json_get_bool);
+define_native!(json_get_string);
+define_native!(json_get_array);
+define_native!(json_array_length);
+define_native!(json_array_object);
+define_native!(json_get_node_int);
+define_native!(json_get_node_float);
+define_native!(json_get_node_bool);
+define_native!(json_get_node_string);
+define_native!(json_toggle_gc);
+define_native!(json_cleanup);
 
 impl Plugin {
     pub fn load(&self) -> bool {
@@ -37,43 +72,43 @@ impl Plugin {
     pub fn amx_load(&self, amx: &AMX) -> Cell {
         let natives = natives! {
             "RequestsClient" => new_requests_client,
-            "Request" => do_request
+            "Request" => do_request,
+            "RequestHeaders" => request_headers,
+            "RequestJSON" => request_json,
+            "WebSocketClient" => web_socket_client,
+            "WebSocketSend" => web_socket_send,
+            "JsonWebSocketClient" => json_web_socket_client,
+            "JsonWebSocketSend" => json_web_socket_send,
+            "JsonParse" => json_parse,
+            "JsonStringify" => json_stringify,
+            "JsonNodeType" => json_node_type,
+            "JsonObject" => json_object,
+            "JsonInt" => json_int,
+            "JsonBool" => json_bool,
+            "JsonFloat" => json_float,
+            "JsonString" => json_string,
+            "JsonArray" => json_array,
+            "JsonAppend" => json_append,
+            "JsonSetObject" => json_set_object,
+            "JsonSetInt" => json_set_int,
+            "JsonSetFloat" => json_set_float,
+            "JsonSetBool" => json_set_bool,
+            "JsonSetString" => json_set_string,
+            "JsonGetObject" => json_get_object,
+            "JsonGetInt" => json_get_int,
+            "JsonGetFloat" => json_get_float,
+            "JsonGetBool" => json_get_bool,
+            "JsonGetString" => json_get_string,
+            "JsonGetArray" => json_get_array,
+            "JsonArrayLength" => json_array_length,
+            "JsonArrayObject" => json_array_object,
+            "JsonGetNodeInt" => json_get_node_int,
+            "JsonGetNodeFloat" => json_get_node_float,
+            "JsonGetNodeBool" => json_get_node_bool,
+            "JsonGetNodeString" => json_get_node_string,
+            "JsonToggleGC" => json_toggle_gc,
+            "JsonCleanup" => json_cleanup
         };
-        // "RequestHeaders" => request_headers,
-        // "RequestJSON" => request_json,
-        // "WebSocketClient" => web_socket_client,
-        // "WebSocketSend" => web_socket_send,
-        // "JsonWebSocketClient" => json_web_socket_client,
-        // "JsonWebSocketSend" => json_web_socket_send,
-        // "JsonParse" => json_parse,
-        // "JsonStringify" => json_stringify,
-        // "JsonNodeType" => json_node_type,
-        // "JsonObject" => json_object,
-        // "JsonInt" => json_int,
-        // "JsonBool" => json_bool,
-        // "JsonFloat" => json_float,
-        // "JsonString" => json_string,
-        // "JsonArray" => json_array,
-        // "JsonAppend" => json_append,
-        // "JsonSetObject" => json_set_object,
-        // "JsonSetInt" => json_set_int,
-        // "JsonSetFloat" => json_set_float,
-        // "JsonSetBool" => json_set_bool,
-        // "JsonSetString" => json_set_string,
-        // "JsonGetObject" => json_get_object,
-        // "JsonGetInt" => json_get_int,
-        // "JsonGetFloat" => json_get_float,
-        // "JsonGetBool" => json_get_bool,
-        // "JsonGetString" => json_get_string,
-        // "JsonGetArray" => json_get_array,
-        // "JsonArrayLength" => json_array_length,
-        // "JsonArrayObject" => json_array_object,
-        // "JsonGetNodeInt" => json_get_node_int,
-        // "JsonGetNodeFloat" => json_get_node_float,
-        // "JsonGetNodeBool" => json_get_node_bool,
-        // "JsonGetNodeString" => json_get_node_string,
-        // "JsonToggleGC" => json_toggle_gc,
-        // "JsonCleanup" => json_cleanup,
 
         match amx.register(&natives) {
             Ok(_) => AMX_ERR_NONE,
@@ -189,6 +224,116 @@ impl Plugin {
         };
 
         Ok(id)
+    }
+
+    // -
+    // Not implemented yet:
+    // -
+
+    pub fn request_headers(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn request_json(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn web_socket_send(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_web_socket_send(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_parse(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_stringify(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_node_type(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_int(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_float(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_array(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_append(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_set_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_set_int(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_set_float(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_set_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_set_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_int(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_float(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_array(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_array_length(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_array_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_node_int(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_node_float(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_node_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_get_node_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_toggle_gc(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
+    }
+    pub fn json_cleanup(&mut self, _: &AMX) -> AmxResult<Cell> {
+        Ok(0)
     }
 }
 
