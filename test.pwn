@@ -6,7 +6,12 @@
 #include "requests.inc"
 
 main() {
-    //
+    SetTimer("exit", 10000, false);
+}
+
+forward exit();
+public exit() {
+    SendRconCommand("exit");
 }
 
 public OnRequestFailure(Request:id, errorCode, errorMessage[], len) {
