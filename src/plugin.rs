@@ -122,7 +122,7 @@ impl Plugin {
                     Some(v) => v,
                     None => return,
                 };
-                let _public = match amx.find_public(&response.request.callback) {
+                let public = match amx.find_public(&response.request.callback) {
                     Ok(v) => v,
                     Err(e) => {
                         log!("{}", e);
@@ -131,6 +131,11 @@ impl Plugin {
                 };
 
                 println!("{}: {}", response.id, response.request.callback);
+
+                match response_call_string(&amx, public, response) {
+                    Ok(_) => (),
+                    Err(e) => log!("{}", e),
+                };
             });
         }
     }
@@ -200,6 +205,15 @@ impl Default for Plugin {
 
 fn cast_amx(raw: &usize) -> AMX {
     AMX::new(*raw as *mut _)
+}
+
+fn response_call_string(amx: &AMX, public: Cell, response: Response) -> AmxResult<()> {
+    amx.push(response.body.len())?;
+    amx.push_string(&response.body, false)?;
+    amx.push(response.status.as_u16())?;
+    amx.push(response.id)?;
+    amx.exec(public)?;
+    Ok(())
 }
 
 // fn get_arg_ref<T: Clone>(amx: &AMX, parser: &mut args::Parser, out_ref: &mut T) -> i32 {
