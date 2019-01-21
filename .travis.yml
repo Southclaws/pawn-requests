@@ -1,7 +1,11 @@
 language: rust
-cache: cargo
 notifications:
   email: false
+
+cache:
+  - cargo
+  - directories:
+      - $HOME/.samp
 
 addons:
   apt:
@@ -25,7 +29,9 @@ before_script:
   - make prepare
 
 script:
+  - pwd
   - make build-linux-release
+  - ls -la target/release
   - make test-native
 
 deploy:
