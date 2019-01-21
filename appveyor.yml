@@ -24,7 +24,7 @@ build_script:
 test_script:
   - sampctl package ensure
   - cd test
-  - sampctl package run
+  - sampctl server run
 
 artifacts:
   - path: test\plugins\requests.dll
