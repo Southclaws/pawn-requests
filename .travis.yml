@@ -6,7 +6,6 @@ notifications:
 addons:
   apt:
     packages:
-      - libssl-dev
       - gcc-multilib
       - g++-multilib
 
@@ -15,6 +14,10 @@ before_install:
     https://github.com/Southclaws/sampctl/releases/download/1.8.37/sampctl_1.8.37_linux_amd64.tar.gz -o ./bin/tmp.tar.gz
   - cd bin && tar xzf tmp.tar.gz && rm tmp.tar.gz
   - alias sampctl=$HOME/bin/sampctl
+  - cd $HOME && curl -Ls https://www.openssl.org/source/openssl-1.0.2o.tar.gz -o openssl-1.0.2o.tar.gz
+  - tar -xzf openssl-1.0.2o.tar.gz
+  - cd openssl-1.0.2o && setarch i386 ./config -m32 no-shared && make && make install && cd ..
+  - export OPENSSL_ROOT_DIR=/root/openssl-1.0.2o
   - cd $HOME/build/Southclaws/pawn-requests
 
 before_script:
