@@ -136,6 +136,7 @@ impl Plugin {
 
     pub fn process_tick(&mut self) {
         for (id, rc) in self.request_clients.active.iter_mut() {
+            self.runtime.poll();
             log!("polling request client {} for responses", id);
             let r: Async<Option<Response>> = match rc.poll() {
                 Ok(v) => v,
