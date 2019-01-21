@@ -4,12 +4,14 @@ use samp_sdk::amx::{AmxResult, AMX};
 use samp_sdk::consts::*;
 use samp_sdk::types::Cell;
 use std::collections::HashMap;
+use tokio::runtime::Runtime;
 
 use method::Method;
 use pool::Pool;
 use request_client::{Request, RequestClient, Response};
 
 pub struct Plugin {
+    runtime: Runtime,
     request_clients: Pool<RequestClient>,
     request_client_amx: HashMap<i32, usize>,
 }
@@ -134,11 +136,13 @@ impl Plugin {
 
     pub fn process_tick(&mut self) {
         for (id, rc) in self.request_clients.active.iter_mut() {
+            log!("polling request client {} for responses", id);
             let r: Async<Option<Response>> = match rc.poll() {
                 Ok(v) => v,
                 Err(_) => continue,
             };
 
+            log!("checking if response ready");
             if r.is_not_ready() {
                 continue;
             }
@@ -152,6 +156,7 @@ impl Plugin {
             };
             let amx = cast_amx(raw);
 
+            log!("mapping over response");
             r.map(|o| {
                 let response: Response = match o {
                     Some(v) => v,
@@ -339,11 +344,17 @@ impl Plugin {
 
 impl Default for Plugin {
     fn default() -> Self {
-        {
-            Plugin {
-                request_clients: Pool::default(),
-                request_client_amx: HashMap::new(),
+        let rt = match Runtime::new() {
+            Ok(v) => v,
+            Err(e) => {
+                panic!("Failed to create Tokio runtime: {}", e);
             }
+        };
+
+        Plugin {
+            runtime: rt,
+            request_clients: Pool::default(),
+            request_client_amx: HashMap::new(),
         }
     }
 }
