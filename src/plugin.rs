@@ -133,7 +133,6 @@ impl Plugin {
 
     pub fn process_tick(&mut self) {
         for (id, rc) in self.request_clients.active.iter_mut() {
-            log!("polling request client {} for responses", id);
             let response: Response = match rc.poll() {
                 Ok(v) => v,
                 Err(_) => continue,
