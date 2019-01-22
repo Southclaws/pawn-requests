@@ -18,6 +18,7 @@ impl<T> Default for Pool<T> {
 impl<T> Pool<T> {
     pub fn alloc(&mut self, t: T) -> i32 {
         self.active.insert(self.current, t);
+        self.current += 1;
         self.current
     }
     pub fn get(&mut self, id: i32) -> Option<&mut T> {
