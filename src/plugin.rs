@@ -173,9 +173,13 @@ impl Plugin {
         _headers: i32, // TODO
     ) -> AmxResult<Cell> {
         let header_map = HeaderMap::new();
-        let rqc = RequestClient::new(endpoint, header_map);
+        let rqc = RequestClient::new(endpoint.clone(), header_map);
         let id = self.request_clients.alloc(rqc);
         self.request_client_amx.insert(id, amx.amx as usize);
+        debug!(
+            "created new request client {} with endpoint {}",
+            id, endpoint
+        );
         Ok(id)
     }
 
@@ -197,6 +201,11 @@ impl Plugin {
         };
 
         let header_map = HeaderMap::new();
+
+        debug!(
+            "executing new request with {} to {} with {:?} calling {}",
+            request_client_id, path, method, callback
+        );
 
         let id = match client.request(Request {
             callback: callback,

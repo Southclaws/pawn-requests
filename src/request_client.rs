@@ -77,7 +77,22 @@ impl RequestClient {
             .headers(request.headers)
             .send()
             .map_err(|e| log!("{}", e))
-            .and_then(move |response| {
+            .and_then(move |response: reqwest::async::Response| {
+                debug!(
+                    "received response for request {} status {}",
+                    id,
+                    response.status()
+                );
+
+                // response
+                //     .body()
+                //     .fold(Vec::new(), move |mut v, chunk| {
+                //         v.extend(&chunk[..]);
+                //         future::ok::<_, reqwest::Error>(v)
+                //     })
+                //     .and_then(move |chunks| future::ok(String::from_utf8(chunks).unwrap()))
+                //     .wait();
+
                 sender
                     .send(Response {
                         request: request_copy,

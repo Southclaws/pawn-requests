@@ -33,7 +33,7 @@ script:
   - pwd
   - make build-linux-release
   - ls -la target/release
-  - RUST_BACKTRACE=1 make test-native
+  - RUST_BACKTRACE=1 RUST_LOG=debug make test-native
 
 deploy:
   on:

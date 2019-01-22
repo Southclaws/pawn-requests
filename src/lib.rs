@@ -1,12 +1,15 @@
 #[macro_use]
+extern crate log;
+extern crate env_logger;
+#[macro_use]
 extern crate samp_sdk;
+#[macro_use]
+extern crate enum_primitive;
 extern crate futures;
+extern crate num_traits;
 extern crate reqwest;
 extern crate tokio;
 extern crate url;
-#[macro_use]
-extern crate enum_primitive;
-extern crate num_traits;
 
 mod method;
 mod plugin;
