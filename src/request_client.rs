@@ -1,8 +1,9 @@
-use futures::{sync::mpsc, Future, Poll, Sink, Stream};
+use futures::Future;
 use reqwest::async::Client;
 use reqwest::header::HeaderMap;
 use reqwest::StatusCode;
 use std::error::Error;
+use std::sync::mpsc;
 use tokio::runtime::Runtime;
 
 use method::Method;
@@ -34,18 +35,6 @@ pub struct Response {
     pub status: StatusCode,
 }
 
-impl Stream for RequestClient {
-    type Item = Response;
-    type Error = ();
-
-    fn poll(&mut self) -> Poll<Option<Response>, ()> {
-        match self.done_recv.poll() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(()),
-        }
-    }
-}
-
 impl RequestClient {
     pub fn new(endpoint: String, headers: HeaderMap) -> RequestClient {
         let rt = match Runtime::new() {
@@ -55,7 +44,7 @@ impl RequestClient {
             }
         };
 
-        let (send, recv) = mpsc::channel(4096);
+        let (send, recv) = mpsc::channel();
 
         RequestClient {
             runtime: rt,
@@ -66,6 +55,10 @@ impl RequestClient {
             done_send: send,
             done_recv: recv,
         }
+    }
+
+    pub fn poll(&mut self) -> Result<Response, Box<dyn std::error::Error>> {
+        Ok(self.done_recv.try_recv()?)
     }
 
     pub fn request(&mut self, request: Request) -> Result<i32, Box<Error>> {
