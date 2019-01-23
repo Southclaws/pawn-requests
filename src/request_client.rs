@@ -104,6 +104,7 @@ impl RequestClient {
             })
             .map(|_| ());
 
+        debug!("spawning request task for {} to {}", full, request.callback);
         self.runtime.spawn(req);
 
         Ok(self.request_id)

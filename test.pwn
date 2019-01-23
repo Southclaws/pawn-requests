@@ -18,23 +18,23 @@ public OnRequestFailure(Request:id, errorCode, errorMessage[], len) {
     printf("Request %d failed with %d: '%s'", _:id, errorCode, errorMessage);
 }
 
-Test:NewClient() {
-    new RequestsClient:client = RequestsClient("http://httpbin.org/");
-    ASSERT(IsValidRequestsClient(client));
-    printf("new requests client: %d", _:client);
-}
+// Test:NewClient() {
+//     new RequestsClient:client = RequestsClient("http://httpbin.org/");
+//     ASSERT(IsValidRequestsClient(client));
+//     printf("new requests client: %d", _:client);
+// }
 
-Test:NewClientInvalid() {
-    new RequestsClient:client = RequestsClient("ssh://httpbin.org/");
-    ASSERT(!IsValidRequestsClient(client));
-    printf("new requests client: %d", _:client);
-}
+// Test:NewClientInvalid() {
+//     new RequestsClient:client = RequestsClient("ssh://httpbin.org/");
+//     ASSERT(!IsValidRequestsClient(client));
+//     printf("new requests client: %d", _:client);
+// }
 
-Test:NewClientIP() {
-    new RequestsClient:client = RequestsClient("1.1.1.1");
-    ASSERT(!IsValidRequestsClient(client));
-    printf("new requests client: %d", _:client);
-}
+// Test:NewClientIP() {
+//     new RequestsClient:client = RequestsClient("1.1.1.1");
+//     ASSERT(!IsValidRequestsClient(client));
+//     printf("new requests client: %d", _:client);
+// }
 
 
 // -

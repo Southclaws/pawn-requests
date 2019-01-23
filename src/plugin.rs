@@ -13,9 +13,9 @@ pub struct Plugin {
     request_client_amx: HashMap<i32, usize>,
 }
 
-define_native!(new_requests_client, endpoint: String, headers: i32);
+define_native!(requests_client, endpoint: String, headers: i32);
 define_native!(
-    do_request,
+    request,
     request_client_id: Cell,
     path: String,
     method: Method,
@@ -71,8 +71,8 @@ impl Plugin {
 
     pub fn amx_load(&self, amx: &AMX) -> Cell {
         let natives = natives! {
-            "RequestsClient" => new_requests_client,
-            "Request" => do_request,
+            "RequestsClient" => requests_client,
+            "Request" => request,
             "RequestHeaders" => request_headers,
             "RequestJSON" => request_json,
             "WebSocketClient" => web_socket_client,
@@ -167,7 +167,7 @@ impl Plugin {
 
     // Natives
 
-    pub fn new_requests_client(
+    pub fn requests_client(
         &mut self,
         amx: &AMX,
         endpoint: String,
@@ -184,7 +184,7 @@ impl Plugin {
         Ok(id)
     }
 
-    pub fn do_request(
+    pub fn request(
         &mut self,
         _: &AMX,
         request_client_id: Cell,
@@ -194,10 +194,15 @@ impl Plugin {
         _body: String,  // TODO
         _headers: Cell, // TODO
     ) -> AmxResult<Cell> {
+        log!("request called {} {:?} {}", path, method, callback);
         let client = match self.request_clients.get(request_client_id) {
             Some(v) => v,
             None => {
-                return Ok(1);
+                debug!(
+                    "attempted to request with invalid client {}",
+                    request_client_id
+                );
+                return Ok(0);
             }
         };
 
