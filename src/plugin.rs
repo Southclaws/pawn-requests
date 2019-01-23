@@ -61,6 +61,7 @@ define_native!(json_cleanup);
 
 impl Plugin {
     pub fn load(&self) -> bool {
+        env_logger::init();
         return true;
     }
 
