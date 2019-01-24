@@ -156,7 +156,10 @@ impl Plugin {
                 }
             };
 
-            println!("{}: {}", response.id, response.request.callback);
+            debug!(
+                "Response {}: {}\n{}",
+                response.id, response.request.callback, response.body
+            );
 
             match response_call_string(&amx, public, response) {
                 Ok(_) => (),
@@ -356,10 +359,12 @@ fn cast_amx(raw: &usize) -> AMX {
 
 fn response_call_string(amx: &AMX, public: Cell, response: Response) -> AmxResult<()> {
     amx.push(response.body.len())?;
-    amx.push_string(&response.body, false)?;
-    amx.push(response.status.as_u16())?;
+    println!("{:?}", response.body.as_bytes());
+    let amx_addr = amx.push_array(response.body.as_bytes())?;
+    amx.push(response.status.as_u16() as i32)?;
     amx.push(response.id)?;
     amx.exec(public)?;
+    amx.release(amx_addr)?;
     Ok(())
 }
 

@@ -1,9 +1,6 @@
-use futures::Future;
-use reqwest::async::Client;
-use reqwest::header::HeaderMap;
-use reqwest::StatusCode;
-use std::error::Error;
-use std::sync::mpsc;
+use futures::{future, Future, Stream};
+use reqwest::{async::Client, header::HeaderMap, StatusCode};
+use std::{error::Error, sync::mpsc};
 use tokio::runtime::Runtime;
 
 use method::Method;
@@ -77,27 +74,34 @@ impl RequestClient {
             .headers(request.headers)
             .send()
             .map_err(|e| log!("{}", e))
-            .and_then(move |response: reqwest::async::Response| {
+            .and_then(move |mut response: reqwest::async::Response| {
                 debug!(
                     "received response for request {} status {}",
                     id,
                     response.status()
                 );
 
-                // response
-                //     .body()
-                //     .fold(Vec::new(), move |mut v, chunk| {
-                //         v.extend(&chunk[..]);
-                //         future::ok::<_, reqwest::Error>(v)
-                //     })
-                //     .and_then(move |chunks| future::ok(String::from_utf8(chunks).unwrap()))
-                //     .wait();
+                let body = match response
+                    .body_mut()
+                    .fold(Vec::new(), move |mut v, chunk| {
+                        v.extend(&chunk[..]);
+                        future::ok::<_, reqwest::Error>(v)
+                    })
+                    .and_then(move |chunks| future::ok(String::from_utf8(chunks).unwrap()))
+                    .wait()
+                {
+                    Ok(v) => v,
+                    Err(e) => {
+                        log!("failed to read body: {}", e);
+                        String::new()
+                    }
+                };
 
                 sender
                     .send(Response {
                         request: request_copy,
                         id: id,
-                        body: String::from(""),
+                        body: body,
                         status: response.status(),
                     })
                     .map_err(|e| log!("{}", e))
