@@ -357,10 +357,18 @@ fn cast_amx(raw: &usize) -> AMX {
     AMX::new(*raw as *mut _)
 }
 
+fn to_pawn_string(input: String) -> Vec<i32> {
+    let mut result = Vec::new();
+    for char in input.as_bytes().iter() {
+        result.push(*char as i32);
+    }
+    result.push(0); // EOS
+    return result;
+}
+
 fn response_call_string(amx: &AMX, public: Cell, response: Response) -> AmxResult<()> {
     amx.push(response.body.len())?;
-    println!("{:?}", response.body.as_bytes());
-    let amx_addr = amx.push_array(response.body.as_bytes())?;
+    let amx_addr = amx.push_array(to_pawn_string(response.body).as_slice())?;
     amx.push(response.status.as_u16() as i32)?;
     amx.push(response.id)?;
     amx.exec(public)?;
