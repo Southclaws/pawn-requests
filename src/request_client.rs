@@ -8,7 +8,7 @@ use method::Method;
 
 pub struct RequestClient {
     runtime: Runtime,
-    endpoint: String,
+    endpoint: url::Url,
     headers: HeaderMap,
     client: Client,
     request_id: i32,
@@ -38,7 +38,8 @@ impl RequestClient {
         endpoint: String,
         headers: HeaderMap,
     ) -> Result<RequestClient, Box<std::error::Error>> {
-        if !url::Url::parse(&endpoint)?.scheme().starts_with("http") {
+        let url = url::Url::parse(&endpoint)?;
+        if !url.scheme().starts_with("http") {
             return Err(static_err("non-http scheme"));
         }
         let rt = Runtime::new()?;
@@ -46,7 +47,7 @@ impl RequestClient {
 
         Ok(RequestClient {
             runtime: rt,
-            endpoint: endpoint,
+            endpoint: url,
             headers: headers,
             client: Client::new(),
             request_id: 0,
@@ -61,16 +62,16 @@ impl RequestClient {
 
     pub fn request(&mut self, request: Request) -> Result<i32, Box<Error>> {
         let id = self.request_id;
-        let full = format!("{}/{}", self.endpoint, request.path);
+        let mut full_url = self.endpoint.clone();
         let request_copy = request.clone();
-        let url = reqwest::Url::parse(&full)?;
         let sender = self.done_send.clone();
 
         self.request_id += 1;
+        full_url.set_path(&request.path);
 
         let req = self
             .client
-            .request(request.method.into(), url)
+            .request(request.method.into(), full_url.clone())
             .headers(self.headers.clone())
             .headers(request.headers)
             .send()
@@ -109,7 +110,10 @@ impl RequestClient {
             })
             .map(|_| ());
 
-        debug!("spawning request task for {} to {}", full, request.callback);
+        debug!(
+            "spawning request task for {} to {}",
+            full_url, request.callback
+        );
         self.runtime.spawn(req);
 
         Ok(id)
