@@ -43,7 +43,7 @@ define_native!(json_bool, value: bool);
 define_native!(json_float, value: f32);
 define_native!(json_string, value: String);
 define_native!(json_array as raw);
-define_native!(json_append);
+define_native!(json_append, a: Cell, b: Cell);
 define_native!(json_set_object);
 define_native!(json_set_int);
 define_native!(json_set_float);
@@ -399,7 +399,19 @@ impl Plugin {
         }
         Ok(self.json_nodes.alloc(serde_json::Value::Array(arr)))
     }
-    pub fn json_append(&mut self, _: &AMX) -> AmxResult<Cell> {
+    pub fn json_append(&mut self, _: &AMX, a: Cell, b: Cell) -> AmxResult<Cell> {
+        let a: &serde_json::Value = match self.json_nodes.get(a) {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+
+        let b: &serde_json::Value = match self.json_nodes.get(b) {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+
+        // TODO: merge b into a
+
         Ok(0)
     }
     pub fn json_set_object(&mut self, _: &AMX) -> AmxResult<Cell> {

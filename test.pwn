@@ -591,41 +591,41 @@ Test:JsonObjectComplex() {
     print(buf);
 }
 
-// Test:JsonAppendObject() {
-//     new Node:a = JsonObject(
-//         "key1", JsonString("value1"),
-//         "key2", JsonString("value2")
-//     );
-//     new Node:b = JsonObject(
-//         "key3", JsonString("value3")
-//     );
+Test:JsonAppendObject() {
+    new Node:a = JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value2")
+    );
+    new Node:b = JsonObject(
+        "key3", JsonString("value3")
+    );
 
-//     new Node:c = JsonAppend(a, b);
+    new Node:c = JsonAppend(a, b);
 
-//     new buf[128];
-//     new ret = JsonStringify(c, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
-//     print(buf);
-// }
+    new buf[128];
+    new ret = JsonStringify(c, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
+    print(buf);
+}
 
-// Test:JsonAppendArray() {
-//     new Node:a = JsonArray(
-//         JsonInt(1),
-//         JsonInt(2)
-//     );
-//     new Node:b = JsonArray(
-//         JsonInt(3)
-//     );
+Test:JsonAppendArray() {
+    new Node:a = JsonArray(
+        JsonInt(1),
+        JsonInt(2)
+    );
+    new Node:b = JsonArray(
+        JsonInt(3)
+    );
 
-//     new Node:c = JsonAppend(a, b);
+    new Node:c = JsonAppend(a, b);
 
-//     new buf[128];
-//     new ret = JsonStringify(c, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "[1,2,3]"));
-//     print(buf);
-// }
+    new buf[128];
+    new ret = JsonStringify(c, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "[1,2,3]"));
+    print(buf);
+}
 
 // Test:JsonSetObject() {
 //     new Node:node = JsonObject();
