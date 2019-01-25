@@ -4,7 +4,7 @@
     "entry": "test.pwn",
     "output": "test/gamemodes/test.amx",
     "dependencies": ["Southclaws/samp-stdlib"],
-    "dev_dependencies": ["pawn-lang/YSI-Includes"],
+    "dev_dependencies": ["pawn-lang/YSI-Includes@5.x"],
     "build": {
         "version": "3.10.8"
     },

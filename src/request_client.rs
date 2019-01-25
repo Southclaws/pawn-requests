@@ -1,6 +1,7 @@
 use futures::{future, Future, Stream};
 use reqwest::{async::Client, header::HeaderMap, StatusCode};
 use std::{error::Error, sync::mpsc};
+use string_error::static_err;
 use tokio::runtime::Runtime;
 
 use method::Method;
@@ -33,17 +34,17 @@ pub struct Response {
 }
 
 impl RequestClient {
-    pub fn new(endpoint: String, headers: HeaderMap) -> RequestClient {
-        let rt = match Runtime::new() {
-            Ok(v) => v,
-            Err(e) => {
-                panic!("Failed to create Tokio runtime: {}", e);
-            }
-        };
-
+    pub fn new(
+        endpoint: String,
+        headers: HeaderMap,
+    ) -> Result<RequestClient, Box<std::error::Error>> {
+        if !url::Url::parse(&endpoint)?.scheme().starts_with("http") {
+            return Err(static_err("non-http scheme"));
+        }
+        let rt = Runtime::new()?;
         let (send, recv) = mpsc::channel();
 
-        RequestClient {
+        Ok(RequestClient {
             runtime: rt,
             endpoint: endpoint,
             headers: headers,
@@ -51,7 +52,7 @@ impl RequestClient {
             request_id: 0,
             done_send: send,
             done_recv: recv,
-        }
+        })
     }
 
     pub fn poll(&mut self) -> Result<Response, Box<dyn std::error::Error>> {
@@ -111,6 +112,6 @@ impl RequestClient {
         debug!("spawning request task for {} to {}", full, request.callback);
         self.runtime.spawn(req);
 
-        Ok(self.request_id)
+        Ok(id)
     }
 }
