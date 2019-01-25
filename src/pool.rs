@@ -24,4 +24,7 @@ impl<T> Pool<T> {
     pub fn get(&mut self, id: i32) -> Option<&mut T> {
         self.active.get_mut(&id)
     }
+    pub fn get_const(&self, id: i32) -> Option<&T> {
+        self.active.get(&id)
+    }
 }

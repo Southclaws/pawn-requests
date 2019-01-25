@@ -44,11 +44,11 @@ define_native!(json_float, value: f32);
 define_native!(json_string, value: String);
 define_native!(json_array as raw);
 define_native!(json_append, a: Cell, b: Cell);
-define_native!(json_set_object);
-define_native!(json_set_int);
-define_native!(json_set_float);
-define_native!(json_set_bool);
-define_native!(json_set_string);
+define_native!(json_set_object, node: Cell, key: String, value: Cell);
+define_native!(json_set_int, node: Cell, key: String, value: Cell);
+define_native!(json_set_float, node: Cell, key: String, value: f32);
+define_native!(json_set_bool, node: Cell, key: String, value: bool);
+define_native!(json_set_string, node: Cell, key: String, value: String);
 define_native!(json_get_object);
 define_native!(json_get_int);
 define_native!(json_get_float);
@@ -400,33 +400,139 @@ impl Plugin {
         Ok(self.json_nodes.alloc(serde_json::Value::Array(arr)))
     }
     pub fn json_append(&mut self, _: &AMX, a: Cell, b: Cell) -> AmxResult<Cell> {
-        let a: &serde_json::Value = match self.json_nodes.get(a) {
+        let a: serde_json::Value = match self.json_nodes.get_const(a) {
+            Some(v) => v.clone(),
+            None => return Ok(-1),
+        };
+        let b: serde_json::Value = match self.json_nodes.get_const(b) {
+            Some(v) => v.clone(),
+            None => return Ok(-1),
+        };
+
+        match (a.as_object(), b.as_object()) {
+            (Some(oa), Some(ob)) => {
+                let mut new = serde_json::Value::Object(serde_json::Map::new());
+                for (k, v) in oa.iter() {
+                    new.as_object_mut().unwrap().insert(k.clone(), v.clone());
+                }
+                for (k, v) in ob.iter() {
+                    new.as_object_mut().unwrap().insert(k.clone(), v.clone());
+                }
+                return Ok(self.json_nodes.alloc(new));
+            }
+            _ => debug!("append: a and b are not both objects"),
+        };
+
+        match (a.as_array(), b.as_array()) {
+            (Some(oa), Some(ob)) => {
+                let mut new = serde_json::Value::Array(Vec::new());
+                for v in oa.iter() {
+                    new.as_array_mut().unwrap().push(v.clone());
+                }
+                for v in ob.iter() {
+                    new.as_array_mut().unwrap().push(v.clone());
+                }
+                return Ok(self.json_nodes.alloc(new));
+            }
+            _ => debug!("append: a and b are not both arrays"),
+        };
+
+        debug!("failed to append: a and b are not both objects or arrays");
+
+        Ok(2)
+    }
+    pub fn json_set_object(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: Cell,
+    ) -> AmxResult<Cell> {
+        let src: serde_json::Value = match self.json_nodes.get_const(value) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let dst: &mut serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
+        if !src.is_object() || !dst.is_object() {
+            return Ok(1);
+        }
 
-        let b: &serde_json::Value = match self.json_nodes.get(b) {
+        dst[key] = src;
+        Ok(0)
+    }
+    pub fn json_set_int(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: Cell,
+    ) -> AmxResult<Cell> {
+        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
+        if !v.is_object() {
+            return Ok(1);
+        }
 
-        // TODO: merge b into a
+        v[key] = serde_json::to_value(value).unwrap();
+        Ok(0)
+    }
+    pub fn json_set_float(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: f32,
+    ) -> AmxResult<Cell> {
+        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        if !v.is_object() {
+            return Ok(1);
+        }
 
+        v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
-    pub fn json_set_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+    pub fn json_set_bool(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: bool,
+    ) -> AmxResult<Cell> {
+        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        if !v.is_object() {
+            return Ok(1);
+        }
+
+        v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
-    pub fn json_set_int(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
-    }
-    pub fn json_set_float(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
-    }
-    pub fn json_set_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
-    }
-    pub fn json_set_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+    pub fn json_set_string(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: String,
+    ) -> AmxResult<Cell> {
+        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        if !v.is_object() {
+            return Ok(1);
+        }
+
+        v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
     pub fn json_get_object(&mut self, _: &AMX) -> AmxResult<Cell> {

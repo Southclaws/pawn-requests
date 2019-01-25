@@ -604,8 +604,8 @@ Test:JsonAppendObject() {
 
     new buf[128];
     new ret = JsonStringify(c, buf);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
+    ASSERT_EQ(ret, 0);
+    ASSERT_SAME(buf, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}");
     print(buf);
 }
 
@@ -622,70 +622,70 @@ Test:JsonAppendArray() {
 
     new buf[128];
     new ret = JsonStringify(c, buf);
-    ASSERT(ret == 0);
-    ASSERT(!strcmp(buf, "[1,2,3]"));
+    ASSERT_EQ(ret, 0);
+    ASSERT_SAME(buf, "[1,2,3]");
     print(buf);
 }
 
-// Test:JsonSetObject() {
-//     new Node:node = JsonObject();
-//     new ret = JsonSetObject(node, "key", JsonObject("key", JsonString("value")));
-//     ASSERT(ret == 0);
+Test:JsonSetObject() {
+    new Node:node = JsonObject();
+    new ret = JsonSetObject(node, "key", JsonObject("key", JsonString("value")));
+    ASSERT(ret == 0);
 
-//     new buf[128];
-//     ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key\":{\"key\":\"value\"}}"));
-//     print(buf);
-// }
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":{\"key\":\"value\"}}"));
+    print(buf);
+}
 
-// Test:JsonSetInt() {
-//     new Node:node = JsonObject();
-//     new ret = JsonSetInt(node, "key", 5);
-//     ASSERT(ret == 0);
+Test:JsonSetInt() {
+    new Node:node = JsonObject();
+    new ret = JsonSetInt(node, "key", 5);
+    ASSERT(ret == 0);
 
-//     new buf[128];
-//     ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key\":5}"));
-//     print(buf);
-// }
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":5}"));
+    print(buf);
+}
 
-// Test:JsonSetFloat() {
-//     new Node:node = JsonObject();
-//     new ret = JsonSetFloat(node, "key", 5.5);
-//     ASSERT(ret == 0);
+Test:JsonSetFloat() {
+    new Node:node = JsonObject();
+    new ret = JsonSetFloat(node, "key", 5.5);
+    ASSERT(ret == 0);
 
-//     new buf[128];
-//     ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key\":5.5}"));
-//     print(buf);
-// }
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":5.5}"));
+    print(buf);
+}
 
-// Test:JsonSetBool() {
-//     new Node:node = JsonObject();
-//     new ret = JsonSetBool(node, "key", true);
-//     ASSERT(ret == 0);
+Test:JsonSetBool() {
+    new Node:node = JsonObject();
+    new ret = JsonSetBool(node, "key", true);
+    ASSERT(ret == 0);
 
-//     new buf[128];
-//     ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key\":true}"));
-//     print(buf);
-// }
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":true}"));
+    print(buf);
+}
 
-// Test:JsonSetString() {
-//     new Node:node = JsonObject();
-//     new ret = JsonSetString(node, "key", "value");
-//     ASSERT(ret == 0);
+Test:JsonSetString() {
+    new Node:node = JsonObject();
+    new ret = JsonSetString(node, "key", "value");
+    ASSERT(ret == 0);
 
-//     new buf[128];
-//     ret = JsonStringify(node, buf);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
-//     print(buf);
-// }
+    new buf[128];
+    ret = JsonStringify(node, buf);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(buf, "{\"key\":\"value\"}"));
+    print(buf);
+}
 
 // Test:JsonGetInt() {
 //     new Node:node = JsonObject(
