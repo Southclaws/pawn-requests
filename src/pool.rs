@@ -25,10 +25,6 @@ impl<T> Pool<T> {
     pub fn get(&mut self, id: i32) -> Option<&mut T> {
         Some(self.active.get_mut(&id)?)
     }
-
-    pub fn get_const(&self, id: i32) -> Option<&T> {
-        Some(self.active.get(&id)?)
-    }
 }
 
 pub struct GarbageCollectedPool<T: Clone> {
@@ -73,11 +69,6 @@ impl<T: Clone> GarbageCollectedPool<T> {
             self.active.remove(&id)?;
         }
         Some(i.value)
-    }
-
-    pub fn get_const(&self, id: i32) -> Option<&T> {
-        let i: &Item<T> = self.active.get(&id)?;
-        Some(&i.value)
     }
 
     pub fn set_gc(&mut self, id: i32, set: bool) -> Option<()> {
