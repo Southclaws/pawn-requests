@@ -53,14 +53,14 @@ define_native!(json_get_object, node: Cell, key: String, value: ref Cell);
 define_native!(json_get_int, node: Cell, key: String, value: ref i32);
 define_native!(json_get_float, node: Cell, key: String, value: ref f32);
 define_native!(json_get_bool, node: Cell, key: String, value: ref bool);
-define_native!(json_get_string, node: Cell, key: String, value: ref String);
+define_native!(json_get_string, node: Cell, key: String, value: ref Cell, length: Cell);
 define_native!(json_get_array);
 define_native!(json_array_length);
 define_native!(json_array_object);
-define_native!(json_get_node_int);
-define_native!(json_get_node_float);
-define_native!(json_get_node_bool);
-define_native!(json_get_node_string);
+define_native!(json_get_node_int, node: Cell, output: ref i32);
+define_native!(json_get_node_float, node: Cell, output: ref f32);
+define_native!(json_get_node_bool, node: Cell, output: ref bool);
+define_native!(json_get_node_string, node: Cell, output: ref Cell, length: Cell);
 define_native!(json_toggle_gc);
 define_native!(json_cleanup);
 
@@ -577,6 +577,24 @@ impl Plugin {
         key: String,
         value: &mut i32,
     ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_object() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let v = match v.get(&key) {
+            Some(v) => v.clone(),
+            None => return Ok(2),
+        };
+        let v = match v.as_i64() {
+            Some(v) => v as i32,
+            None => return Ok(3),
+        };
+        *value = v;
+
         Ok(0)
     }
 
@@ -587,6 +605,23 @@ impl Plugin {
         key: String,
         value: &mut f32,
     ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_object() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let v = match v.get(&key) {
+            Some(v) => v.clone(),
+            None => return Ok(2),
+        };
+        let v = match v.as_f64() {
+            Some(v) => v as f32,
+            None => return Ok(3),
+        };
+        *value = v;
         Ok(0)
     }
 
@@ -597,6 +632,23 @@ impl Plugin {
         key: String,
         value: &mut bool,
     ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_object() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let v = match v.get(&key) {
+            Some(v) => v.clone(),
+            None => return Ok(2),
+        };
+        let v = match v.as_bool() {
+            Some(v) => v,
+            None => return Ok(3),
+        };
+        *value = v;
         Ok(0)
     }
 
@@ -605,8 +657,27 @@ impl Plugin {
         _: &AMX,
         node: Cell,
         key: String,
-        value: &mut String,
+        value: &mut Cell,
+        length: Cell,
     ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_object() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let v = match v.get(&key) {
+            Some(v) => v.clone(),
+            None => return Ok(2),
+        };
+        let v = match v.as_str() {
+            Some(v) => v,
+            None => return Ok(3),
+        };
+        let encoded: Vec<u8> = samp_sdk::cp1251::encode(&v)?;
+        set_string!(encoded, value, length as usize);
         Ok(0)
     }
 
@@ -619,18 +690,76 @@ impl Plugin {
     pub fn json_array_object(&mut self, _: &AMX) -> AmxResult<Cell> {
         Ok(0)
     }
-    pub fn json_get_node_int(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_node_int(&mut self, _: &AMX, node: Cell, output: &mut i32) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_i64() {
+            Some(v) => v as i32,
+            None => return Ok(1),
+        };
+        *output = v;
         Ok(0)
     }
-    pub fn json_get_node_float(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_node_float(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        output: &mut f32,
+    ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_f64() {
+            Some(v) => v as f32,
+            None => return Ok(1),
+        };
+        *output = v;
         Ok(0)
     }
-    pub fn json_get_node_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_node_bool(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        output: &mut bool,
+    ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_bool() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        *output = v;
         Ok(0)
     }
-    pub fn json_get_node_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_node_string(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        output: &mut Cell,
+        length: Cell,
+    ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_str() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let encoded: Vec<u8> = samp_sdk::cp1251::encode(&v)?;
+        set_string!(encoded, output, length as usize);
         Ok(0)
     }
+
     pub fn json_toggle_gc(&mut self, _: &AMX) -> AmxResult<Cell> {
         Ok(0)
     }

@@ -687,109 +687,109 @@ Test:JsonSetString() {
     print(buf);
 }
 
-// Test:JsonGetInt() {
-//     new Node:node = JsonObject(
-//         "key1", JsonInt(1),
-//         "key2", JsonInt(2),
-//         "key3", JsonInt(3)
-//     );
+Test:JsonGetInt() {
+    new Node:node = JsonObject(
+        "key1", JsonInt(1),
+        "key2", JsonInt(2),
+        "key3", JsonInt(3)
+    );
 
-//     new got;
-//     new ret;
+    new got;
+    new ret;
     
-//     ret = JsonGetInt(node, "key1", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 1);
+    ret = JsonGetInt(node, "key1", got);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(got, 1);
 
-//     ret = JsonGetInt(node, "key2", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 2);
+    ret = JsonGetInt(node, "key2", got);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(got, 2);
 
-//     ret = JsonGetInt(node, "key3", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 3);
+    ret = JsonGetInt(node, "key3", got);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(got, 3);
 
-//     ret = JsonGetInt(node, "key4", got);
-//     ASSERT(ret == 2);
-// }
+    ret = JsonGetInt(node, "key4", got);
+    ASSERT_EQ(ret, 2);
+}
 
-// Test:JsonGetFloat() {
-//     new Node:node = JsonObject(
-//         "key1", JsonFloat(1.5),
-//         "key2", JsonFloat(2.5),
-//         "key3", JsonFloat(3.5)
-//     );
+Test:JsonGetFloat() {
+    new Node:node = JsonObject(
+        "key1", JsonFloat(1.5),
+        "key2", JsonFloat(2.5),
+        "key3", JsonFloat(3.5)
+    );
 
-//     new Float:got;
-//     new ret;
+    new Float:got;
+    new ret;
     
-//     ret = JsonGetFloat(node, "key1", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 1.5);
+    ret = JsonGetFloat(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1.5);
 
-//     ret = JsonGetFloat(node, "key2", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 2.5);
+    ret = JsonGetFloat(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 2.5);
 
-//     ret = JsonGetFloat(node, "key3", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 3.5);
+    ret = JsonGetFloat(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(got == 3.5);
 
-//     ret = JsonGetFloat(node, "key4", got);
-//     ASSERT(ret == 2);
-// }
+    ret = JsonGetFloat(node, "key4", got);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonGetBool() {
-//     new Node:node = JsonObject(
-//         "key1", JsonBool(false),
-//         "key2", JsonBool(true),
-//         "key3", JsonBool(false)
-//     );
+Test:JsonGetBool() {
+    new Node:node = JsonObject(
+        "key1", JsonBool(false),
+        "key2", JsonBool(true),
+        "key3", JsonBool(false)
+    );
 
-//     new bool:got;
-//     new ret;
+    new bool:got;
+    new ret;
     
-//     ret = JsonGetBool(node, "key1", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == false);
+    ret = JsonGetBool(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(got == false);
 
-//     ret = JsonGetBool(node, "key2", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == true);
+    ret = JsonGetBool(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(got == true);
 
-//     ret = JsonGetBool(node, "key3", got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == false);
+    ret = JsonGetBool(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(got == false);
 
-//     ret = JsonGetBool(node, "key4", got);
-//     ASSERT(ret == 2);
-// }
+    ret = JsonGetBool(node, "key4", got);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonGetString() {
-//     new Node:node = JsonObject(
-//         "key1", JsonString("value1"),
-//         "key2", JsonString("value2"),
-//         "key3", JsonString("value3")
-//     );
+Test:JsonGetString() {
+    new Node:node = JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value2"),
+        "key3", JsonString("value3")
+    );
 
-//     new got[128];
-//     new ret;
+    new got[128];
+    new ret;
     
-//     ret = JsonGetString(node, "key1", got);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(got, "value1"));
+    ret = JsonGetString(node, "key1", got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value1"));
 
-//     ret = JsonGetString(node, "key2", got);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(got, "value2"));
+    ret = JsonGetString(node, "key2", got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value2"));
 
-//     ret = JsonGetString(node, "key3", got);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(got, "value3"));
+    ret = JsonGetString(node, "key3", got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value3"));
 
-//     ret = JsonGetString(node, "key4", got);
-//     ASSERT(ret == 2);
-// }
+    ret = JsonGetString(node, "key4", got);
+    ASSERT(ret == 2);
+}
 
 // Test:JsonGetArray() {
 //     new Node:node = JsonObject(
@@ -905,12 +905,12 @@ Test:JsonGetNodeInt() {
     new Node:output;
     new ret;
     ret = JsonGetObject(node, "key", output);
-    ASSERT(ret == 0);
+    ASSERT_EQ(ret, 0);
 
     new got;
     ret = JsonGetNodeInt(output, got);
-    ASSERT(ret == 0);
-    ASSERT(got == 1);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(got, 1);
 }
 
 Test:JsonGetNodeFloat() {
