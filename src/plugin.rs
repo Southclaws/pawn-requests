@@ -9,13 +9,13 @@ use serde_json;
 use std::collections::HashMap;
 
 use method::Method;
-use pool::Pool;
+use pool::{GarbageCollectedPool, Pool};
 use request_client::{Request, RequestClient, Response};
 
 pub struct Plugin {
     request_clients: Pool<RequestClient>,
     request_client_amx: HashMap<i32, usize>,
-    json_nodes: Pool<serde_json::Value>,
+    json_nodes: GarbageCollectedPool<serde_json::Value>,
 }
 
 define_native!(requests_client, endpoint: String, headers: i32);
@@ -151,7 +151,7 @@ impl Plugin {
 
     pub fn process_tick(&mut self) {
         for (id, rc) in self.request_clients.active.iter_mut() {
-            let response: Response = match rc.value.poll() {
+            let response: Response = match rc.poll() {
                 Ok(v) => v,
                 Err(_) => continue,
             };
@@ -356,7 +356,7 @@ impl Plugin {
             let mut node: Cell = 0;
             get_arg_ref(amx, &mut parser, &mut node);
 
-            let node = match self.json_nodes.get(node) {
+            let node = match self.json_nodes.take(node) {
                 Some(v) => v,
                 None => {
                     log!("invalid JSON node ID passed to JsonObject");
@@ -391,7 +391,7 @@ impl Plugin {
         for _ in 0..args {
             let mut node: i32 = 0;
             get_arg_ref(amx, &mut parser, &mut node);
-            let node = match self.json_nodes.get(node) {
+            let node = match self.json_nodes.take(node) {
                 Some(v) => v,
                 None => {
                     log!("invalid JSON node ID passed to JsonArray");
@@ -404,12 +404,12 @@ impl Plugin {
     }
 
     pub fn json_append(&mut self, _: &AMX, a: Cell, b: Cell) -> AmxResult<Cell> {
-        let a: serde_json::Value = match self.json_nodes.get_const(a) {
-            Some(v) => v.clone(),
+        let a: serde_json::Value = match self.json_nodes.take(a) {
+            Some(v) => v,
             None => return Ok(-1),
         };
-        let b: serde_json::Value = match self.json_nodes.get_const(b) {
-            Some(v) => v.clone(),
+        let b: serde_json::Value = match self.json_nodes.take(b) {
+            Some(v) => v,
             None => return Ok(-1),
         };
 
@@ -453,7 +453,7 @@ impl Plugin {
         key: String,
         value: Cell,
     ) -> AmxResult<Cell> {
-        let src: serde_json::Value = match self.json_nodes.get_const(value) {
+        let src: serde_json::Value = match self.json_nodes.take(value) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -747,7 +747,7 @@ impl Plugin {
     }
 
     pub fn json_get_node_int(&mut self, _: &AMX, node: Cell, output: &mut i32) -> AmxResult<Cell> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -765,7 +765,7 @@ impl Plugin {
         node: Cell,
         output: &mut f32,
     ) -> AmxResult<Cell> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -783,7 +783,7 @@ impl Plugin {
         node: Cell,
         output: &mut bool,
     ) -> AmxResult<Cell> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -802,7 +802,7 @@ impl Plugin {
         output: &mut Cell,
         length: Cell,
     ) -> AmxResult<Cell> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => {
                 debug!("value under {} doesn't exist", node);
@@ -844,7 +844,7 @@ impl Default for Plugin {
         Plugin {
             request_clients: Pool::default(),
             request_client_amx: HashMap::new(),
-            json_nodes: Pool::default(),
+            json_nodes: GarbageCollectedPool::default(),
         }
     }
 }
