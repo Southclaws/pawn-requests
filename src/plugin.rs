@@ -54,9 +54,9 @@ define_native!(json_get_int, node: Cell, key: String, value: ref i32);
 define_native!(json_get_float, node: Cell, key: String, value: ref f32);
 define_native!(json_get_bool, node: Cell, key: String, value: ref bool);
 define_native!(json_get_string, node: Cell, key: String, value: ref Cell, length: Cell);
-define_native!(json_get_array);
-define_native!(json_array_length);
-define_native!(json_array_object);
+define_native!(json_get_array, node: Cell, key: String, value: ref Cell);
+define_native!(json_array_length, node: Cell, length: ref Cell);
+define_native!(json_array_object, node: Cell, index: Cell, output: ref Cell);
 define_native!(json_get_node_int, node: Cell, output: ref i32);
 define_native!(json_get_node_float, node: Cell, output: ref f32);
 define_native!(json_get_node_bool, node: Cell, output: ref bool);
@@ -681,13 +681,68 @@ impl Plugin {
         Ok(0)
     }
 
-    pub fn json_get_array(&mut self, _: &AMX) -> AmxResult<Cell> {
+    pub fn json_get_array(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: &mut Cell,
+    ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_object() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let v = match v.get(&key) {
+            Some(v) => v.clone(),
+            None => return Ok(2),
+        };
+        match v.as_array() {
+            Some(_) => (),
+            None => return Ok(3),
+        };
+        let v = self.json_nodes.alloc(v);
+        *value = v;
         Ok(0)
     }
-    pub fn json_array_length(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_array_length(&mut self, _: &AMX, node: Cell, length: &mut Cell) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_array() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        *length = v.len() as i32;
         Ok(0)
     }
-    pub fn json_array_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_array_object(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        index: Cell,
+        output: &mut Cell,
+    ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_array() {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+        let v = match v.get(index as usize) {
+            Some(v) => v.clone(),
+            None => return Ok(2),
+        };
+        let v = self.json_nodes.alloc(v);
+        *output = v;
         Ok(0)
     }
 
@@ -749,11 +804,17 @@ impl Plugin {
     ) -> AmxResult<Cell> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
-            None => return Ok(1),
+            None => {
+                debug!("value under {} doesn't exist", node);
+                return Ok(1);
+            }
         };
         let v = match v.as_str() {
             Some(v) => v,
-            None => return Ok(1),
+            None => {
+                debug!("value is not a string {:?}", v);
+                return Ok(1);
+            }
         };
         let encoded: Vec<u8> = samp_sdk::cp1251::encode(&v)?;
         set_string!(encoded, output, length as usize);

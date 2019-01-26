@@ -791,93 +791,93 @@ Test:JsonGetString() {
     ASSERT(ret == 2);
 }
 
-// Test:JsonGetArray() {
-//     new Node:node = JsonObject(
-//         "key1", JsonArray(
-//             JsonString("one"),
-//             JsonString("two"),
-//             JsonString("three")
-//         )
-//     );
+Test:JsonGetArray() {
+    new Node:node = JsonObject(
+        "key1", JsonArray(
+            JsonString("one"),
+            JsonString("two"),
+            JsonString("three")
+        )
+    );
 
-//     new Node:arrayNode;
-//     new ret;
+    new Node:arrayNode;
+    new ret;
 
-//     ret = JsonGetArray(node, "key1", arrayNode);
-//     printf("JsonGetArray:%d arrayNode: %d", ret, _:arrayNode);
-//     ASSERT(ret == 0);
+    ret = JsonGetArray(node, "key1", arrayNode);
+    printf("JsonGetArray:%d arrayNode: %d", ret, _:arrayNode);
+    ASSERT_EQ(ret, 0);
 
-//     new Node:output;
-//     new gotString[32];
+    new Node:output;
+    new gotString[32];
 
-//     ret = JsonArrayObject(arrayNode, 0, output);
-//     ASSERT(ret == 0);
-//     ret = JsonGetNodeString(output, gotString);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(gotString, "one"));
+    ret = JsonArrayObject(arrayNode, 0, output);
+    ASSERT_EQ(ret, 0);
+    ret = JsonGetNodeString(output, gotString);
+    ASSERT_EQ(ret, 0);
+    ASSERT_SAME(gotString, "one");
 
-//     ret = JsonArrayObject(arrayNode, 1, output);
-//     ASSERT(ret == 0);
-//     ret = JsonGetNodeString(output, gotString);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(gotString, "two"));
+    ret = JsonArrayObject(arrayNode, 1, output);
+    ASSERT_EQ(ret, 0);
+    ret = JsonGetNodeString(output, gotString);
+    ASSERT_EQ(ret, 0);
+    ASSERT_SAME(gotString, "two");
 
-//     ret = JsonArrayObject(arrayNode, 2, output);
-//     ASSERT(ret == 0);
-//     ret = JsonGetNodeString(output, gotString);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(gotString, "three"));
-// }
+    ret = JsonArrayObject(arrayNode, 2, output);
+    ASSERT_EQ(ret, 0);
+    ret = JsonGetNodeString(output, gotString);
+    ASSERT_EQ(ret, 0);
+    ASSERT_SAME(gotString, "three");
+}
 
-// Test:JsonGetIntInvalid() {
-//     new Node:node = JsonObject("k", JsonString("v"));
-//     new gotInt;
-//     new ret = JsonGetInt(node, "key4", gotInt);
-//     ASSERT(ret == 2);
-// }
+Test:JsonGetIntInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new gotInt;
+    new ret = JsonGetInt(node, "key4", gotInt);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonGetFloatInvalid() {
-//     new Node:node = JsonObject("k", JsonString("v"));
-//     new Float:gotFloat;
-//     new ret = JsonGetFloat(node, "key4", gotFloat);
-//     ASSERT(ret == 2);
-// }
+Test:JsonGetFloatInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new Float:gotFloat;
+    new ret = JsonGetFloat(node, "key4", gotFloat);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonGetBoolInvalid() {
-//     new Node:node = JsonObject("k", JsonString("v"));
-//     new bool:gotBool;
-//     new ret = JsonGetBool(node, "key4", gotBool);
-//     ASSERT(ret == 2);
-// }
+Test:JsonGetBoolInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new bool:gotBool;
+    new ret = JsonGetBool(node, "key4", gotBool);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonGetStringInvalid() {
-//     new Node:node = JsonObject("k", JsonString("v"));
-//     new gotString[1];
-//     new ret = JsonGetString(node, "key4", gotString);
-//     ASSERT(ret == 2);
-// }
+Test:JsonGetStringInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new gotString[1];
+    new ret = JsonGetString(node, "key4", gotString);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonGetArrayInvalid() {
-//     new Node:node = JsonObject("k", JsonString("v"));
-//     new Node:gotNode;
-//     new ret = JsonGetArray(node, "key4", gotNode);
-//     ASSERT(ret == 2);
-// }
+Test:JsonGetArrayInvalid() {
+    new Node:node = JsonObject("k", JsonString("v"));
+    new Node:gotNode;
+    new ret = JsonGetArray(node, "key4", gotNode);
+    ASSERT(ret == 2);
+}
 
-// Test:JsonArrayLength() {
-//     new Node:node = JsonArray(
-//         JsonString("one"),
-//         JsonString("two"),
-//         JsonString("three")
-//     );
+Test:JsonArrayLength() {
+    new Node:node = JsonArray(
+        JsonString("one"),
+        JsonString("two"),
+        JsonString("three")
+    );
 
-//     new length;
-//     new ret;
-//     ret = JsonArrayLength(node, length);
-//     printf("ret %d length %d", ret, length);
-//     ASSERT(ret == 0);
-//     ASSERT(length == 3);
-// }
+    new length;
+    new ret;
+    ret = JsonArrayLength(node, length);
+    printf("ret %d length %d", ret, length);
+    ASSERT(ret == 0);
+    ASSERT(length == 3);
+}
 
 // Test:JsonArrayObject() {
 //     new Node:node = JsonArray(
