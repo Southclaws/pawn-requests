@@ -61,8 +61,8 @@ define_native!(json_get_node_int, node: Cell, output: ref i32);
 define_native!(json_get_node_float, node: Cell, output: ref f32);
 define_native!(json_get_node_bool, node: Cell, output: ref bool);
 define_native!(json_get_node_string, node: Cell, output: ref Cell, length: Cell);
-define_native!(json_toggle_gc);
-define_native!(json_cleanup);
+define_native!(json_toggle_gc, node: Cell, set: bool);
+define_native!(json_cleanup, node: Cell, auto: bool);
 
 enum_from_primitive! {
 #[derive(Debug, PartialEq, Clone)]
@@ -151,7 +151,7 @@ impl Plugin {
 
     pub fn process_tick(&mut self) {
         for (id, rc) in self.request_clients.active.iter_mut() {
-            let response: Response = match rc.poll() {
+            let response: Response = match rc.value.poll() {
                 Ok(v) => v,
                 Err(_) => continue,
             };
@@ -821,11 +821,21 @@ impl Plugin {
         Ok(0)
     }
 
-    pub fn json_toggle_gc(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
+    pub fn json_toggle_gc(&mut self, _: &AMX, node: Cell, set: bool) -> AmxResult<Cell> {
+        match self.json_nodes.set_gc(node, set) {
+            Some(_) => Ok(0),
+            None => Ok(1),
+        }
     }
-    pub fn json_cleanup(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
+    pub fn json_cleanup(&mut self, _: &AMX, node: Cell, auto: bool) -> AmxResult<Cell> {
+        match if auto {
+            self.json_nodes.collect(node)
+        } else {
+            self.json_nodes.collect_force(node)
+        } {
+            Some(_) => Ok(0),
+            None => Ok(1),
+        }
     }
 }
 

@@ -879,23 +879,23 @@ Test:JsonArrayLength() {
     ASSERT(length == 3);
 }
 
-// Test:JsonArrayObject() {
-//     new Node:node = JsonArray(
-//         JsonString("one"),
-//         JsonString("two"),
-//         JsonString("three")
-//     );
+Test:JsonArrayObject() {
+    new Node:node = JsonArray(
+        JsonString("one"),
+        JsonString("two"),
+        JsonString("three")
+    );
 
-//     new Node:output;
-//     new ret;
-//     ret = JsonArrayObject(node, 1, output);
-//     ASSERT(ret == 0);
+    new Node:output;
+    new ret;
+    ret = JsonArrayObject(node, 1, output);
+    ASSERT(ret == 0);
 
-//     new got[32];
-//     ret = JsonGetNodeString(output, got);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(got, "two"));
-// }
+    new got[32];
+    ret = JsonGetNodeString(output, got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "two"));
+}
 
 Test:JsonGetNodeInt() {
     new Node:node = JsonObject(
@@ -961,25 +961,25 @@ Test:JsonGetNodeString() {
     ASSERT(!strcmp(got, "value"));
 }
 
-// // Test:JsonScopeGC() {
-// //     new Node:node = JsonObject();
-// //     scopeNodeGC(node);
-// //     ASSERT(JsonCleanup(node) == 1);
-// // }
-
-// Test:JsonToggleGC() {
-//     new Node:node = JsonObject(
-//         "key", JsonString("value")
-//     );
-//     JsonToggleGC(node, false);
+// Test:JsonScopeGC() {
+//     new Node:node = JsonObject();
 //     scopeNodeGC(node);
-//     new value[6];
-//     JsonGetString(node, "key", value);
-//     ASSERT(!strcmp(value, "value"));
-//     ASSERT(JsonCleanup(node) == 0);
 //     ASSERT(JsonCleanup(node) == 1);
 // }
 
-// scopeNodeGC(Node:node) {
-//     printf("scoped %d", _:node);
-// }
+Test:JsonToggleGC() {
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
+    JsonToggleGC(node, false);
+    scopeNodeGC(node);
+    new value[6];
+    JsonGetString(node, "key", value);
+    ASSERT_SAME(value, "value");
+    ASSERT_EQ(JsonCleanup(node), 0);
+    ASSERT_EQ(JsonCleanup(node), 1);
+}
+
+scopeNodeGC(Node:node) {
+    printf("scoped %d", _:node);
+}
