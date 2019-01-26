@@ -337,6 +337,7 @@ impl Plugin {
 
         Ok(t)
     }
+
     pub fn json_object(&mut self, amx: &AMX, params: *mut Cell) -> AmxResult<Cell> {
         let arg_count = args_count!(params);
         let pairs = match arg_count == 0 || arg_count % 2 == 0 {
@@ -368,6 +369,7 @@ impl Plugin {
 
         Ok(self.json_nodes.alloc(v))
     }
+
     pub fn json_int(&mut self, _: &AMX, value: Cell) -> AmxResult<Cell> {
         Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
     }
@@ -380,6 +382,7 @@ impl Plugin {
     pub fn json_string(&mut self, _: &AMX, value: String) -> AmxResult<Cell> {
         Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
     }
+
     pub fn json_array(&mut self, amx: &AMX, params: *mut Cell) -> AmxResult<Cell> {
         let args = args_count!(params);
         let mut parser = Parser::new(params);
@@ -399,6 +402,7 @@ impl Plugin {
         }
         Ok(self.json_nodes.alloc(serde_json::Value::Array(arr)))
     }
+
     pub fn json_append(&mut self, _: &AMX, a: Cell, b: Cell) -> AmxResult<Cell> {
         let a: serde_json::Value = match self.json_nodes.get_const(a) {
             Some(v) => v.clone(),
@@ -441,6 +445,7 @@ impl Plugin {
 
         Ok(2)
     }
+
     pub fn json_set_object(
         &mut self,
         _: &AMX,
@@ -463,6 +468,7 @@ impl Plugin {
         dst[key] = src;
         Ok(0)
     }
+
     pub fn json_set_int(
         &mut self,
         _: &AMX,
@@ -481,6 +487,7 @@ impl Plugin {
         v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
+
     pub fn json_set_float(
         &mut self,
         _: &AMX,
@@ -499,6 +506,7 @@ impl Plugin {
         v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
+
     pub fn json_set_bool(
         &mut self,
         _: &AMX,
@@ -517,6 +525,7 @@ impl Plugin {
         v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
+
     pub fn json_set_string(
         &mut self,
         _: &AMX,
