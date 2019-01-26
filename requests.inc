@@ -164,7 +164,7 @@ native JsonGetObject(Node:node, const key[], &Node:output);
 // new Node:output;
 // JsonGetObject(node, "key", output);
 // new string[128];
-// JsonGetString(output, string);
+// JsonGetNodeString(output, string);
 //
 // 99% of the time, you only need these functions to get values out of objects.
 //

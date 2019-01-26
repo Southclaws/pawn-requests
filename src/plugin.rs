@@ -49,11 +49,11 @@ define_native!(json_set_int, node: Cell, key: String, value: Cell);
 define_native!(json_set_float, node: Cell, key: String, value: f32);
 define_native!(json_set_bool, node: Cell, key: String, value: bool);
 define_native!(json_set_string, node: Cell, key: String, value: String);
-define_native!(json_get_object);
-define_native!(json_get_int);
-define_native!(json_get_float);
-define_native!(json_get_bool);
-define_native!(json_get_string);
+define_native!(json_get_object, node: Cell, key: String, value: ref Cell);
+define_native!(json_get_int, node: Cell, key: String, value: ref i32);
+define_native!(json_get_float, node: Cell, key: String, value: ref f32);
+define_native!(json_get_bool, node: Cell, key: String, value: ref bool);
+define_native!(json_get_string, node: Cell, key: String, value: ref String);
 define_native!(json_get_array);
 define_native!(json_array_length);
 define_native!(json_array_object);
@@ -544,21 +544,72 @@ impl Plugin {
         v[key] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
-    pub fn json_get_object(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_object(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: &mut Cell,
+    ) -> AmxResult<Cell> {
+        let v: serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v.clone(),
+            None => return Ok(1),
+        };
+        let v = match v.as_object() {
+            Some(v) => v,
+            None => return Ok(2),
+        };
+        let v = match v.get(&key) {
+            Some(v) => v.clone(),
+            None => return Ok(3),
+        };
+        let v = self.json_nodes.alloc(v);
+        *value = v;
+
         Ok(0)
     }
-    pub fn json_get_int(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_int(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: &mut i32,
+    ) -> AmxResult<Cell> {
         Ok(0)
     }
-    pub fn json_get_float(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_float(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: &mut f32,
+    ) -> AmxResult<Cell> {
         Ok(0)
     }
-    pub fn json_get_bool(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_bool(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: &mut bool,
+    ) -> AmxResult<Cell> {
         Ok(0)
     }
-    pub fn json_get_string(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    pub fn json_get_string(
+        &mut self,
+        _: &AMX,
+        node: Cell,
+        key: String,
+        value: &mut String,
+    ) -> AmxResult<Cell> {
         Ok(0)
     }
+
     pub fn json_get_array(&mut self, _: &AMX) -> AmxResult<Cell> {
         Ok(0)
     }

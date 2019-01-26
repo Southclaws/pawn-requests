@@ -897,69 +897,69 @@ Test:JsonSetString() {
 //     ASSERT(!strcmp(got, "two"));
 // }
 
-// Test:JsonGetNodeInt() {
-//     new Node:node = JsonObject(
-//         "key", JsonInt(1)
-//     );
+Test:JsonGetNodeInt() {
+    new Node:node = JsonObject(
+        "key", JsonInt(1)
+    );
 
-//     new Node:output;
-//     new ret;
-//     ret = JsonGetObject(node, "key", output);
-//     ASSERT(ret == 0);
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
 
-//     new got;
-//     ret = JsonGetNodeInt(output, got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 1);
-// }
+    new got;
+    ret = JsonGetNodeInt(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1);
+}
 
-// Test:JsonGetNodeFloat() {
-//     new Node:node = JsonObject(
-//         "key", JsonFloat(1.34)
-//     );
+Test:JsonGetNodeFloat() {
+    new Node:node = JsonObject(
+        "key", JsonFloat(1.34)
+    );
 
-//     new Node:output;
-//     new ret;
-//     ret = JsonGetObject(node, "key", output);
-//     ASSERT(ret == 0);
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
 
-//     new Float:got;
-//     ret = JsonGetNodeFloat(output, got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == 1.34);
-// }
+    new Float:got;
+    ret = JsonGetNodeFloat(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == 1.34);
+}
 
-// Test:JsonGetNodeBool() {
-//     new Node:node = JsonObject(
-//         "key", JsonBool(true)
-//     );
+Test:JsonGetNodeBool() {
+    new Node:node = JsonObject(
+        "key", JsonBool(true)
+    );
 
-//     new Node:output;
-//     new ret;
-//     ret = JsonGetObject(node, "key", output);
-//     ASSERT(ret == 0);
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
 
-//     new bool:got;
-//     ret = JsonGetNodeBool(output, got);
-//     ASSERT(ret == 0);
-//     ASSERT(got == true);
-// }
+    new bool:got;
+    ret = JsonGetNodeBool(output, got);
+    ASSERT(ret == 0);
+    ASSERT(got == true);
+}
 
-// Test:JsonGetNodeString() {
-//     new Node:node = JsonObject(
-//         "key", JsonString("value")
-//     );
+Test:JsonGetNodeString() {
+    new Node:node = JsonObject(
+        "key", JsonString("value")
+    );
 
-//     new Node:output;
-//     new ret;
-//     ret = JsonGetObject(node, "key", output);
-//     ASSERT(ret == 0);
+    new Node:output;
+    new ret;
+    ret = JsonGetObject(node, "key", output);
+    ASSERT(ret == 0);
 
-//     new got[32];
-//     ret = JsonGetNodeString(output, got);
-//     ASSERT(ret == 0);
-//     ASSERT(!strcmp(got, "value"));
-// }
+    new got[32];
+    ret = JsonGetNodeString(output, got);
+    ASSERT(ret == 0);
+    ASSERT(!strcmp(got, "value"));
+}
 
 // // Test:JsonScopeGC() {
 // //     new Node:node = JsonObject();
