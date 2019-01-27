@@ -13,10 +13,12 @@ use string_error::new_err;
 use method::Method;
 use pool::{GarbageCollectedPool, Pool};
 use request_client::{Request, RequestClient, Response};
+use websocket_client::WebsocketClient;
 
 pub struct Plugin {
     request_clients: Pool<RequestClient>,
     request_client_amx: HashMap<i32, usize>,
+    websocket_clients: Pool<WebsocketClient>,
     json_nodes: GarbageCollectedPool<serde_json::Value>,
     headers: GarbageCollectedPool<reqwest::header::HeaderMap>,
 }
@@ -41,8 +43,8 @@ define_native!(
     node: Cell,
     headers: Cell
 );
-define_native!(web_socket_client);
-define_native!(web_socket_send);
+define_native!(web_socket_client, address: String, callback: String);
+define_native!(web_socket_send, client: Cell, data: String);
 define_native!(json_web_socket_client);
 define_native!(json_web_socket_send);
 define_native!(json_parse, input: String, node: ref Cell);
@@ -366,10 +368,15 @@ impl Plugin {
         )
     }
 
-    pub fn web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
+    pub fn web_socket_client(
+        &mut self,
+        _: &AMX,
+        address: String,
+        callback: String,
+    ) -> AmxResult<Cell> {
         Ok(0)
     }
-    pub fn web_socket_send(&mut self, _: &AMX) -> AmxResult<Cell> {
+    pub fn web_socket_send(&mut self, _: &AMX, client: Cell, data: String) -> AmxResult<Cell> {
         Ok(0)
     }
     pub fn json_web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
@@ -944,6 +951,7 @@ impl Default for Plugin {
         Plugin {
             request_clients: Pool::default(),
             request_client_amx: HashMap::new(),
+            websocket_clients: Pool::default(),
             json_nodes: GarbageCollectedPool::default(),
             headers: GarbageCollectedPool::default(),
         }
