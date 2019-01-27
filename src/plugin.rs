@@ -7,6 +7,7 @@ use samp_sdk::{
 };
 use serde_json;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use method::Method;
 use pool::{GarbageCollectedPool, Pool};
@@ -16,9 +17,11 @@ pub struct Plugin {
     request_clients: Pool<RequestClient>,
     request_client_amx: HashMap<i32, usize>,
     json_nodes: GarbageCollectedPool<serde_json::Value>,
+    headers: GarbageCollectedPool<reqwest::header::HeaderMap>,
 }
 
 define_native!(requests_client, endpoint: String, headers: i32);
+define_native!(request_headers as raw);
 define_native!(
     request,
     request_client_id: Cell,
@@ -28,7 +31,6 @@ define_native!(
     body: String,
     headers: Cell
 );
-define_native!(request_headers);
 define_native!(request_json);
 define_native!(web_socket_client);
 define_native!(web_socket_send);
@@ -89,8 +91,8 @@ impl Plugin {
     pub fn amx_load(&self, amx: &AMX) -> Cell {
         let natives = natives! {
             "RequestsClient" => requests_client,
-            "Request" => request,
             "RequestHeaders" => request_headers,
+            "Request" => request,
             "RequestJSON" => request_json,
             "WebSocketClient" => web_socket_client,
             "WebSocketSend" => web_socket_send,
@@ -210,6 +212,45 @@ impl Plugin {
         Ok(id)
     }
 
+    pub fn request_headers(&mut self, amx: &AMX, params: *mut Cell) -> AmxResult<Cell> {
+        let arg_count = args_count!(params);
+        let pairs = match arg_count == 0 || arg_count % 2 == 0 {
+            true => arg_count / 2,
+            false => {
+                log!("invalid variadic argument pattern passed to JsonObject");
+                return Ok(1);
+            }
+        };
+        let mut parser = Parser::new(params);
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        for _ in 0..pairs {
+            let mut key = String::new();
+            get_arg_string(amx, &mut parser, &mut key);
+            let key = match reqwest::header::HeaderName::from_str(&key) {
+                Ok(v) => v,
+                Err(e) => {
+                    log!("invalid header name {}: {}", key, e);
+                    return Ok(1);
+                }
+            };
+
+            let mut value = String::new();
+            get_arg_string(amx, &mut parser, &mut value);
+            let value = match reqwest::header::HeaderValue::from_str(&value) {
+                Ok(v) => v,
+                Err(e) => {
+                    log!("invalid header value {}: {}", value, e);
+                    return Ok(1);
+                }
+            };
+
+            headers.append(key, value);
+        }
+
+        Ok(self.headers.alloc(headers))
+    }
+
     pub fn request(
         &mut self,
         _: &AMX,
@@ -217,10 +258,9 @@ impl Plugin {
         path: String,
         method: Method,
         callback: String,
-        _body: String,  // TODO
-        _headers: Cell, // TODO
+        _body: String, // TODO
+        headers: Cell, // TODO
     ) -> AmxResult<Cell> {
-        log!("request called {} {:?} {}", path, method, callback);
         let client = match self.request_clients.get(request_client_id) {
             Some(v) => v,
             None => {
@@ -232,11 +272,17 @@ impl Plugin {
             }
         };
 
-        let header_map = HeaderMap::new();
+        let header_map = match self.headers.take(headers) {
+            Some(v) => v,
+            None => {
+                log!("invalid headers identifier {} passed", headers);
+                return Ok(1);
+            }
+        };
 
         debug!(
-            "executing new request with {} to {} with {:?} calling {}",
-            request_client_id, path, method, callback
+            "executing new request {} with {:?} to {} with {:?} calling {}",
+            request_client_id, header_map, path, method, callback
         );
 
         let id = match client.request(Request {
@@ -256,13 +302,6 @@ impl Plugin {
         Ok(id)
     }
 
-    // -
-    // Not implemented yet:
-    // -
-
-    pub fn request_headers(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
-    }
     pub fn request_json(&mut self, _: &AMX) -> AmxResult<Cell> {
         Ok(0)
     }
@@ -845,6 +884,7 @@ impl Default for Plugin {
             request_clients: Pool::default(),
             request_client_amx: HashMap::new(),
             json_nodes: GarbageCollectedPool::default(),
+            headers: GarbageCollectedPool::default(),
         }
     }
 }
