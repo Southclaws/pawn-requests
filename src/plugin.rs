@@ -8,6 +8,7 @@ use samp_sdk::{
 use serde_json;
 use std::collections::HashMap;
 use std::str::FromStr;
+use string_error::new_err;
 
 use method::Method;
 use pool::{GarbageCollectedPool, Pool};
@@ -31,7 +32,15 @@ define_native!(
     body: String,
     headers: Cell
 );
-define_native!(request_json);
+define_native!(
+    request_json,
+    request_client_id: Cell,
+    path: String,
+    method: Method,
+    callback: String,
+    node: Cell,
+    headers: Cell
+);
 define_native!(web_socket_client);
 define_native!(web_socket_send);
 define_native!(json_web_socket_client);
@@ -258,53 +267,105 @@ impl Plugin {
         path: String,
         method: Method,
         callback: String,
-        _body: String, // TODO
-        headers: Cell, // TODO
+        body: String,
+        headers: Cell,
     ) -> AmxResult<Cell> {
-        let client = match self.request_clients.get(request_client_id) {
-            Some(v) => v,
-            None => {
-                debug!(
-                    "attempted to request with invalid client {}",
-                    request_client_id
-                );
-                return Ok(0);
-            }
-        };
-
-        let header_map = match self.headers.take(headers) {
+        let headers = match self.headers.take(headers) {
             Some(v) => v,
             None => {
                 log!("invalid headers identifier {} passed", headers);
                 return Ok(1);
             }
         };
-
-        debug!(
-            "executing new request {} with {:?} to {} with {:?} calling {}",
-            request_client_id, header_map, path, method, callback
-        );
-
-        let id = match client.request(Request {
-            callback: callback,
-            path: path,
-            method: Method::from(method),
-            headers: header_map,
-            request_type: 0,
-        }) {
+        let id = match self.do_request(request_client_id, path, method, callback, body, headers) {
             Ok(v) => v,
             Err(e) => {
-                log!("{}", e);
-                return Ok(1);
+                log!("failed to execute request: {}", e);
+                return Ok(-1);
             }
         };
-
         Ok(id)
     }
 
-    pub fn request_json(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
+    pub fn request_json(
+        &mut self,
+        _: &AMX,
+        request_client_id: Cell,
+        path: String,
+        method: Method,
+        callback: String,
+        node: Cell,
+        headers: Cell,
+    ) -> AmxResult<Cell> {
+        let body = match self.json_nodes.take(node) {
+            Some(v) => v,
+            None => {
+                log!("invalid json node ID {}", node);
+                return Ok(-1);
+            }
+        };
+        let mut headers = match self.headers.take(headers) {
+            Some(v) => v,
+            None => {
+                log!("invalid headers identifier {} passed", headers);
+                return Ok(1);
+            }
+        };
+        headers
+            .insert("Content-Type", "application/json".parse().unwrap())
+            .unwrap();
+        let id = match self.do_request(request_client_id, path, method, callback, body, headers) {
+            Ok(v) => v,
+            Err(e) => {
+                log!("failed to execute request: {}", e);
+                return Ok(-1);
+            }
+        };
+        Ok(id)
     }
+
+    fn do_request<T: ToString>(
+        &mut self,
+        request_client_id: Cell,
+        path: String,
+        method: Method,
+        callback: String,
+        body: T,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<i32, Box<dyn std::error::Error>> {
+        let client = match self.request_clients.get(request_client_id) {
+            Some(v) => v,
+            None => {
+                return Err(new_err(&format!(
+                    "attempted to request with invalid client {}",
+                    request_client_id
+                )));
+            }
+        };
+
+        debug!(
+            "executing new request {} with {:?} to {} with {:?} calling {}",
+            request_client_id, headers, path, method, callback
+        );
+
+        Ok(
+            match client.request(Request {
+                callback: callback,
+                path: path,
+                method: Method::from(method),
+                body: body.to_string(),
+                headers: headers,
+                request_type: 0,
+            }) {
+                Ok(v) => v,
+                Err(e) => {
+                    log!("{}", e);
+                    return Ok(1);
+                }
+            },
+        )
+    }
+
     pub fn web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
         Ok(0)
     }

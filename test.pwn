@@ -87,147 +87,147 @@ public OnGetDataSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
 }
 
 
-// // -
-// // Request - basic HTTP GET with headers test
-// // -
+// -
+// Request - basic HTTP GET with headers test
+// -
 
 
-// new Request:OnGetDataWithHeaders_ID;
-// Test:GetDataWithHeaders() {
-//     new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders(
-//         "X-Pawn-Requests", "YES"
-//     ));
-//     OnGetDataWithHeaders_ID = Request(
-//         client,
-//         "headers",
-//         HTTP_METHOD_GET,
-//         "OnGetDataWithHeaders",
-//         .headers = RequestHeaders(
-//             "X-Pawn-Requests-Embedded", "YES"
-//         )
-//     );
-// }
-// forward OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen);
-// public OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
-//     print("*** Test OnGetDataWithHeaders\n");
+new Request:OnGetDataWithHeaders_ID;
+Test:GetDataWithHeaders() {
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders(
+        "X-Pawn-Requests", "YES"
+    ));
+    OnGetDataWithHeaders_ID = Request(
+        client,
+        "headers",
+        HTTP_METHOD_GET,
+        "OnGetDataWithHeaders",
+        .headers = RequestHeaders(
+            "X-Pawn-Requests-Embedded", "YES"
+        )
+    );
+}
+forward OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnGetDataWithHeaders(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    print("*** Test OnGetDataWithHeaders\n");
 
-//     ASSERT(id == OnGetDataWithHeaders_ID);
-//     ASSERT(status == HTTP_STATUS_OK);
-//     print(data);
+    ASSERT(id == OnGetDataWithHeaders_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    print(data);
 
-//     print("\nPASS!");
-// }
+    print("\nPASS!");
+}
 
-// new Request:OnGetDataWithHeadersSSL_ID;
-// Test:GetDataWithHeadersSSL() {
-//     new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders(
-//         "X-Pawn-Requests", "YES"
-//     ));
-//     OnGetDataWithHeadersSSL_ID = Request(
-//         client,
-//         "headers",
-//         HTTP_METHOD_GET,
-//         "OnGetDataWithHeadersSSL",
-//         .headers = RequestHeaders(
-//             "X-Pawn-Requests-Embedded", "YES"
-//         )
-//     );
-// }
-// forward OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen);
-// public OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
-//     print("*** Test OnGetDataWithHeadersSSL\n");
+new Request:OnGetDataWithHeadersSSL_ID;
+Test:GetDataWithHeadersSSL() {
+    new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders(
+        "X-Pawn-Requests", "YES"
+    ));
+    OnGetDataWithHeadersSSL_ID = Request(
+        client,
+        "headers",
+        HTTP_METHOD_GET,
+        "OnGetDataWithHeadersSSL",
+        .headers = RequestHeaders(
+            "X-Pawn-Requests-Embedded", "YES"
+        )
+    );
+}
+forward OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen);
+public OnGetDataWithHeadersSSL(Request:id, E_HTTP_STATUS:status, data[], dataLen) {
+    print("*** Test OnGetDataWithHeadersSSL\n");
 
-//     ASSERT(id == OnGetDataWithHeadersSSL_ID);
-//     ASSERT(status == HTTP_STATUS_OK);
-//     print(data);
+    ASSERT(id == OnGetDataWithHeadersSSL_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    print(data);
 
-//     print("\nPASS!");
-// }
+    print("\nPASS!");
+}
 
-// new Request:OnGetJsonWithHeaders_ID;
-// Test:GetJsonWithHeaders() {
-//     new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders(
-//         "X-Pawn-Requests", "YES"
-//     ));
-//     OnGetJsonWithHeaders_ID = RequestJSON(
-//         client,
-//         "headers",
-//         HTTP_METHOD_GET,
-//         "OnGetJsonWithHeaders"
-//     );
-// }
-// forward OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node);
-// public OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node) {
-//     print("*** Test OnGetJsonWithHeaders\n");
+new Request:OnGetJsonWithHeaders_ID;
+Test:GetJsonWithHeaders() {
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders(
+        "X-Pawn-Requests", "YES"
+    ));
+    OnGetJsonWithHeaders_ID = RequestJSON(
+        client,
+        "headers",
+        HTTP_METHOD_GET,
+        "OnGetJsonWithHeaders"
+    );
+}
+forward OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node);
+public OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node) {
+    print("*** Test OnGetJsonWithHeaders\n");
 
-//     ASSERT(id == OnGetJsonWithHeaders_ID);
-//     ASSERT(status == HTTP_STATUS_OK);
+    ASSERT(id == OnGetJsonWithHeaders_ID);
+    ASSERT(status == HTTP_STATUS_OK);
 
-//     new string[512];
-//     JsonStringify(node, string);
-//     printf("%s", string);
+    new string[512];
+    JsonStringify(node, string);
+    printf("%s", string);
 
-//     print("\nPASS!");
-// }
-
-
-// // -
-// // RequestJSON - basic GET on JSON data
-// // -
+    print("\nPASS!");
+}
 
 
-// new Request:OnGetJson_ID;
-// Test:GetJson() {
-//     new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
-//     OnGetJson_ID = RequestJSON(
-//         client,
-//         "anything",
-//         HTTP_METHOD_GET,
-//         "OnGetJson",
-//         .headers = RequestHeaders()
-//     );
-// }
-// forward OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node);
-// public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
-//     print("*** Test OnGetJson\n");
-
-//     ASSERT(id == OnGetJson_ID);
-//     ASSERT(status == HTTP_STATUS_OK);
-//     ASSERT(_:node != -1);
-
-//     new string[512];
-//     JsonStringify(node, string);
-//     printf("%s", string);
-
-//     new output[128];
-
-//     JsonGetString(node, "method", output);
-//     ASSERT(!strcmp(output, "GET"));
-
-//     JsonGetString(node, "origin", output);
-//     ASSERT(strlen(output) > 0);
-
-//     JsonGetString(node, "url", output);
-//     ASSERT(!strcmp(output, "http://httpbin.org/anything"));
-
-//     print("\nPASS!");
-// }
+// -
+// RequestJSON - basic GET on JSON data
+// -
 
 
-// // -
-// // RequestJSON - failure cases
-// // -
+new Request:OnGetJson_ID;
+Test:GetJson() {
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    OnGetJson_ID = RequestJSON(
+        client,
+        "anything",
+        HTTP_METHOD_GET,
+        "OnGetJson",
+        .headers = RequestHeaders()
+    );
+}
+forward OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node);
+public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
+    print("*** Test OnGetJson\n");
+
+    ASSERT(id == OnGetJson_ID);
+    ASSERT(status == HTTP_STATUS_OK);
+    ASSERT(_:node != -1);
+
+    new string[512];
+    JsonStringify(node, string);
+    printf("%s", string);
+
+    new output[128];
+
+    JsonGetString(node, "method", output);
+    ASSERT(!strcmp(output, "GET"));
+
+    JsonGetString(node, "origin", output);
+    ASSERT(strlen(output) > 0);
+
+    JsonGetString(node, "url", output);
+    ASSERT(!strcmp(output, "http://httpbin.org/anything"));
+
+    print("\nPASS!");
+}
 
 
-// Test:InvalidClient() {
-//     new Request:id = RequestJSON(
-//         RequestsClient:-1,
-//         "",
-//         HTTP_METHOD_GET,
-//         ""
-//     );
-//     ASSERT(!IsValidRequest(id));
-// }
+// -
+// RequestJSON - failure cases
+// -
+
+
+Test:InvalidClient() {
+    new Request:id = RequestJSON(
+        RequestsClient:-1,
+        "",
+        HTTP_METHOD_GET,
+        ""
+    );
+    ASSERT(!IsValidRequest(id));
+}
 
 
 // // -

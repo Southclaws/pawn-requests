@@ -22,6 +22,7 @@ pub struct Request {
     pub path: String,
     pub method: Method,
     pub headers: HeaderMap,
+    pub body: String,
     pub request_type: i32,
 }
 
@@ -74,6 +75,7 @@ impl RequestClient {
             .request(request.method.into(), full_url.clone())
             .headers(self.headers.clone())
             .headers(request.headers)
+            .body(request.body)
             .send()
             .map_err(|e| log!("{}", e))
             .and_then(move |mut response: reqwest::async::Response| {
