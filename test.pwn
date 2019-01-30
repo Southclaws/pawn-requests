@@ -230,35 +230,35 @@ Test:InvalidClient() {
 }
 
 
-// // -
-// // WebSocket Tests
-// // -
+// -
+// WebSocket Tests
+// -
 
 
-// new WebSocket:WebSocketEcho_ID;
-// Test:WebSocketEcho() {
-//     print("Connecting to WebSocket...");
-//     new start = GetTickCount();
-//     WebSocketEcho_ID = WebSocketClient("wss://echo.websocket.org", "OnWebSocket");
-//     printf("Connected! Took %dms", GetTickCount() - start);
+new WebSocket:WebSocketEcho_ID;
+Test:WebSocketEcho() {
+    print("Connecting to WebSocket...");
+    new start = GetTickCount();
+    WebSocketEcho_ID = WebSocketClient("ws://echo.websocket.org", "OnWebSocket");
+    printf("Connected! Took %dms", GetTickCount() - start);
 
-//     start = GetTickCount();
-//     printf("Sending WebSocket message...");
-//     new ret = WebSocketSend(WebSocketEcho_ID, "Hello World!");
-//     printf("Sent! Took %dms", GetTickCount() - start);
+    start = GetTickCount();
+    printf("Sending WebSocket message...");
+    new ret = WebSocketSend(WebSocketEcho_ID, "Hello World!");
+    printf("Sent! Took %dms", GetTickCount() - start);
 
-//     ASSERT(ret == 0);
-// }
-// forward OnWebSocket(WebSocket:ws, const data[], dataLen);
-// public OnWebSocket(WebSocket:ws, const data[], dataLen) {
-//     print("*** Test OnWebSocket\n");
+    ASSERT(ret == 0);
+}
+forward OnWebSocket(WebSocket:ws, const data[], dataLen);
+public OnWebSocket(WebSocket:ws, const data[], dataLen) {
+    print("*** Test OnWebSocket\n");
 
-//     printf("%d %d: '%s'", _:ws, dataLen, data);
-//     new ret = strcmp(data, "Hello World!", false, dataLen);
-//     ASSERT(!ret);
+    printf("%d %d: '%s'", _:ws, dataLen, data);
+    new ret = strcmp(data, "Hello World!", false, dataLen);
+    ASSERT(!ret);
 
-//     print("\nPASS!");
-// }
+    print("\nPASS!");
+}
 
 // new JsonWebSocket:JsonWebSocketEcho_ID;
 // Test:JsonWebSocketEcho() {

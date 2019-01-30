@@ -19,6 +19,7 @@ pub struct Plugin {
     request_clients: Pool<RequestClient>,
     request_client_amx: HashMap<i32, usize>,
     websocket_clients: Pool<WebsocketClient>,
+    websocket_client_amx: HashMap<i32, usize>,
     json_nodes: GarbageCollectedPool<serde_json::Value>,
     headers: GarbageCollectedPool<reqwest::header::HeaderMap>,
 }
@@ -43,7 +44,7 @@ define_native!(
     node: Cell,
     headers: Cell
 );
-define_native!(web_socket_client, address: String, callback: String);
+define_native!(web_socket_client, endpoint: String, callback: String);
 define_native!(web_socket_send, client: Cell, data: String);
 define_native!(json_web_socket_client);
 define_native!(json_web_socket_send);
@@ -192,6 +193,37 @@ impl Plugin {
             );
 
             match response_call_string(&amx, public, response) {
+                Ok(_) => (),
+                Err(e) => log!("{}", e),
+            };
+        }
+
+        for (id, wc) in self.websocket_clients.active.iter_mut() {
+            let response: String = match wc.poll() {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+
+            let raw = match self.websocket_client_amx.get(&id) {
+                Some(v) => v,
+                None => {
+                    log!("orphan request client: lost handle to amx");
+                    continue;
+                }
+            };
+            let amx = cast_amx(raw);
+
+            let public = match amx.find_public(&wc.callback) {
+                Ok(v) => v,
+                Err(e) => {
+                    log!("{}", e);
+                    return;
+                }
+            };
+
+            debug!("WebSocket Response {}: {}\n{}", id, wc.callback, response);
+
+            match websocket_call_string(&amx, public, id, response) {
                 Ok(_) => (),
                 Err(e) => log!("{}", e),
             };
@@ -370,13 +402,37 @@ impl Plugin {
 
     pub fn web_socket_client(
         &mut self,
-        _: &AMX,
-        address: String,
+        amx: &AMX,
+        endpoint: String,
         callback: String,
     ) -> AmxResult<Cell> {
-        Ok(0)
+        let client = match WebsocketClient::new(endpoint.clone(), callback) {
+            Ok(v) => v,
+            Err(e) => {
+                log!("failed to create new websocket client: {}", e);
+                return Ok(-1);
+            }
+        };
+        let id = self.websocket_clients.alloc(client);
+        self.websocket_client_amx.insert(id, amx.amx as usize);
+        debug!(
+            "created new request client {} with endpoint {}",
+            id, endpoint
+        );
+        Ok(id)
     }
     pub fn web_socket_send(&mut self, _: &AMX, client: Cell, data: String) -> AmxResult<Cell> {
+        let client = match self.websocket_clients.get(client) {
+            Some(v) => v,
+            None => return Ok(-1),
+        };
+        match client.send(data) {
+            Ok(v) => v,
+            Err(e) => {
+                log!("failed to send websocket data: {}", e);
+                return Ok(-1);
+            }
+        };
         Ok(0)
     }
     pub fn json_web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
@@ -952,6 +1008,7 @@ impl Default for Plugin {
             request_clients: Pool::default(),
             request_client_amx: HashMap::new(),
             websocket_clients: Pool::default(),
+            websocket_client_amx: HashMap::new(),
             json_nodes: GarbageCollectedPool::default(),
             headers: GarbageCollectedPool::default(),
         }
@@ -976,6 +1033,20 @@ fn response_call_string(amx: &AMX, public: Cell, response: Response) -> AmxResul
     let amx_addr = amx.push_array(to_pawn_string(response.body).as_slice())?;
     amx.push(response.status.as_u16() as i32)?;
     amx.push(response.id)?;
+    amx.exec(public)?;
+    amx.release(amx_addr)?;
+    Ok(())
+}
+
+fn websocket_call_string(
+    amx: &AMX,
+    public: Cell,
+    client_id: &Cell,
+    response: String,
+) -> AmxResult<()> {
+    amx.push(response.len())?;
+    let amx_addr = amx.push_array(to_pawn_string(response).as_slice())?;
+    amx.push(client_id)?;
     amx.exec(public)?;
     amx.release(amx_addr)?;
     Ok(())
