@@ -6,7 +6,6 @@ use futures::Stream;
 use std::error::Error;
 use string_error::static_err;
 use tokio::runtime::Runtime;
-use websocket::result::WebSocketError;
 use websocket::ClientBuilder;
 use websocket::OwnedMessage;
 
@@ -29,43 +28,30 @@ impl WebsocketClient {
 
         let f = ClientBuilder::from_url(&url)
             .async_connect(None)
-            .and_then(move |(duplex, _)| {
-                let (sink, stream) = duplex.split();
+            .map(|(duplex, _)| duplex.split())
+            .and_then(move |(sink, stream)| {
+                let sink: futures::stream::SplitSink<
+                    tokio::codec::Framed<
+                        std::boxed::Box<(dyn websocket::async::Stream + std::marker::Send)>,
+                        websocket::async::MessageCodec<websocket::OwnedMessage>,
+                    >,
+                > = sink;
+                let stream: futures::stream::SplitStream<
+                    tokio::codec::Framed<
+                        std::boxed::Box<(dyn websocket::async::Stream + std::marker::Send)>,
+                        websocket::async::MessageCodec<websocket::OwnedMessage>,
+                    >,
+                > = stream;
 
-                debug!("connected to websocket");
+                // TODO:
+                // 1. Read the items from `stream` and send them to
+                // `incoming_send` so they can be read via `self.poll`.
+                // 2. Read the items from `outgoing_recv` that were added via
+                // `self.send` and write them to `sink`.
 
-                stream
-                    .filter_map(move |message| {
-                        debug!("stream: {:?}", message);
-                        let r = match message {
-                            OwnedMessage::Close(e) => Some(OwnedMessage::Close(e)),
-                            OwnedMessage::Ping(d) => Some(OwnedMessage::Pong(d)),
-                            OwnedMessage::Text(v) => {
-                                match incoming_send.clone().send(v) {
-                                    Ok(_) => (),
-                                    Err(e) => log!("failed to send to internal queues: {}", e),
-                                }
-                                None
-                            }
-                            _ => None,
-                        };
-                        return r;
-                    })
-                    .select(
-                        outgoing_recv
-                            .and_then(|d| {
-                                debug!("outgoing_recv: {:?}", d);
-                                future::ok(d)
-                            })
-                            .map_err(|_| {
-                                debug!("sending");
-                                return WebSocketError::NoDataAvailable;
-                            }),
-                    )
-                    .forward(sink)
+                future::ok(())
             })
-            .map(|_| {})
-            .map_err(|e: WebSocketError| {
+            .map_err(|e| {
                 log!("{}", e);
                 return ();
             });
