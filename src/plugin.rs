@@ -199,9 +199,14 @@ impl Plugin {
         }
 
         for (id, wc) in self.websocket_clients.active.iter_mut() {
-            let response: String = match wc.poll() {
+            let owned_message = match wc.poll() {
                 Ok(v) => v,
                 Err(_) => continue,
+            };
+
+            let response = match owned_message {
+                websocket::OwnedMessage::Text(v) => v,
+                _ => continue, // Todo: handle other cases
             };
 
             let raw = match self.websocket_client_amx.get(&id) {

@@ -6,13 +6,14 @@ use futures::Stream;
 use std::error::Error;
 use string_error::static_err;
 use tokio::runtime::Runtime;
+use tokio::spawn;
 use websocket::ClientBuilder;
 use websocket::OwnedMessage;
 
 pub struct WebsocketClient {
     pub callback: String,
     sender: sync::mpsc::Sender<OwnedMessage>,
-    receiver: std::sync::mpsc::Receiver<String>,
+    receiver: std::sync::mpsc::Receiver<OwnedMessage>,
 }
 
 impl WebsocketClient {
@@ -43,11 +44,19 @@ impl WebsocketClient {
                     >,
                 > = stream;
 
-                // TODO:
-                // 1. Read the items from `stream` and send them to
-                // `incoming_send` so they can be read via `self.poll`.
-                // 2. Read the items from `outgoing_recv` that were added via
-                // `self.send` and write them to `sink`.
+                spawn(
+                    stream
+                        .map_err(|e| {
+                            log!("{}", e);
+                            return ();
+                        })
+                        .for_each(move |m| {
+                            incoming_send.send(m); // TODO: match
+                            future::ok(())
+                        }),
+                );
+
+                outgoing_recv.forward(sink);
 
                 future::ok(())
             })
@@ -75,7 +84,7 @@ impl WebsocketClient {
         Ok(())
     }
 
-    pub fn poll(&mut self) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn poll(&mut self) -> Result<OwnedMessage, Box<dyn std::error::Error>> {
         Ok(self.receiver.try_recv()?)
     }
 }
