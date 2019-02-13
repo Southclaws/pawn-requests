@@ -51,12 +51,24 @@ impl WebsocketClient {
                             return ();
                         })
                         .for_each(move |m| {
-                            incoming_send.send(m); // TODO: match
+                            match incoming_send.send(m) {
+                                Ok(_) => {}
+                                Err(e) => log!("{}", e),
+                            };
                             future::ok(())
                         }),
                 );
 
-                outgoing_recv.forward(sink);
+                match outgoing_recv
+                    .forward(sink.sink_map_err(|e| {
+                        log!("{}", e);
+                        ()
+                    }))
+                    .wait()
+                {
+                    Ok(_) => {}
+                    Err(_) => {}
+                };
 
                 future::ok(())
             })
