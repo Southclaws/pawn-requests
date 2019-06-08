@@ -42,8 +42,9 @@ ENV BOOST_ROOT=/root/boost_1_67_0
 # cpprestsdk
 # -
 
-RUN git clone https://github.com/Microsoft/cpprestsdk.git casablanca
+RUN git clone --recursive https://github.com/Microsoft/cpprestsdk.git casablanca
 RUN cd casablanca/Release && \
+    git checkout v2.10.8 && \
     mkdir build && \
     cd build && \
     cmake .. \
