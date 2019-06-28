@@ -14,6 +14,7 @@ pub struct WebsocketClient {
     pub callback: String,
     sender: sync::mpsc::Sender<OwnedMessage>,
     receiver: std::sync::mpsc::Receiver<OwnedMessage>,
+    pub runtime: Runtime,
 }
 
 impl WebsocketClient {
@@ -84,6 +85,7 @@ impl WebsocketClient {
             callback: callback,
             sender: outgoing_send,
             receiver: incoming_recv,
+            runtime:rt
         })
     }
 
