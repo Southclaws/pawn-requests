@@ -14,7 +14,7 @@ use std::collections::HashMap;
 
 initialize_plugin!(
     natives: [
-        	Plugin::requests_client,
+            Plugin::requests_client,
             Plugin::request_headers,
             Plugin::request,
             Plugin::request_json,
