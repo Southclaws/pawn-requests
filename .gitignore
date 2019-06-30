@@ -36,6 +36,7 @@ samp-npc
 # logs
 logs/
 server_log.txt
+*.log
 
 #
 # Common files
