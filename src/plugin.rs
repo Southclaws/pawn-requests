@@ -77,7 +77,7 @@ impl SampPlugin for Plugin {
                 response.id, response.request.callback, response.body
             );
 
-            match response_call_string(*raw, response) {
+            match execute_response_callback(*raw, response) {
                 Ok(_) => (),
                 Err(e) => error!("{}", e),
             };
@@ -105,11 +105,26 @@ impl SampPlugin for Plugin {
             let callback = &wc.callback;
 
             debug!("WebSocket Response {}: {}\n{}", id, callback, response);
+            if wc.is_json {
+                let v: serde_json::Value = match serde_json::from_str(&response) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
 
-            match websocket_call_string(*raw, callback, id, response) {
-                Ok(_) => (),
-                Err(e) => error!("{}", e),
-            };
+                let node = self.json_nodes.alloc(v);
+                match execute_json_websocket_callback(*raw, callback, id, &node) {
+                    Ok(_) => (),
+                    Err(e) => error!("{}", e),
+                };
+            } else {
+                match execute_websocket_callback(*raw, callback, id, response) {
+                    Ok(_) => (),
+                    Err(e) => error!("{}", e),
+                };
+            }
         }
     }
 }
@@ -324,7 +339,7 @@ impl Plugin {
         let endpoint = endpoint.to_string();
         let callback = callback.to_string();
 
-        let client = match WebsocketClient::new(endpoint.clone(), callback) {
+        let client = match WebsocketClient::new(endpoint.clone(), callback, false) {
             Ok(v) => v,
             Err(e) => {
                 error!("failed to create new websocket client: {}", e);
@@ -334,7 +349,7 @@ impl Plugin {
         let id = self.websocket_clients.alloc(client);
         self.websocket_client_amx.insert(id, amx.ident());
         debug!(
-            "created new request client {} with endpoint {}",
+            "created new web socket client {} with endpoint {}",
             id, endpoint
         );
         Ok(id)
@@ -357,12 +372,58 @@ impl Plugin {
     }
 
     #[native(name = "JsonWebSocketClient")]
-    pub fn json_web_socket_client(&mut self, _: &Amx) -> AmxResult<i32> {
-        Ok(0)
+    pub fn json_web_socket_client(
+        &mut self,
+        amx: &Amx,
+        endpoint: AmxString,
+        callback: AmxString,
+    ) -> AmxResult<i32> {
+        let endpoint = endpoint.to_string();
+        let callback = callback.to_string();
+
+        let client = match WebsocketClient::new(endpoint.clone(), callback, true) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("failed to create new websocket client: {}", e);
+                return Ok(-1);
+            }
+        };
+        let id = self.websocket_clients.alloc(client);
+        self.websocket_client_amx.insert(id, amx.ident());
+        debug!(
+            "created new json web socket client {} with endpoint {}",
+            id, endpoint
+        );
+        Ok(id)
     }
 
     #[native(name = "JsonWebSocketSend")]
-    pub fn json_web_socket_send(&mut self, _: &Amx) -> AmxResult<i32> {
+    pub fn json_web_socket_send(&mut self, _: &Amx, client: i32, node: i32) -> AmxResult<i32> {
+        let client = match self.websocket_clients.get(client) {
+            Some(v) => v,
+            None => return Ok(-1),
+        };
+
+        let v: &serde_json::Value = match self.json_nodes.get(node) {
+            Some(v) => v,
+            None => return Ok(1),
+        };
+
+        let data = match serde_json::to_string(&v) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("{}", e);
+                return Ok(1);
+            }
+        };
+
+        match client.send(data) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("failed to send websocket data: {}", e);
+                return Ok(-1);
+            }
+        };
         Ok(0)
     }
 
@@ -992,7 +1053,7 @@ impl Plugin {
     }
 }
 
-fn response_call_string(amx: AmxIdent, response: Response) -> AmxResult<()> {
+fn execute_response_callback(amx: AmxIdent, response: Response) -> AmxResult<()> {
     let amx = samp::amx::get(amx).unwrap();
     let length = response.body.len();
     let body = response.body;
@@ -1005,7 +1066,7 @@ fn response_call_string(amx: AmxIdent, response: Response) -> AmxResult<()> {
     Ok(())
 }
 
-fn websocket_call_string(
+fn execute_websocket_callback(
     amx: AmxIdent,
     callback: &str,
     client_id: &i32,
@@ -1014,5 +1075,16 @@ fn websocket_call_string(
     let length = response.len();
     let amx = samp::amx::get(amx).unwrap();
     let _ = exec_public!(amx,callback,client_id,&response => string ,length);
+    Ok(())
+}
+
+fn execute_json_websocket_callback(
+    amx: AmxIdent,
+    callback: &str,
+    client_id: &i32,
+    node: &i32,
+) -> AmxResult<()> {
+    let amx = samp::amx::get(amx).unwrap();
+    let _ = exec_public!(amx, callback, client_id, node);
     Ok(())
 }

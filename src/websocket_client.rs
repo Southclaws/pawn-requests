@@ -15,10 +15,15 @@ pub struct WebsocketClient {
     sender: sync::mpsc::Sender<OwnedMessage>,
     receiver: std::sync::mpsc::Receiver<OwnedMessage>,
     pub runtime: Runtime,
+    pub is_json: bool,
 }
 
 impl WebsocketClient {
-    pub fn new(endpoint: String, callback: String) -> Result<WebsocketClient, Box<dyn Error>> {
+    pub fn new(
+        endpoint: String,
+        callback: String,
+        is_json: bool,
+    ) -> Result<WebsocketClient, Box<dyn Error>> {
         let url = url::Url::parse(&endpoint)?;
         if !url.scheme().starts_with("ws") {
             return Err(static_err("non-http scheme"));
@@ -58,6 +63,7 @@ impl WebsocketClient {
             sender: outgoing_send,
             receiver: incoming_recv,
             runtime: rt,
+            is_json,
         })
     }
 

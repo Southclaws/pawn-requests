@@ -29,7 +29,6 @@ pub struct Request {
 
 pub struct Response {
     pub request: Request,
-
     pub id: i32,
     pub body: String,
     pub status: StatusCode,
