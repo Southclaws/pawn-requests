@@ -10,7 +10,7 @@ crate-type = ["dylib"]
 [dependencies]
 samp-sdk = { git="https://github.com/ZOTTCE/samp-sdk" }
 reqwest = "0.9.8"
-websocket = "0.22.2"
+websocket = "0.22.4"
 serde_json = "1.0.37"
 string-error = "0.1.0"
 enum_primitive = "0.1.1"

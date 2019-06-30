@@ -1,4 +1,3 @@
-use futures::future;
 use futures::sync;
 use futures::Future;
 use futures::Sink;
@@ -31,51 +30,23 @@ impl WebsocketClient {
         let f = ClientBuilder::from_url(&url)
             .async_connect(None)
             .map(|(duplex, _)| duplex.split())
+            .map_err(|_| ())
             .and_then(move |(sink, stream)| {
-                let sink: futures::stream::SplitSink<
-                    tokio::codec::Framed<
-                        std::boxed::Box<(dyn websocket::async::Stream + std::marker::Send)>,
-                        websocket::async::MessageCodec<websocket::OwnedMessage>,
-                    >,
-                > = sink;
-                let stream: futures::stream::SplitStream<
-                    tokio::codec::Framed<
-                        std::boxed::Box<(dyn websocket::async::Stream + std::marker::Send)>,
-                        websocket::async::MessageCodec<websocket::OwnedMessage>,
-                    >,
-                > = stream;
-
                 spawn(
                     stream
-                        .map_err(|e| {
-                            log!("{}", e);
+                        .map_err(|err| {
+                            log!("{}", err);
                             return ();
                         })
-                        .for_each(move |m| {
-                            match incoming_send.send(m) {
-                                Ok(_) => {}
-                                Err(e) => log!("{}", e),
-                            };
-                            future::ok(())
+                        .for_each(move |message| {
+                            let _ = incoming_send.send(message);
+                            Ok(())
                         }),
                 );
 
-                match outgoing_recv
-                    .forward(sink.sink_map_err(|e| {
-                        log!("{}", e);
-                        ()
-                    }))
-                    .wait()
-                {
-                    Ok(_) => {}
-                    Err(_) => {}
-                };
-
-                future::ok(())
-            })
-            .map_err(|e| {
-                log!("{}", e);
-                return ();
+                outgoing_recv
+                    .forward(sink.sink_map_err(|err| log!("{:?}", err)))
+                    .map(|_| ())
             });
 
         debug!("connecting to websocket");
@@ -85,7 +56,7 @@ impl WebsocketClient {
             callback: callback,
             sender: outgoing_send,
             receiver: incoming_recv,
-            runtime:rt
+            runtime: rt,
         })
     }
 
