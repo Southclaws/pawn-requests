@@ -8,6 +8,7 @@ use tokio::runtime::Runtime;
 use tokio::spawn;
 use websocket::ClientBuilder;
 use websocket::OwnedMessage;
+use log::{debug,error};
 
 pub struct WebsocketClient {
     pub callback: String,
@@ -35,7 +36,7 @@ impl WebsocketClient {
                 spawn(
                     stream
                         .map_err(|err| {
-                            log!("{}", err);
+                            error!("{}", err);
                             return ();
                         })
                         .for_each(move |message| {
@@ -45,7 +46,7 @@ impl WebsocketClient {
                 );
 
                 outgoing_recv
-                    .forward(sink.sink_map_err(|err| log!("{:?}", err)))
+                    .forward(sink.sink_map_err(|err| error!("{:?}", err)))
                     .map(|_| ())
             });
 

@@ -1,10 +1,11 @@
 use futures::{future, Future, Stream};
-use reqwest::{async::Client, header::HeaderMap, StatusCode};
+use reqwest::{r#async::Client, header::HeaderMap, StatusCode};
 use std::{error::Error, sync::mpsc};
 use string_error::static_err;
 use tokio::runtime::Runtime;
+use log::{debug,error};
 
-use method::Method;
+use crate::method::Method;
 
 pub struct RequestClient {
     runtime: Runtime,
@@ -77,8 +78,8 @@ impl RequestClient {
             .headers(request.headers)
             .body(request.body)
             .send()
-            .map_err(|e| log!("{}", e))
-            .and_then(move |mut response: reqwest::async::Response| {
+            .map_err(|e| error!("{}", e))
+            .and_then(move |mut response: reqwest::r#async::Response| {
                 debug!(
                     "received response for request {} status {}",
                     id,
@@ -96,7 +97,7 @@ impl RequestClient {
                 {
                     Ok(v) => v,
                     Err(e) => {
-                        log!("failed to read body: {}", e);
+                        error!("failed to read body: {}", e);
                         String::new()
                     }
                 };
@@ -108,7 +109,7 @@ impl RequestClient {
                         body: body,
                         status: response.status(),
                     })
-                    .map_err(|e| log!("{}", e))
+                    .map_err(|e| error!("{}", e))
             })
             .map(|_| ());
 

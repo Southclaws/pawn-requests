@@ -1,82 +1,27 @@
 use reqwest::header::HeaderMap;
-use samp_sdk::{
-    amx::{AmxResult, AMX},
-    args::Parser,
-    consts::*,
-    types::Cell,
-};
+use samp::prelude::*;
+use samp::SampPlugin;
+use samp::{native,exec_public};
+use log::{debug,info,error};
 use serde_json;
 use std::collections::HashMap;
 use std::str::FromStr;
 use string_error::new_err;
 
-use method::Method;
-use pool::{GarbageCollectedPool, Pool};
-use request_client::{Request, RequestClient, Response};
-use websocket_client::WebsocketClient;
+use crate::method::Method;
+use crate::pool::{GarbageCollectedPool, Pool};
+use crate::request_client::{Request, RequestClient, Response};
+use crate::websocket_client::WebsocketClient;
+use samp::amx::AmxIdent;
 
 pub struct Plugin {
-    request_clients: Pool<RequestClient>,
-    request_client_amx: HashMap<i32, usize>,
-    websocket_clients: Pool<WebsocketClient>,
-    websocket_client_amx: HashMap<i32, usize>,
-    json_nodes: GarbageCollectedPool<serde_json::Value>,
-    headers: GarbageCollectedPool<reqwest::header::HeaderMap>,
+    pub request_clients: Pool<RequestClient>,
+    pub request_client_amx: HashMap<i32, AmxIdent>,
+    pub websocket_clients: Pool<WebsocketClient>,
+    pub websocket_client_amx: HashMap<i32, AmxIdent>,
+    pub json_nodes: GarbageCollectedPool<serde_json::Value>,
+    pub headers: GarbageCollectedPool<reqwest::header::HeaderMap>,
 }
-
-define_native!(requests_client, endpoint: String, headers: i32);
-define_native!(request_headers as raw);
-define_native!(
-    request,
-    request_client_id: Cell,
-    path: String,
-    method: Method,
-    callback: String,
-    body: String,
-    headers: Cell
-);
-define_native!(
-    request_json,
-    request_client_id: Cell,
-    path: String,
-    method: Method,
-    callback: String,
-    node: Cell,
-    headers: Cell
-);
-define_native!(web_socket_client, endpoint: String, callback: String);
-define_native!(web_socket_send, client: Cell, data: String);
-define_native!(json_web_socket_client);
-define_native!(json_web_socket_send);
-define_native!(json_parse, input: String, node: ref Cell);
-define_native!(json_stringify, node: Cell, output: ref Cell, length: Cell);
-define_native!(json_node_type, node: Cell);
-define_native!(json_object as raw);
-define_native!(json_int, value: Cell);
-define_native!(json_bool, value: bool);
-define_native!(json_float, value: f32);
-define_native!(json_string, value: String);
-define_native!(json_array as raw);
-define_native!(json_append, a: Cell, b: Cell);
-define_native!(json_set_object, node: Cell, key: String, value: Cell);
-define_native!(json_set_int, node: Cell, key: String, value: Cell);
-define_native!(json_set_float, node: Cell, key: String, value: f32);
-define_native!(json_set_bool, node: Cell, key: String, value: bool);
-define_native!(json_set_string, node: Cell, key: String, value: String);
-define_native!(json_get_object, node: Cell, key: String, value: ref Cell);
-define_native!(json_get_int, node: Cell, key: String, value: ref i32);
-define_native!(json_get_float, node: Cell, key: String, value: ref f32);
-define_native!(json_get_bool, node: Cell, key: String, value: ref bool);
-define_native!(json_get_string, node: Cell, key: String, value: ref Cell, length: Cell);
-define_native!(json_get_array, node: Cell, key: String, value: ref Cell);
-define_native!(json_array_length, node: Cell, length: ref Cell);
-define_native!(json_array_object, node: Cell, index: Cell, output: ref Cell);
-define_native!(json_get_node_int, node: Cell, output: ref i32);
-define_native!(json_get_node_float, node: Cell, output: ref f32);
-define_native!(json_get_node_bool, node: Cell, output: ref bool);
-define_native!(json_get_node_string, node: Cell, output: ref Cell, length: Cell);
-define_native!(json_toggle_gc, node: Cell, set: bool);
-define_native!(json_cleanup, node: Cell, auto: bool);
 
 enum_from_primitive! {
 #[derive(Debug, PartialEq, Clone)]
@@ -90,80 +35,29 @@ enum JsonNode {
 }
 }
 
-impl Plugin {
-    pub fn load(&self) -> bool {
-        env_logger::init();
-        return true;
+impl SampPlugin for Plugin {
+    fn on_load(&mut self) {
+        info!("Loaded");
     }
 
-    pub fn unload(&self) {
-        return;
+    fn on_unload(self: Box<Self>) {
+        info!("Unloaded");
     }
 
-    pub fn amx_load(&self, amx: &AMX) -> Cell {
-        let natives = natives! {
-            "RequestsClient" => requests_client,
-            "RequestHeaders" => request_headers,
-            "Request" => request,
-            "RequestJSON" => request_json,
-            "WebSocketClient" => web_socket_client,
-            "WebSocketSend" => web_socket_send,
-            "JsonWebSocketClient" => json_web_socket_client,
-            "JsonWebSocketSend" => json_web_socket_send,
-            "JsonParse" => json_parse,
-            "JsonStringify" => json_stringify,
-            "JsonNodeType" => json_node_type,
-            "JsonObject" => json_object,
-            "JsonInt" => json_int,
-            "JsonBool" => json_bool,
-            "JsonFloat" => json_float,
-            "JsonString" => json_string,
-            "JsonArray" => json_array,
-            "JsonAppend" => json_append,
-            "JsonSetObject" => json_set_object,
-            "JsonSetInt" => json_set_int,
-            "JsonSetFloat" => json_set_float,
-            "JsonSetBool" => json_set_bool,
-            "JsonSetString" => json_set_string,
-            "JsonGetObject" => json_get_object,
-            "JsonGetInt" => json_get_int,
-            "JsonGetFloat" => json_get_float,
-            "JsonGetBool" => json_get_bool,
-            "JsonGetString" => json_get_string,
-            "JsonGetArray" => json_get_array,
-            "JsonArrayLength" => json_array_length,
-            "JsonArrayObject" => json_array_object,
-            "JsonGetNodeInt" => json_get_node_int,
-            "JsonGetNodeFloat" => json_get_node_float,
-            "JsonGetNodeBool" => json_get_node_bool,
-            "JsonGetNodeString" => json_get_node_string,
-            "JsonToggleGC" => json_toggle_gc,
-            "JsonCleanup" => json_cleanup
-        };
-
-        match amx.register(&natives) {
-            Ok(_) => AMX_ERR_NONE,
-            Err(err) => {
-                log!("failed to register natives: {:?}", err);
-                AMX_ERR_INIT
-            }
-        }
-    }
-
-    pub fn amx_unload(&mut self, _amx: &AMX) -> Cell {
+    /*fn on_amx_unload(&mut self, _Amx: &Amx) -> i32 {
         // let mut to_clear = Vec::new();
-        // for (id, amx_ptr) in self.request_client_amx.iter() {
-        //     if amx.amx as usize == *amx_ptr {
+        // for (id, Amx_ptr) in self.request_client_amx.iter() {
+        //     if Amx.Amx as usize == *Amx_ptr {
         //         to_clear.push(id);
         //     }
         // }
         // for id in to_clear.iter() {
         //     self.request_client_amx.remove(id);
         // }
-        return AMX_ERR_NONE;
-    }
+        return Amx_ERR_NONE;
+    }*/
 
-    pub fn process_tick(&mut self) {
+    fn process_tick(&mut self) {
         for (id, rc) in self.request_clients.active.iter_mut() {
             let response: Response = match rc.poll() {
                 Ok(v) => v,
@@ -173,28 +67,19 @@ impl Plugin {
             let raw = match self.request_client_amx.get(&id) {
                 Some(v) => v,
                 None => {
-                    log!("orphan request client: lost handle to amx");
+                    info!("orphan request client: lost handle to Amx");
                     continue;
                 }
             };
-            let amx = cast_amx(raw);
-
-            let public = match amx.find_public(&response.request.callback) {
-                Ok(v) => v,
-                Err(e) => {
-                    log!("{}", e);
-                    return;
-                }
-            };
-
+          
             debug!(
                 "Response {}: {}\n{}",
                 response.id, response.request.callback, response.body
             );
 
-            match response_call_string(&amx, public, response) {
+            match response_call_string(*raw,response) {
                 Ok(_) => (),
-                Err(e) => log!("{}", e),
+                Err(e) => error!("{}", e),
             };
         }
 
@@ -212,47 +97,44 @@ impl Plugin {
             let raw = match self.websocket_client_amx.get(&id) {
                 Some(v) => v,
                 None => {
-                    log!("orphan request client: lost handle to amx");
+                    info!("orphan request client: lost handle to Amx");
                     continue;
                 }
             };
-            let amx = cast_amx(raw);
 
-            let public = match amx.find_public(&wc.callback) {
-                Ok(v) => v,
-                Err(e) => {
-                    log!("{}", e);
-                    return;
-                }
-            };
+            let callback = &wc.callback;
+            
+            debug!("WebSocket Response {}: {}\n{}", id, callback, response);
 
-            debug!("WebSocket Response {}: {}\n{}", id, wc.callback, response);
-
-            match websocket_call_string(&amx, public, id, response) {
+            match websocket_call_string(*raw,callback,id,response) {
                 Ok(_) => (),
-                Err(e) => log!("{}", e),
+                Err(e) => error!("{}", e),
             };
         }
     }
+}
 
+impl Plugin {
     // Natives
-
+    #[native(name = "RequestsClient")]
     pub fn requests_client(
         &mut self,
-        amx: &AMX,
-        endpoint: String,
+        amx: &Amx,
+        endpoint: AmxString,
         _headers: i32, // TODO
-    ) -> AmxResult<Cell> {
+    ) -> AmxResult<i32> {
         let header_map = HeaderMap::new();
+        let endpoint = endpoint.to_string();
+
         let rqc = match RequestClient::new(endpoint.clone(), header_map) {
             Ok(v) => v,
             Err(e) => {
-                log!("failed to create new client: {}", e);
+                error!("failed to create new client: {}", e);
                 return Ok(-1);
             }
         };
         let id = self.request_clients.alloc(rqc);
-        self.request_client_amx.insert(id, amx.amx as usize);
+        self.request_client_amx.insert(id, amx.ident());
         debug!(
             "created new request client {} with endpoint {}",
             id, endpoint
@@ -260,35 +142,46 @@ impl Plugin {
         Ok(id)
     }
 
-    pub fn request_headers(&mut self, amx: &AMX, params: *mut Cell) -> AmxResult<Cell> {
-        let arg_count = args_count!(params);
+    #[native(raw,name = "RequestHeaders")]
+    pub fn request_headers(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
+        let arg_count = params.count();
         let pairs = match arg_count == 0 || arg_count % 2 == 0 {
             true => arg_count / 2,
             false => {
-                log!("invalid variadic argument pattern passed to JsonObject");
+                error!("invalid variadic argument pattern passed to JsonObject");
                 return Ok(1);
             }
         };
-        let mut parser = Parser::new(params);
 
         let mut headers = reqwest::header::HeaderMap::new();
         for _ in 0..pairs {
-            let mut key = String::new();
-            get_arg_string(amx, &mut parser, &mut key);
+            let key = match params.next::<AmxString>() {
+                None => {
+                    error!("invalid type expected String");
+                    return Ok(1);
+                }
+                Some(parameter) => parameter.to_string()
+            };
             let key = match reqwest::header::HeaderName::from_str(&key) {
                 Ok(v) => v,
                 Err(e) => {
-                    log!("invalid header name {}: {}", key, e);
+                    error!("invalid header name {}: {}", key, e);
                     return Ok(1);
                 }
             };
 
-            let mut value = String::new();
-            get_arg_string(amx, &mut parser, &mut value);
+            let value = match params.next::<AmxString>() {
+                None => {
+                    error!("invalid type expected String");
+                    return Ok(1);
+                }
+                Some(parameter) => parameter.to_string()
+            };
+
             let value = match reqwest::header::HeaderValue::from_str(&value) {
                 Ok(v) => v,
                 Err(e) => {
-                    log!("invalid header value {}: {}", value, e);
+                    error!("invalid header value {}: {}", value, e);
                     return Ok(1);
                 }
             };
@@ -299,73 +192,76 @@ impl Plugin {
         Ok(self.headers.alloc(headers))
     }
 
+    #[native(name = "Request")]
     pub fn request(
         &mut self,
-        _: &AMX,
-        request_client_id: Cell,
-        path: String,
+        _: &Amx,
+        request_client_id: i32,
+        path: AmxString,
         method: Method,
-        callback: String,
-        body: String,
-        headers: Cell,
-    ) -> AmxResult<Cell> {
+        callback: AmxString,
+        body: AmxString,
+        headers: i32,
+    ) -> AmxResult<i32> {
         let headers = match self.headers.take(headers) {
             Some(v) => v,
             None => {
-                log!("invalid headers identifier {} passed", headers);
+                error!("invalid headers identifier {} passed", headers);
                 return Ok(1);
             }
         };
-        let id = match self.do_request(request_client_id, path, method, callback, body, headers) {
+        let id = match self.do_request(request_client_id, path.to_string(), method, callback.to_string(), body.to_string(), headers) {
             Ok(v) => v,
             Err(e) => {
-                log!("failed to execute request: {}", e);
+                error!("failed to execute request: {}", e);
                 return Ok(-1);
             }
         };
         Ok(id)
     }
 
-    pub fn request_json(
+    #[native(name = "RequestJSON")]
+    pub  fn request_json(
         &mut self,
-        _: &AMX,
-        request_client_id: Cell,
-        path: String,
+        _: &Amx,
+        request_client_id: i32,
+        path: AmxString,
         method: Method,
-        callback: String,
-        node: Cell,
-        headers: Cell,
-    ) -> AmxResult<Cell> {
+        callback: AmxString,
+        node: i32,
+        headers: i32,
+    ) -> AmxResult<i32> {
         let body = match self.json_nodes.take(node) {
             Some(v) => v,
             None => {
-                log!("invalid json node ID {}", node);
+                error!("invalid json node ID {}", node);
                 return Ok(-1);
             }
         };
         let mut headers = match self.headers.take(headers) {
             Some(v) => v,
             None => {
-                log!("invalid headers identifier {} passed", headers);
+                error!("invalid headers identifier {} passed", headers);
                 return Ok(1);
             }
         };
         headers
             .insert("Content-Type", "application/json".parse().unwrap())
             .unwrap();
-        let id = match self.do_request(request_client_id, path, method, callback, body, headers) {
+        let id = match self.do_request(request_client_id, path.to_string(), method, callback.to_string(), body, headers) {
             Ok(v) => v,
             Err(e) => {
-                log!("failed to execute request: {}", e);
+                error!("failed to execute request: {}", e);
                 return Ok(-1);
             }
         };
         Ok(id)
     }
 
-    fn do_request<T: ToString>(
+
+    pub fn do_request<T: ToString>(
         &mut self,
-        request_client_id: Cell,
+        request_client_id: i32,
         path: String,
         method: Method,
         callback: String,
@@ -398,60 +294,72 @@ impl Plugin {
             }) {
                 Ok(v) => v,
                 Err(e) => {
-                    log!("{}", e);
+                    error!("{}", e);
                     return Ok(1);
                 }
             },
         )
     }
 
+    #[native(name = "WebSocketClient")]
     pub fn web_socket_client(
         &mut self,
-        amx: &AMX,
-        endpoint: String,
-        callback: String,
-    ) -> AmxResult<Cell> {
+        amx: &Amx,
+        endpoint: AmxString,
+        callback: AmxString,
+    ) -> AmxResult<i32> {
+
+        let endpoint = endpoint.to_string();
+        let callback = callback.to_string();
+
         let client = match WebsocketClient::new(endpoint.clone(), callback) {
             Ok(v) => v,
             Err(e) => {
-                log!("failed to create new websocket client: {}", e);
+                error!("failed to create new websocket client: {}", e);
                 return Ok(-1);
             }
         };
         let id = self.websocket_clients.alloc(client);
-        self.websocket_client_amx.insert(id, amx.amx as usize);
+        self.websocket_client_amx.insert(id, amx.ident());
         debug!(
             "created new request client {} with endpoint {}",
             id, endpoint
         );
         Ok(id)
     }
-    pub fn web_socket_send(&mut self, _: &AMX, client: Cell, data: String) -> AmxResult<Cell> {
+
+    #[native(name = "WebSocketSend")]
+    pub fn web_socket_send(&mut self, _: &Amx, client: i32, data: AmxString) -> AmxResult<i32> {
         let client = match self.websocket_clients.get(client) {
             Some(v) => v,
             None => return Ok(-1),
         };
-        match client.send(data) {
+        match client.send(data.to_string()) {
             Ok(v) => v,
             Err(e) => {
-                log!("failed to send websocket data: {}", e);
+                error!("failed to send websocket data: {}", e);
                 return Ok(-1);
             }
         };
         Ok(0)
     }
-    pub fn json_web_socket_client(&mut self, _: &AMX) -> AmxResult<Cell> {
-        Ok(0)
-    }
-    pub fn json_web_socket_send(&mut self, _: &AMX) -> AmxResult<Cell> {
+
+    #[native(name = "JsonWebSocketClient")]
+    pub fn json_web_socket_client(&mut self, _: &Amx) -> AmxResult<i32> {
         Ok(0)
     }
 
-    pub fn json_parse(&mut self, _: &AMX, input: String, node: &mut Cell) -> AmxResult<Cell> {
-        let v: serde_json::Value = match serde_json::from_str(&input) {
+    #[native(name = "JsonWebSocketSend")]
+    pub fn json_web_socket_send(&mut self, _: &Amx) -> AmxResult<i32> {
+        Ok(0)
+    }
+
+    #[native(name = "JsonParse")]
+    pub fn json_parse(&mut self, _: &Amx, input: AmxString, mut node: Ref<i32>) -> AmxResult<i32> {
+        let v: serde_json::Value = match serde_json::from_str(&input.to_string()) {
             Ok(v) => v,
             Err(e) => {
-                log!("{}", e);
+                error!("{}", e);
                 return Ok(1);
             }
         };
@@ -461,13 +369,14 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonStringify")]
     pub fn json_stringify(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        output: &mut Cell,
-        length: Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        output: UnsizedBuffer,
+        length: usize,
+    ) -> AmxResult<i32> {
         let v: &serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
@@ -476,17 +385,19 @@ impl Plugin {
         let s = match serde_json::to_string(&v) {
             Ok(v) => v,
             Err(e) => {
-                log!("{}", e);
+                error!("{}", e);
                 return Ok(1);
             }
         };
-        let encoded: Vec<u8> = samp_sdk::cp1251::encode(&s)?;
-        set_string!(encoded, output, length as usize);
 
+        let mut dest = output.into_sized_buffer(length);
+        let _ = samp::cell::string::put_in_buffer(&mut dest, &s);
+        
         Ok(0)
     }
 
-    pub fn json_node_type(&mut self, _: &AMX, node: Cell) -> AmxResult<Cell> {
+    #[native(name = "JsonNodeType")]
+    pub fn json_node_type(&mut self, _: &Amx, node: i32) -> AmxResult<i32> {
         let v: &serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => &serde_json::Value::Null,
@@ -506,63 +417,90 @@ impl Plugin {
         Ok(t)
     }
 
-    pub fn json_object(&mut self, amx: &AMX, params: *mut Cell) -> AmxResult<Cell> {
-        let arg_count = args_count!(params);
+    #[native(raw,name = "JsonObject")]
+    pub fn json_object(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
+        let arg_count = params.count();
         let pairs = match arg_count == 0 || arg_count % 2 == 0 {
             true => arg_count / 2,
             false => {
-                log!("invalid variadic argument pattern passed to JsonObject");
+                error!("invalid variadic argument pattern passed to JsonObject");
                 return Ok(1);
             }
         };
-        let mut parser = Parser::new(params);
 
         let mut v = serde_json::Value::Object(serde_json::Map::new());
-        for _ in 0..pairs {
-            let mut key = String::new();
-            get_arg_string(amx, &mut parser, &mut key);
-            let mut node: Cell = 0;
-            get_arg_ref(amx, &mut parser, &mut node);
+        for _ in 0..pairs { 
+            
+            let key = match params.next::<AmxString>() {
+                None => {
+                    error!("invalid type expected String");
+                    return Ok(2);
+                }
+                Some(parameter) => parameter
+            };
+            
 
-            let node = match self.json_nodes.take(node) {
+            let node = match params.next::<Ref<i32>>() {
+                None => {
+                    error!("invalid type expected int");
+                    return Ok(2);
+                }
+                Some(parameter) => parameter
+            };
+            
+
+            let node = match self.json_nodes.take(*node) {
                 Some(v) => v,
                 None => {
-                    log!("invalid JSON node ID passed to JsonObject");
+                    error!("invalid JSON node ID passed to JsonObject");
                     return Ok(2);
                 }
             };
 
-            v[key] = node.clone();
+            v[key.to_string()] = node.clone();
         }
 
         Ok(self.json_nodes.alloc(v))
     }
 
-    pub fn json_int(&mut self, _: &AMX, value: Cell) -> AmxResult<Cell> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
-    }
-    pub fn json_bool(&mut self, _: &AMX, value: bool) -> AmxResult<Cell> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
-    }
-    pub fn json_float(&mut self, _: &AMX, value: f32) -> AmxResult<Cell> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
-    }
-    pub fn json_string(&mut self, _: &AMX, value: String) -> AmxResult<Cell> {
+    #[native(name = "JsonInt")]
+    pub fn json_int(&mut self, _: &Amx, value: i32) -> AmxResult<i32> {
         Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
     }
 
-    pub fn json_array(&mut self, amx: &AMX, params: *mut Cell) -> AmxResult<Cell> {
-        let args = args_count!(params);
-        let mut parser = Parser::new(params);
+    #[native(name = "JsonBool")]
+    pub fn json_bool(&mut self, _: &Amx, value: bool) -> AmxResult<i32> {
+        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
+    }
 
+    #[native(name = "JsonFloat")]
+    pub fn json_float(&mut self, _: &Amx, value: f32) -> AmxResult<i32> {
+        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
+    }
+
+    #[native(name = "JsonString")]
+    pub fn json_string(&mut self, _: &Amx, value: AmxString) -> AmxResult<i32> {
+        Ok(self.json_nodes.alloc(serde_json::to_value(value.to_string()).unwrap()))
+    }
+
+    #[native(raw,name = "JsonArray")]
+    pub fn json_array(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
+        let args = params.count();
+        
         let mut arr = Vec::<serde_json::Value>::new();
         for _ in 0..args {
-            let mut node: i32 = 0;
-            get_arg_ref(amx, &mut parser, &mut node);
-            let node = match self.json_nodes.take(node) {
+            let node = match params.next::<Ref<i32>>() {
+                None => {
+                    error!("invalid type expected int");
+                    return Ok(1);
+                }
+                Some(parameter) => parameter
+            };
+            
+            let node = match self.json_nodes.take(*node) {
                 Some(v) => v,
                 None => {
-                    log!("invalid JSON node ID passed to JsonArray");
+                    error!("invalid JSON node ID passed to JsonArray");
                     return Ok(1);
                 }
             };
@@ -571,7 +509,8 @@ impl Plugin {
         Ok(self.json_nodes.alloc(serde_json::Value::Array(arr)))
     }
 
-    pub fn json_append(&mut self, _: &AMX, a: Cell, b: Cell) -> AmxResult<Cell> {
+    #[native(name = "JsonAppend")]
+    pub fn json_append(&mut self, _: &Amx, a: i32, b: i32) -> AmxResult<i32> {
         let a: serde_json::Value = match self.json_nodes.take(a) {
             Some(v) => v,
             None => return Ok(-1),
@@ -614,13 +553,14 @@ impl Plugin {
         Ok(2)
     }
 
+    #[native(name = "JsonSetObject")]
     pub fn json_set_object(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        value: i32,
+    ) -> AmxResult<i32> {
         let src: serde_json::Value = match self.json_nodes.take(value) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -633,17 +573,18 @@ impl Plugin {
             return Ok(1);
         }
 
-        dst[key] = src;
+        dst[key.to_string()] = src;
         Ok(0)
     }
 
+    #[native(name = "JsonSetInt")]
     pub fn json_set_int(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        value: i32,
+    ) -> AmxResult<i32> {
         let v: &mut serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
@@ -652,17 +593,18 @@ impl Plugin {
             return Ok(1);
         }
 
-        v[key] = serde_json::to_value(value).unwrap();
+        v[key.to_string()] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
 
+    #[native(name = "JsonSetFloat")]
     pub fn json_set_float(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
+        _: &Amx,
+        node: i32,
+        key: AmxString,
         value: f32,
-    ) -> AmxResult<Cell> {
+    ) -> AmxResult<i32> {
         let v: &mut serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
@@ -671,17 +613,18 @@ impl Plugin {
             return Ok(1);
         }
 
-        v[key] = serde_json::to_value(value).unwrap();
+        v[key.to_string()] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
 
+    #[native(name = "JsonSetBool")]
     pub fn json_set_bool(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
+        _: &Amx,
+        node: i32,
+        key: AmxString,
         value: bool,
-    ) -> AmxResult<Cell> {
+    ) -> AmxResult<i32> {
         let v: &mut serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
@@ -690,17 +633,18 @@ impl Plugin {
             return Ok(1);
         }
 
-        v[key] = serde_json::to_value(value).unwrap();
+        v[key.to_string()] = serde_json::to_value(value).unwrap();
         Ok(0)
     }
 
+    #[native(name = "JsonSetString")]
     pub fn json_set_string(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: String,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        value: AmxString,
+    ) -> AmxResult<i32> {
         let v: &mut serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
@@ -709,17 +653,18 @@ impl Plugin {
             return Ok(1);
         }
 
-        v[key] = serde_json::to_value(value).unwrap();
+        v[key.to_string()] = serde_json::to_value(value.to_string()).unwrap();
         Ok(0)
     }
 
+    #[native(name = "JsonGetObject")]
     pub fn json_get_object(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: &mut Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        mut value:Ref<i32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -728,7 +673,7 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(2),
         };
-        let v = match v.get(&key) {
+        let v = match v.get(&key.to_string()) {
             Some(v) => v.clone(),
             None => return Ok(3),
         };
@@ -738,13 +683,14 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonGetInt")]
     pub fn json_get_int(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: &mut i32,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        mut value: Ref<i32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -753,7 +699,7 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(1),
         };
-        let v = match v.get(&key) {
+        let v = match v.get(&key.to_string()) {
             Some(v) => v.clone(),
             None => return Ok(2),
         };
@@ -766,13 +712,14 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonGetFloat")]
     pub fn json_get_float(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: &mut f32,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        mut value: Ref<f32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -781,7 +728,7 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(1),
         };
-        let v = match v.get(&key) {
+        let v = match v.get(&key.to_string()) {
             Some(v) => v.clone(),
             None => return Ok(2),
         };
@@ -789,17 +736,20 @@ impl Plugin {
             Some(v) => v as f32,
             None => return Ok(3),
         };
+
         *value = v;
+        
         Ok(0)
     }
 
+    #[native(name = "JsonGetBool")]
     pub fn json_get_bool(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: &mut bool,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        mut value:Ref<bool>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -808,7 +758,7 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(1),
         };
-        let v = match v.get(&key) {
+        let v = match v.get(&key.to_string()) {
             Some(v) => v.clone(),
             None => return Ok(2),
         };
@@ -820,14 +770,15 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonGetString")]
     pub fn json_get_string(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: &mut Cell,
-        length: Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        value: UnsizedBuffer,
+        length: usize,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -836,7 +787,7 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(1),
         };
-        let v = match v.get(&key) {
+        let v = match v.get(&key.to_string()) {
             Some(v) => v.clone(),
             None => return Ok(2),
         };
@@ -844,18 +795,21 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(3),
         };
-        let encoded: Vec<u8> = samp_sdk::cp1251::encode(&v)?;
-        set_string!(encoded, value, length as usize);
+
+        let mut dest = value.into_sized_buffer(length);
+        let _ = samp::cell::string::put_in_buffer(&mut dest, &v);
+      
         Ok(0)
     }
 
+    #[native(name = "JsonGetArray")]
     pub fn json_get_array(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        key: String,
-        value: &mut Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        key: AmxString,
+        mut value: Ref<i32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -864,7 +818,7 @@ impl Plugin {
             Some(v) => v,
             None => return Ok(1),
         };
-        let v = match v.get(&key) {
+        let v = match v.get(&key.to_string()) {
             Some(v) => v.clone(),
             None => return Ok(2),
         };
@@ -877,7 +831,8 @@ impl Plugin {
         Ok(0)
     }
 
-    pub fn json_array_length(&mut self, _: &AMX, node: Cell, length: &mut Cell) -> AmxResult<Cell> {
+    #[native(name = "JsonArrayLength")]
+    pub fn json_array_length(&mut self, _: &Amx, node: i32, mut length: Ref<i32>) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -890,13 +845,14 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonArrayObject")]
     pub fn json_array_object(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        index: Cell,
-        output: &mut Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        index: i32,
+        mut output: Ref<i32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -914,7 +870,8 @@ impl Plugin {
         Ok(0)
     }
 
-    pub fn json_get_node_int(&mut self, _: &AMX, node: Cell, output: &mut i32) -> AmxResult<Cell> {
+    #[native(name = "JsonGetNodeInt")]
+    pub fn json_get_node_int(&mut self, _: &Amx, node: i32, mut output: Ref<i32>) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -927,12 +884,13 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonGetNodeFloat")]
     pub fn json_get_node_float(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        output: &mut f32,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        mut output: Ref<f32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -945,12 +903,13 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonGetNodeBool")]
     pub fn json_get_node_bool(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        output: &mut bool,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        mut output: Ref<bool>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -963,13 +922,14 @@ impl Plugin {
         Ok(0)
     }
 
+    #[native(name = "JsonGetNodeString")]
     pub fn json_get_node_string(
         &mut self,
-        _: &AMX,
-        node: Cell,
-        output: &mut Cell,
-        length: Cell,
-    ) -> AmxResult<Cell> {
+        _: &Amx,
+        node: i32,
+        output: UnsizedBuffer,
+        length: usize,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => {
@@ -984,18 +944,22 @@ impl Plugin {
                 return Ok(1);
             }
         };
-        let encoded: Vec<u8> = samp_sdk::cp1251::encode(&v)?;
-        set_string!(encoded, output, length as usize);
+        let mut dest = output.into_sized_buffer(length);
+        let _ = samp::cell::string::put_in_buffer(&mut dest, &v);
+       
         Ok(0)
     }
 
-    pub fn json_toggle_gc(&mut self, _: &AMX, node: Cell, set: bool) -> AmxResult<Cell> {
+    #[native(name = "JsonToggleGC")]
+    pub fn json_toggle_gc(&mut self, _: &Amx, node: i32, set: bool) -> AmxResult<i32> {
         match self.json_nodes.set_gc(node, set) {
             Some(_) => Ok(0),
             None => Ok(1),
         }
     }
-    pub fn json_cleanup(&mut self, _: &AMX, node: Cell, auto: bool) -> AmxResult<Cell> {
+
+    #[native(name = "JsonCleanup")]
+    pub fn json_cleanup(&mut self, _: &Amx, node: i32, auto: bool) -> AmxResult<i32> {
         match if auto {
             self.json_nodes.collect(node)
         } else {
@@ -1007,71 +971,27 @@ impl Plugin {
     }
 }
 
-impl Default for Plugin {
-    fn default() -> Self {
-        Plugin {
-            request_clients: Pool::default(),
-            request_client_amx: HashMap::new(),
-            websocket_clients: Pool::default(),
-            websocket_client_amx: HashMap::new(),
-            json_nodes: GarbageCollectedPool::default(),
-            headers: GarbageCollectedPool::default(),
-        }
-    }
-}
+fn response_call_string(amx: AmxIdent,response: Response) -> AmxResult<()> {
+    let amx = samp::amx::get(amx).unwrap();
+    let length = response.body.len();
+    let body = response.body;
+    let status = response.status.as_u16() as i32;
+    let id = response.id;
+    let callback = response.request.callback;
 
-fn cast_amx(raw: &usize) -> AMX {
-    AMX::new(*raw as *mut _)
-}
+    let _ = exec_public!(amx,&callback,id,status,&body => string ,length);
 
-fn to_pawn_string(input: String) -> Vec<i32> {
-    let mut result = Vec::new();
-    for char in input.as_bytes().iter() {
-        result.push(*char as i32);
-    }
-    result.push(0); // EOS
-    return result;
-}
-
-fn response_call_string(amx: &AMX, public: Cell, response: Response) -> AmxResult<()> {
-    amx.push(response.body.len())?;
-    let amx_addr = amx.push_array(to_pawn_string(response.body).as_slice())?;
-    amx.push(response.status.as_u16() as i32)?;
-    amx.push(response.id)?;
-    amx.exec(public)?;
-    amx.release(amx_addr)?;
     Ok(())
 }
 
 fn websocket_call_string(
-    amx: &AMX,
-    public: Cell,
-    client_id: &Cell,
+    amx: AmxIdent,
+    callback:&str,
+    client_id: &i32,
     response: String,
 ) -> AmxResult<()> {
-    amx.push(response.len())?;
-    let amx_addr = amx.push_array(to_pawn_string(response).as_slice())?;
-    amx.push(client_id)?;
-    amx.exec(public)?;
-    amx.release(amx_addr)?;
+    let length = response.len();
+    let amx = samp::amx::get(amx).unwrap();
+    let _ = exec_public!(amx,callback,client_id,&response => string ,length);
     Ok(())
-}
-
-fn get_arg_ref<T: Clone>(amx: &AMX, parser: &mut Parser, out_ref: &mut T) -> i32 {
-    expand_args!(@amx, parser, tmp_ref: ref T);
-    *out_ref = tmp_ref.clone();
-    return 1;
-}
-
-fn get_arg_string(amx: &AMX, parser: &mut Parser, out_str: &mut String) -> i32 {
-    expand_args!(@amx, parser, tmp_str: String);
-    match samp_sdk::cp1251::decode_to(&tmp_str.into_bytes(), out_str) {
-        Ok(_) => {
-            return 1;
-        }
-        Err(e) => {
-            log!("{}", e);
-            return 0;
-        }
-    }
 }
