@@ -2,13 +2,13 @@ use futures::sync;
 use futures::Future;
 use futures::Sink;
 use futures::Stream;
+use log::{debug, error};
 use std::error::Error;
 use string_error::static_err;
 use tokio::runtime::Runtime;
 use tokio::spawn;
 use websocket::ClientBuilder;
 use websocket::OwnedMessage;
-use log::{debug,error};
 
 pub struct WebsocketClient {
     pub callback: String,

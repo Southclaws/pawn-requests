@@ -1,7 +1,7 @@
 use enum_primitive::enum_from_primitive;
-use samp::cell::AmxCell;
 use samp::amx::Amx;
-use samp::error::{AmxResult,AmxError};
+use samp::cell::AmxCell;
+use samp::error::{AmxError, AmxResult};
 
 enum_from_primitive! {
 #[derive(Debug, PartialEq, Clone,Copy)]
@@ -28,11 +28,10 @@ impl AmxCell<'_> for Method {
             4 => Ok(Method::HttpMethodDelete),
             5 => Ok(Method::HttpMethodConnect),
             6 => Ok(Method::HttpMethodOptions),
-            7 => Ok(Method::HttpMethodTrace),            
+            7 => Ok(Method::HttpMethodTrace),
             8 => Ok(Method::HttpMethodPatch),
-            _ => Err(AmxError::Params)
+            _ => Err(AmxError::Params),
         }
-
     }
     fn as_cell(&self) -> i32 {
         match self {

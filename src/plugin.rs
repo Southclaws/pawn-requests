@@ -1,8 +1,8 @@
+use log::{debug, error, info};
 use reqwest::header::HeaderMap;
 use samp::prelude::*;
 use samp::SampPlugin;
-use samp::{native,exec_public};
-use log::{debug,info,error};
+use samp::{exec_public, native};
 use serde_json;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -71,13 +71,13 @@ impl SampPlugin for Plugin {
                     continue;
                 }
             };
-          
+
             debug!(
                 "Response {}: {}\n{}",
                 response.id, response.request.callback, response.body
             );
 
-            match response_call_string(*raw,response) {
+            match response_call_string(*raw, response) {
                 Ok(_) => (),
                 Err(e) => error!("{}", e),
             };
@@ -103,10 +103,10 @@ impl SampPlugin for Plugin {
             };
 
             let callback = &wc.callback;
-            
+
             debug!("WebSocket Response {}: {}\n{}", id, callback, response);
 
-            match websocket_call_string(*raw,callback,id,response) {
+            match websocket_call_string(*raw, callback, id, response) {
                 Ok(_) => (),
                 Err(e) => error!("{}", e),
             };
@@ -142,7 +142,7 @@ impl Plugin {
         Ok(id)
     }
 
-    #[native(raw,name = "RequestHeaders")]
+    #[native(raw, name = "RequestHeaders")]
     pub fn request_headers(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
         let arg_count = params.count();
         let pairs = match arg_count == 0 || arg_count % 2 == 0 {
@@ -160,7 +160,7 @@ impl Plugin {
                     error!("invalid type expected String");
                     return Ok(1);
                 }
-                Some(parameter) => parameter.to_string()
+                Some(parameter) => parameter.to_string(),
             };
             let key = match reqwest::header::HeaderName::from_str(&key) {
                 Ok(v) => v,
@@ -175,7 +175,7 @@ impl Plugin {
                     error!("invalid type expected String");
                     return Ok(1);
                 }
-                Some(parameter) => parameter.to_string()
+                Some(parameter) => parameter.to_string(),
             };
 
             let value = match reqwest::header::HeaderValue::from_str(&value) {
@@ -210,7 +210,14 @@ impl Plugin {
                 return Ok(1);
             }
         };
-        let id = match self.do_request(request_client_id, path.to_string(), method, callback.to_string(), body.to_string(), headers) {
+        let id = match self.do_request(
+            request_client_id,
+            path.to_string(),
+            method,
+            callback.to_string(),
+            body.to_string(),
+            headers,
+        ) {
             Ok(v) => v,
             Err(e) => {
                 error!("failed to execute request: {}", e);
@@ -221,7 +228,7 @@ impl Plugin {
     }
 
     #[native(name = "RequestJSON")]
-    pub  fn request_json(
+    pub fn request_json(
         &mut self,
         _: &Amx,
         request_client_id: i32,
@@ -248,7 +255,14 @@ impl Plugin {
         headers
             .insert("Content-Type", "application/json".parse().unwrap())
             .unwrap();
-        let id = match self.do_request(request_client_id, path.to_string(), method, callback.to_string(), body, headers) {
+        let id = match self.do_request(
+            request_client_id,
+            path.to_string(),
+            method,
+            callback.to_string(),
+            body,
+            headers,
+        ) {
             Ok(v) => v,
             Err(e) => {
                 error!("failed to execute request: {}", e);
@@ -257,7 +271,6 @@ impl Plugin {
         };
         Ok(id)
     }
-
 
     pub fn do_request<T: ToString>(
         &mut self,
@@ -308,7 +321,6 @@ impl Plugin {
         endpoint: AmxString,
         callback: AmxString,
     ) -> AmxResult<i32> {
-
         let endpoint = endpoint.to_string();
         let callback = callback.to_string();
 
@@ -392,7 +404,7 @@ impl Plugin {
 
         let mut dest = output.into_sized_buffer(length);
         let _ = samp::cell::string::put_in_buffer(&mut dest, &s);
-        
+
         Ok(0)
     }
 
@@ -417,7 +429,7 @@ impl Plugin {
         Ok(t)
     }
 
-    #[native(raw,name = "JsonObject")]
+    #[native(raw, name = "JsonObject")]
     pub fn json_object(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
         let arg_count = params.count();
         let pairs = match arg_count == 0 || arg_count % 2 == 0 {
@@ -429,25 +441,22 @@ impl Plugin {
         };
 
         let mut v = serde_json::Value::Object(serde_json::Map::new());
-        for _ in 0..pairs { 
-            
+        for _ in 0..pairs {
             let key = match params.next::<AmxString>() {
                 None => {
                     error!("invalid type expected String");
                     return Ok(2);
                 }
-                Some(parameter) => parameter
+                Some(parameter) => parameter,
             };
-            
 
             let node = match params.next::<Ref<i32>>() {
                 None => {
                     error!("invalid type expected int");
                     return Ok(2);
                 }
-                Some(parameter) => parameter
+                Some(parameter) => parameter,
             };
-            
 
             let node = match self.json_nodes.take(*node) {
                 Some(v) => v,
@@ -480,13 +489,15 @@ impl Plugin {
 
     #[native(name = "JsonString")]
     pub fn json_string(&mut self, _: &Amx, value: AmxString) -> AmxResult<i32> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value.to_string()).unwrap()))
+        Ok(self
+            .json_nodes
+            .alloc(serde_json::to_value(value.to_string()).unwrap()))
     }
 
-    #[native(raw,name = "JsonArray")]
+    #[native(raw, name = "JsonArray")]
     pub fn json_array(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
         let args = params.count();
-        
+
         let mut arr = Vec::<serde_json::Value>::new();
         for _ in 0..args {
             let node = match params.next::<Ref<i32>>() {
@@ -494,9 +505,9 @@ impl Plugin {
                     error!("invalid type expected int");
                     return Ok(1);
                 }
-                Some(parameter) => parameter
+                Some(parameter) => parameter,
             };
-            
+
             let node = match self.json_nodes.take(*node) {
                 Some(v) => v,
                 None => {
@@ -663,7 +674,7 @@ impl Plugin {
         _: &Amx,
         node: i32,
         key: AmxString,
-        mut value:Ref<i32>,
+        mut value: Ref<i32>,
     ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
@@ -738,7 +749,7 @@ impl Plugin {
         };
 
         *value = v;
-        
+
         Ok(0)
     }
 
@@ -748,7 +759,7 @@ impl Plugin {
         _: &Amx,
         node: i32,
         key: AmxString,
-        mut value:Ref<bool>,
+        mut value: Ref<bool>,
     ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
@@ -798,7 +809,7 @@ impl Plugin {
 
         let mut dest = value.into_sized_buffer(length);
         let _ = samp::cell::string::put_in_buffer(&mut dest, &v);
-      
+
         Ok(0)
     }
 
@@ -832,7 +843,12 @@ impl Plugin {
     }
 
     #[native(name = "JsonArrayLength")]
-    pub fn json_array_length(&mut self, _: &Amx, node: i32, mut length: Ref<i32>) -> AmxResult<i32> {
+    pub fn json_array_length(
+        &mut self,
+        _: &Amx,
+        node: i32,
+        mut length: Ref<i32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -871,7 +887,12 @@ impl Plugin {
     }
 
     #[native(name = "JsonGetNodeInt")]
-    pub fn json_get_node_int(&mut self, _: &Amx, node: i32, mut output: Ref<i32>) -> AmxResult<i32> {
+    pub fn json_get_node_int(
+        &mut self,
+        _: &Amx,
+        node: i32,
+        mut output: Ref<i32>,
+    ) -> AmxResult<i32> {
         let v: serde_json::Value = match self.json_nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
@@ -946,7 +967,7 @@ impl Plugin {
         };
         let mut dest = output.into_sized_buffer(length);
         let _ = samp::cell::string::put_in_buffer(&mut dest, &v);
-       
+
         Ok(0)
     }
 
@@ -971,7 +992,7 @@ impl Plugin {
     }
 }
 
-fn response_call_string(amx: AmxIdent,response: Response) -> AmxResult<()> {
+fn response_call_string(amx: AmxIdent, response: Response) -> AmxResult<()> {
     let amx = samp::amx::get(amx).unwrap();
     let length = response.body.len();
     let body = response.body;
@@ -986,7 +1007,7 @@ fn response_call_string(amx: AmxIdent,response: Response) -> AmxResult<()> {
 
 fn websocket_call_string(
     amx: AmxIdent,
-    callback:&str,
+    callback: &str,
     client_id: &i32,
     response: String,
 ) -> AmxResult<()> {

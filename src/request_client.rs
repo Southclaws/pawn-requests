@@ -1,9 +1,9 @@
 use futures::{future, Future, Stream};
-use reqwest::{r#async::Client, header::HeaderMap, StatusCode};
+use log::{debug, error};
+use reqwest::{header::HeaderMap, r#async::Client, StatusCode};
 use std::{error::Error, sync::mpsc};
 use string_error::static_err;
 use tokio::runtime::Runtime;
-use log::{debug,error};
 
 use crate::method::Method;
 

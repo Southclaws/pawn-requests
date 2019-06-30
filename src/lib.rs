@@ -8,8 +8,8 @@ mod request_client;
 mod websocket_client;
 
 use crate::plugin::Plugin;
-use samp::initialize_plugin;
 use crate::pool::{GarbageCollectedPool, Pool};
+use samp::initialize_plugin;
 use std::collections::HashMap;
 
 initialize_plugin!(
@@ -55,7 +55,7 @@ initialize_plugin!(
     {
         let samp_logger = samp::plugin::logger()
             .level(log::LevelFilter::Info);
-        samp::encoding::set_default_encoding(samp::encoding::WINDOWS_1251); 
+        samp::encoding::set_default_encoding(samp::encoding::WINDOWS_1251);
 
         let log_file = fern::log_file("requests.log").expect("Cannot create log file!");
 
