@@ -2,7 +2,7 @@ use log::{debug, error, info};
 use reqwest::header::HeaderMap;
 use samp::prelude::*;
 use samp::SampPlugin;
-use samp::{exec_public, native};
+use samp::{exec_public, native,AmxAsyncExt};
 use serde_json;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -10,13 +10,12 @@ use string_error::new_err;
 
 use crate::method::Method;
 use crate::pool::{GarbageCollectedPool, Pool};
-use crate::request_client::{Request, RequestClient, Response};
+use crate::request_client::{Request, RequestClient};
 use crate::websocket_client::WebsocketClient;
 use samp::amx::AmxIdent;
 
 pub struct Plugin {
     pub request_clients: Pool<RequestClient>,
-    pub request_client_amx: HashMap<i32, AmxIdent>,
     pub websocket_clients: Pool<WebsocketClient>,
     pub websocket_client_amx: HashMap<i32, AmxIdent>,
     pub json_nodes: GarbageCollectedPool<serde_json::Value>,
@@ -58,30 +57,6 @@ impl SampPlugin for Plugin {
     }*/
 
     fn process_tick(&mut self) {
-        for (id, rc) in self.request_clients.active.iter_mut() {
-            let response: Response = match rc.poll() {
-                Ok(v) => v,
-                Err(_) => continue,
-            };
-
-            let raw = match self.request_client_amx.get(&id) {
-                Some(v) => v,
-                None => {
-                    info!("orphan request client: lost handle to Amx");
-                    continue;
-                }
-            };
-
-            debug!(
-                "Response {}: {}\n{}",
-                response.id, response.request.callback, response.body
-            );
-
-            match execute_response_callback(*raw, response) {
-                Ok(_) => (),
-                Err(e) => error!("{}", e),
-            };
-        }
 
         for (id, wc) in self.websocket_clients.active.iter_mut() {
             let owned_message = match wc.poll() {
@@ -141,7 +116,7 @@ impl Plugin {
         let header_map = HeaderMap::new();
         let endpoint = endpoint.to_string();
 
-        let rqc = match RequestClient::new(endpoint.clone(), header_map) {
+        let rqc = match RequestClient::new(amx.to_async(),endpoint.clone(), header_map) {
             Ok(v) => v,
             Err(e) => {
                 error!("failed to create new client: {}", e);
@@ -149,7 +124,6 @@ impl Plugin {
             }
         };
         let id = self.request_clients.alloc(rqc);
-        self.request_client_amx.insert(id, amx.ident());
         debug!(
             "created new request client {} with endpoint {}",
             id, endpoint
@@ -1051,19 +1025,6 @@ impl Plugin {
             None => Ok(1),
         }
     }
-}
-
-fn execute_response_callback(amx: AmxIdent, response: Response) -> AmxResult<()> {
-    let amx = samp::amx::get(amx).unwrap();
-    let length = response.body.len();
-    let body = response.body;
-    let status = response.status.as_u16() as i32;
-    let id = response.id;
-    let callback = response.request.callback;
-
-    let _ = exec_public!(amx,&callback,id,status,&body => string ,length);
-
-    Ok(())
 }
 
 fn execute_websocket_callback(
