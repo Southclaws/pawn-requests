@@ -73,6 +73,7 @@ initialize_plugin!(
 
         Plugin {
             request_clients: Pool::default(),
+            request_client_amx: HashMap::new(),
             websocket_clients: Pool::default(),
             websocket_client_amx: HashMap::new(),
             json_nodes: GarbageCollectedPool::default(),
