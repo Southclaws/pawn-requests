@@ -3,35 +3,38 @@ use futures::Future;
 use futures::Sink;
 use futures::Stream;
 use log::{debug, error};
+use samp::{exec_public, AmxLockError, AsyncAmx};
 use std::error::Error;
+use std::sync::{Arc, Mutex};
 use string_error::static_err;
 use tokio::runtime::Runtime;
 use tokio::spawn;
 use websocket::ClientBuilder;
 use websocket::OwnedMessage;
 
+use crate::pool::GarbageCollectedPool;
+
 pub struct WebsocketClient {
-    pub callback: String,
     sender: sync::mpsc::Sender<OwnedMessage>,
-    receiver: std::sync::mpsc::Receiver<OwnedMessage>,
     pub runtime: Runtime,
-    pub is_json: bool,
 }
 
 impl WebsocketClient {
     pub fn new(
+        amx: AsyncAmx,
         endpoint: String,
         callback: String,
-        is_json: bool,
+        client_id: i32,
+        json_nodes: Option<Arc<Mutex<GarbageCollectedPool<serde_json::Value>>>>,
     ) -> Result<WebsocketClient, Box<dyn Error>> {
         let url = url::Url::parse(&endpoint)?;
         if !url.scheme().starts_with("ws") {
             return Err(static_err("non-http scheme"));
         }
+        let json_nodes = json_nodes.clone();
 
         let mut rt = Runtime::new()?;
         let (outgoing_send, outgoing_recv) = sync::mpsc::channel(4096);
-        let (incoming_send, incoming_recv) = std::sync::mpsc::channel();
 
         let f = ClientBuilder::from_url(&url)
             .async_connect(None)
@@ -45,7 +48,19 @@ impl WebsocketClient {
                             return ();
                         })
                         .for_each(move |message| {
-                            let _ = incoming_send.send(message);
+                            match message {
+                                OwnedMessage::Text(message) => {
+                                    execute_websocket_callback(
+                                        amx.clone(),
+                                        &callback,
+                                        client_id,
+                                        &message,
+                                        json_nodes.clone(),
+                                    );
+                                }
+                                _ => (),
+                            };
+
                             Ok(())
                         }),
                 );
@@ -59,11 +74,8 @@ impl WebsocketClient {
         rt.spawn(f);
 
         Ok(WebsocketClient {
-            callback: callback,
             sender: outgoing_send,
-            receiver: incoming_recv,
             runtime: rt,
-            is_json,
         })
     }
 
@@ -75,8 +87,42 @@ impl WebsocketClient {
 
         Ok(())
     }
+}
 
-    pub fn poll(&mut self) -> Result<OwnedMessage, Box<dyn std::error::Error>> {
-        Ok(self.receiver.try_recv()?)
+fn execute_websocket_callback(
+    amx: AsyncAmx,
+    callback: &str,
+    client_id: i32,
+    message: &str,
+    json_nodes: Option<Arc<Mutex<GarbageCollectedPool<serde_json::Value>>>>,
+) {
+    let amx = match amx.lock() {
+        Err(AmxLockError::AmxGone) => {
+            error!("{} => AMX is gone", callback);
+            return;
+        }
+        Err(_) => {
+            error!("{} => mutex is poisoned", callback);
+            return;
+        }
+        Ok(amx) => amx,
+    };
+    if json_nodes.is_some() {
+        let v: serde_json::Value = match serde_json::from_str(message) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("{}", e);
+                return;
+            }
+        };
+
+        let nodes = json_nodes.unwrap();
+        let mut nodes = nodes.lock().unwrap();
+        let node = nodes.alloc(v);
+        drop(nodes);
+
+        let _ = exec_public!(amx, callback, client_id, node);
+    } else {
+        let _ = exec_public!(amx,callback,client_id,message => string ,message.len());
     }
 }

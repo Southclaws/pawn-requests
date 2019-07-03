@@ -2,24 +2,21 @@ use log::{debug, error, info};
 use reqwest::header::HeaderMap;
 use samp::prelude::*;
 use samp::SampPlugin;
-use samp::{exec_public, native};
+use samp::{native, AmxAsyncExt};
 use serde_json;
-use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use string_error::new_err;
 
 use crate::method::Method;
 use crate::pool::{GarbageCollectedPool, Pool};
-use crate::request_client::{Request, RequestClient, Response};
+use crate::request_client::{Request, RequestClient};
 use crate::websocket_client::WebsocketClient;
-use samp::amx::AmxIdent;
 
 pub struct Plugin {
     pub request_clients: Pool<RequestClient>,
-    pub request_client_amx: HashMap<i32, AmxIdent>,
     pub websocket_clients: Pool<WebsocketClient>,
-    pub websocket_client_amx: HashMap<i32, AmxIdent>,
-    pub json_nodes: GarbageCollectedPool<serde_json::Value>,
+    pub json_nodes: Arc<Mutex<GarbageCollectedPool<serde_json::Value>>>,
     pub headers: GarbageCollectedPool<reqwest::header::HeaderMap>,
 }
 
@@ -56,77 +53,6 @@ impl SampPlugin for Plugin {
         // }
         return Amx_ERR_NONE;
     }*/
-
-    fn process_tick(&mut self) {
-        for (id, rc) in self.request_clients.active.iter_mut() {
-            let response: Response = match rc.poll() {
-                Ok(v) => v,
-                Err(_) => continue,
-            };
-
-            let raw = match self.request_client_amx.get(&id) {
-                Some(v) => v,
-                None => {
-                    info!("orphan request client: lost handle to Amx");
-                    continue;
-                }
-            };
-
-            debug!(
-                "Response {}: {}\n{}",
-                response.id, response.request.callback, response.body
-            );
-
-            match execute_response_callback(*raw, response) {
-                Ok(_) => (),
-                Err(e) => error!("{}", e),
-            };
-        }
-
-        for (id, wc) in self.websocket_clients.active.iter_mut() {
-            let owned_message = match wc.poll() {
-                Ok(v) => v,
-                Err(_) => continue,
-            };
-
-            let response = match owned_message {
-                websocket::OwnedMessage::Text(v) => v,
-                _ => continue, // Todo: handle other cases
-            };
-
-            let raw = match self.websocket_client_amx.get(&id) {
-                Some(v) => v,
-                None => {
-                    info!("orphan request client: lost handle to Amx");
-                    continue;
-                }
-            };
-
-            let callback = &wc.callback;
-
-            debug!("WebSocket Response {}: {}\n{}", id, callback, response);
-            if wc.is_json {
-                let v: serde_json::Value = match serde_json::from_str(&response) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        error!("{}", e);
-                        continue;
-                    }
-                };
-
-                let node = self.json_nodes.alloc(v);
-                match execute_json_websocket_callback(*raw, callback, id, &node) {
-                    Ok(_) => (),
-                    Err(e) => error!("{}", e),
-                };
-            } else {
-                match execute_websocket_callback(*raw, callback, id, response) {
-                    Ok(_) => (),
-                    Err(e) => error!("{}", e),
-                };
-            }
-        }
-    }
 }
 
 impl Plugin {
@@ -141,7 +67,7 @@ impl Plugin {
         let header_map = HeaderMap::new();
         let endpoint = endpoint.to_string();
 
-        let rqc = match RequestClient::new(endpoint.clone(), header_map) {
+        let rqc = match RequestClient::new(amx.to_async(), endpoint.clone(), header_map) {
             Ok(v) => v,
             Err(e) => {
                 error!("failed to create new client: {}", e);
@@ -149,7 +75,7 @@ impl Plugin {
             }
         };
         let id = self.request_clients.alloc(rqc);
-        self.request_client_amx.insert(id, amx.ident());
+
         debug!(
             "created new request client {} with endpoint {}",
             id, endpoint
@@ -232,6 +158,7 @@ impl Plugin {
             callback.to_string(),
             body.to_string(),
             headers,
+            false,
         ) {
             Ok(v) => v,
             Err(e) => {
@@ -253,23 +180,34 @@ impl Plugin {
         node: i32,
         headers: i32,
     ) -> AmxResult<i32> {
-        let body = match self.json_nodes.take(node) {
-            Some(v) => v,
-            None => {
-                error!("invalid json node ID {}", node);
-                return Ok(-1);
-            }
-        };
+        let nodes = self.json_nodes.clone();
+        let mut nodes = nodes.lock().unwrap();
+
+        let body;
+        if node != -1 {
+            body = match nodes.take(node) {
+                Some(v) => v,
+                None => {
+                    error!("invalid json node ID {}", node);
+                    return Ok(-1);
+                }
+            };
+        } else {
+            body = serde_json::Value::Null;
+        }
+
+        let body = serde_json::to_string(&body).unwrap();
+
         let mut headers = match self.headers.take(headers) {
             Some(v) => v,
             None => {
                 error!("invalid headers identifier {} passed", headers);
-                return Ok(1);
+                return Ok(-1);
             }
         };
-        headers
-            .insert("Content-Type", "application/json".parse().unwrap())
-            .unwrap();
+
+        headers.insert("Content-Type", "application/json".parse().unwrap());
+
         let id = match self.do_request(
             request_client_id,
             path.to_string(),
@@ -277,6 +215,7 @@ impl Plugin {
             callback.to_string(),
             body,
             headers,
+            true,
         ) {
             Ok(v) => v,
             Err(e) => {
@@ -284,6 +223,7 @@ impl Plugin {
                 return Ok(-1);
             }
         };
+
         Ok(id)
     }
 
@@ -295,6 +235,7 @@ impl Plugin {
         callback: String,
         body: T,
         headers: reqwest::header::HeaderMap,
+        is_json: bool,
     ) -> Result<i32, Box<dyn std::error::Error>> {
         let client = match self.request_clients.get(request_client_id) {
             Some(v) => v,
@@ -311,15 +252,22 @@ impl Plugin {
             request_client_id, headers, path, method, callback
         );
 
+        let json_nodes = match is_json {
+            true => Some(self.json_nodes.clone()),
+            false => None,
+        };
+
         Ok(
-            match client.request(Request {
-                callback: callback,
-                path: path,
-                method: Method::from(method),
-                body: body.to_string(),
-                headers: headers,
-                request_type: 0,
-            }) {
+            match client.request(
+                Request {
+                    callback: callback,
+                    path: path,
+                    method: Method::from(method),
+                    body: body.to_string(),
+                    headers: headers,
+                },
+                json_nodes,
+            ) {
                 Ok(v) => v,
                 Err(e) => {
                     error!("{}", e);
@@ -338,16 +286,20 @@ impl Plugin {
     ) -> AmxResult<i32> {
         let endpoint = endpoint.to_string();
         let callback = callback.to_string();
+        let client_id = self.websocket_clients.current + 1;
 
-        let client = match WebsocketClient::new(endpoint.clone(), callback, false) {
-            Ok(v) => v,
-            Err(e) => {
-                error!("failed to create new websocket client: {}", e);
-                return Ok(-1);
-            }
-        };
+        let client =
+            match WebsocketClient::new(amx.to_async(), endpoint.clone(), callback, client_id, None)
+            {
+                Ok(v) => v,
+                Err(e) => {
+                    error!("failed to create new websocket client: {}", e);
+                    return Ok(-1);
+                }
+            };
+
         let id = self.websocket_clients.alloc(client);
-        self.websocket_client_amx.insert(id, amx.ident());
+
         debug!(
             "created new web socket client {} with endpoint {}",
             id, endpoint
@@ -380,16 +332,23 @@ impl Plugin {
     ) -> AmxResult<i32> {
         let endpoint = endpoint.to_string();
         let callback = callback.to_string();
-
-        let client = match WebsocketClient::new(endpoint.clone(), callback, true) {
+        let client_id = self.websocket_clients.current + 1;
+        let client = match WebsocketClient::new(
+            amx.to_async(),
+            endpoint.clone(),
+            callback,
+            client_id,
+            Some(self.json_nodes.clone()),
+        ) {
             Ok(v) => v,
             Err(e) => {
                 error!("failed to create new websocket client: {}", e);
                 return Ok(-1);
             }
         };
+
         let id = self.websocket_clients.alloc(client);
-        self.websocket_client_amx.insert(id, amx.ident());
+
         debug!(
             "created new json web socket client {} with endpoint {}",
             id, endpoint
@@ -404,7 +363,10 @@ impl Plugin {
             None => return Ok(-1),
         };
 
-        let v: &serde_json::Value = match self.json_nodes.get(node) {
+        let nodes = self.json_nodes.lock().unwrap();
+        let mut nodes = nodes;
+
+        let v: &serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -437,7 +399,8 @@ impl Plugin {
             }
         };
 
-        *node = self.json_nodes.alloc(v);
+        let mut nodes = self.json_nodes.lock().unwrap();
+        *node = nodes.alloc(v);
 
         Ok(0)
     }
@@ -450,7 +413,9 @@ impl Plugin {
         output: UnsizedBuffer,
         length: usize,
     ) -> AmxResult<i32> {
-        let v: &serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: &serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -471,7 +436,8 @@ impl Plugin {
 
     #[native(name = "JsonNodeType")]
     pub fn json_node_type(&mut self, _: &Amx, node: i32) -> AmxResult<i32> {
-        let v: &serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+        let v: &serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => &serde_json::Value::Null,
         };
@@ -519,7 +485,9 @@ impl Plugin {
                 Some(parameter) => parameter,
             };
 
-            let node = match self.json_nodes.take(*node) {
+            let mut nodes = self.json_nodes.lock().unwrap();
+
+            let node = match nodes.take(*node) {
                 Some(v) => v,
                 None => {
                     error!("invalid JSON node ID passed to JsonObject");
@@ -530,29 +498,32 @@ impl Plugin {
             v[key.to_string()] = node.clone();
         }
 
-        Ok(self.json_nodes.alloc(v))
+        let mut nodes = self.json_nodes.lock().unwrap();
+        Ok(nodes.alloc(v))
     }
 
     #[native(name = "JsonInt")]
     pub fn json_int(&mut self, _: &Amx, value: i32) -> AmxResult<i32> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
+        let mut nodes = self.json_nodes.lock().unwrap();
+        Ok(nodes.alloc(serde_json::to_value(value).unwrap()))
     }
 
     #[native(name = "JsonBool")]
     pub fn json_bool(&mut self, _: &Amx, value: bool) -> AmxResult<i32> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
+        let mut nodes = self.json_nodes.lock().unwrap();
+        Ok(nodes.alloc(serde_json::to_value(value).unwrap()))
     }
 
     #[native(name = "JsonFloat")]
     pub fn json_float(&mut self, _: &Amx, value: f32) -> AmxResult<i32> {
-        Ok(self.json_nodes.alloc(serde_json::to_value(value).unwrap()))
+        let mut nodes = self.json_nodes.lock().unwrap();
+        Ok(nodes.alloc(serde_json::to_value(value).unwrap()))
     }
 
     #[native(name = "JsonString")]
     pub fn json_string(&mut self, _: &Amx, value: AmxString) -> AmxResult<i32> {
-        Ok(self
-            .json_nodes
-            .alloc(serde_json::to_value(value.to_string()).unwrap()))
+        let mut nodes = self.json_nodes.lock().unwrap();
+        Ok(nodes.alloc(serde_json::to_value(value.to_string()).unwrap()))
     }
 
     #[native(raw, name = "JsonArray")]
@@ -569,7 +540,8 @@ impl Plugin {
                 Some(parameter) => parameter,
             };
 
-            let node = match self.json_nodes.take(*node) {
+            let mut nodes = self.json_nodes.lock().unwrap();
+            let node = match nodes.take(*node) {
                 Some(v) => v,
                 None => {
                     error!("invalid JSON node ID passed to JsonArray");
@@ -578,16 +550,21 @@ impl Plugin {
             };
             arr.push(node.clone());
         }
-        Ok(self.json_nodes.alloc(serde_json::Value::Array(arr)))
+
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        Ok(nodes.alloc(serde_json::Value::Array(arr)))
     }
 
     #[native(name = "JsonAppend")]
     pub fn json_append(&mut self, _: &Amx, a: i32, b: i32) -> AmxResult<i32> {
-        let a: serde_json::Value = match self.json_nodes.take(a) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let a: serde_json::Value = match nodes.take(a) {
             Some(v) => v,
             None => return Ok(-1),
         };
-        let b: serde_json::Value = match self.json_nodes.take(b) {
+        let b: serde_json::Value = match nodes.take(b) {
             Some(v) => v,
             None => return Ok(-1),
         };
@@ -601,7 +578,7 @@ impl Plugin {
                 for (k, v) in ob.iter() {
                     new.as_object_mut().unwrap().insert(k.clone(), v.clone());
                 }
-                return Ok(self.json_nodes.alloc(new));
+                return Ok(nodes.alloc(new));
             }
             _ => debug!("append: a and b are not both objects"),
         };
@@ -615,7 +592,7 @@ impl Plugin {
                 for v in ob.iter() {
                     new.as_array_mut().unwrap().push(v.clone());
                 }
-                return Ok(self.json_nodes.alloc(new));
+                return Ok(nodes.alloc(new));
             }
             _ => debug!("append: a and b are not both arrays"),
         };
@@ -633,11 +610,13 @@ impl Plugin {
         key: AmxString,
         value: i32,
     ) -> AmxResult<i32> {
-        let src: serde_json::Value = match self.json_nodes.take(value) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let src: serde_json::Value = match nodes.take(value) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
-        let dst: &mut serde_json::Value = match self.json_nodes.get(node) {
+        let dst: &mut serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -657,7 +636,9 @@ impl Plugin {
         key: AmxString,
         value: i32,
     ) -> AmxResult<i32> {
-        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: &mut serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -677,7 +658,9 @@ impl Plugin {
         key: AmxString,
         value: f32,
     ) -> AmxResult<i32> {
-        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: &mut serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -697,7 +680,9 @@ impl Plugin {
         key: AmxString,
         value: bool,
     ) -> AmxResult<i32> {
-        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: &mut serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -717,7 +702,9 @@ impl Plugin {
         key: AmxString,
         value: AmxString,
     ) -> AmxResult<i32> {
-        let v: &mut serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: &mut serde_json::Value = match nodes.get(node) {
             Some(v) => v,
             None => return Ok(1),
         };
@@ -737,7 +724,9 @@ impl Plugin {
         key: AmxString,
         mut value: Ref<i32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -749,7 +738,7 @@ impl Plugin {
             Some(v) => v.clone(),
             None => return Ok(3),
         };
-        let v = self.json_nodes.alloc(v);
+        let v = nodes.alloc(v);
         *value = v;
 
         Ok(0)
@@ -763,7 +752,9 @@ impl Plugin {
         key: AmxString,
         mut value: Ref<i32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -792,7 +783,9 @@ impl Plugin {
         key: AmxString,
         mut value: Ref<f32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -822,7 +815,9 @@ impl Plugin {
         key: AmxString,
         mut value: Ref<bool>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -851,7 +846,9 @@ impl Plugin {
         value: UnsizedBuffer,
         length: usize,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -882,7 +879,9 @@ impl Plugin {
         key: AmxString,
         mut value: Ref<i32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -898,7 +897,7 @@ impl Plugin {
             Some(_) => (),
             None => return Ok(3),
         };
-        let v = self.json_nodes.alloc(v);
+        let v = nodes.alloc(v);
         *value = v;
         Ok(0)
     }
@@ -910,7 +909,9 @@ impl Plugin {
         node: i32,
         mut length: Ref<i32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -930,7 +931,9 @@ impl Plugin {
         index: i32,
         mut output: Ref<i32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.get(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.get(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -942,7 +945,7 @@ impl Plugin {
             Some(v) => v.clone(),
             None => return Ok(2),
         };
-        let v = self.json_nodes.alloc(v);
+        let v = nodes.alloc(v);
         *output = v;
         Ok(0)
     }
@@ -954,7 +957,9 @@ impl Plugin {
         node: i32,
         mut output: Ref<i32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.take(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -973,7 +978,9 @@ impl Plugin {
         node: i32,
         mut output: Ref<f32>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.take(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -992,7 +999,9 @@ impl Plugin {
         node: i32,
         mut output: Ref<bool>,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.take(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.take(node) {
             Some(v) => v.clone(),
             None => return Ok(1),
         };
@@ -1012,7 +1021,9 @@ impl Plugin {
         output: UnsizedBuffer,
         length: usize,
     ) -> AmxResult<i32> {
-        let v: serde_json::Value = match self.json_nodes.take(node) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        let v: serde_json::Value = match nodes.take(node) {
             Some(v) => v.clone(),
             None => {
                 debug!("value under {} doesn't exist", node);
@@ -1034,7 +1045,9 @@ impl Plugin {
 
     #[native(name = "JsonToggleGC")]
     pub fn json_toggle_gc(&mut self, _: &Amx, node: i32, set: bool) -> AmxResult<i32> {
-        match self.json_nodes.set_gc(node, set) {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
+        match nodes.set_gc(node, set) {
             Some(_) => Ok(0),
             None => Ok(1),
         }
@@ -1042,49 +1055,15 @@ impl Plugin {
 
     #[native(name = "JsonCleanup")]
     pub fn json_cleanup(&mut self, _: &Amx, node: i32, auto: bool) -> AmxResult<i32> {
+        let mut nodes = self.json_nodes.lock().unwrap();
+
         match if auto {
-            self.json_nodes.collect(node)
+            nodes.collect(node)
         } else {
-            self.json_nodes.collect_force(node)
+            nodes.collect_force(node)
         } {
             Some(_) => Ok(0),
             None => Ok(1),
         }
     }
-}
-
-fn execute_response_callback(amx: AmxIdent, response: Response) -> AmxResult<()> {
-    let amx = samp::amx::get(amx).unwrap();
-    let length = response.body.len();
-    let body = response.body;
-    let status = response.status.as_u16() as i32;
-    let id = response.id;
-    let callback = response.request.callback;
-
-    let _ = exec_public!(amx,&callback,id,status,&body => string ,length);
-
-    Ok(())
-}
-
-fn execute_websocket_callback(
-    amx: AmxIdent,
-    callback: &str,
-    client_id: &i32,
-    response: String,
-) -> AmxResult<()> {
-    let length = response.len();
-    let amx = samp::amx::get(amx).unwrap();
-    let _ = exec_public!(amx,callback,client_id,&response => string ,length);
-    Ok(())
-}
-
-fn execute_json_websocket_callback(
-    amx: AmxIdent,
-    callback: &str,
-    client_id: &i32,
-    node: &i32,
-) -> AmxResult<()> {
-    let amx = samp::amx::get(amx).unwrap();
-    let _ = exec_public!(amx, callback, client_id, node);
-    Ok(())
 }

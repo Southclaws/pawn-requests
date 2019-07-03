@@ -10,7 +10,7 @@ mod websocket_client;
 use crate::plugin::Plugin;
 use crate::pool::{GarbageCollectedPool, Pool};
 use samp::initialize_plugin;
-use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 initialize_plugin!(
     natives: [
@@ -73,10 +73,8 @@ initialize_plugin!(
 
         Plugin {
             request_clients: Pool::default(),
-            request_client_amx: HashMap::new(),
             websocket_clients: Pool::default(),
-            websocket_client_amx: HashMap::new(),
-            json_nodes: GarbageCollectedPool::default(),
+            json_nodes: Arc::new(Mutex::new(GarbageCollectedPool::default())),
             headers: GarbageCollectedPool::default(),
         }
     }

@@ -1,20 +1,22 @@
 use futures::{future, Future, Stream};
 use log::{debug, error};
-use reqwest::{header::HeaderMap, r#async::Client, StatusCode};
-use std::{error::Error, sync::mpsc};
+use reqwest::{header::HeaderMap, r#async::Client};
+use samp::{exec_public, AmxLockError, AsyncAmx};
+use std::error::Error;
+use std::sync::{Arc, Mutex};
 use string_error::static_err;
 use tokio::runtime::Runtime;
 
 use crate::method::Method;
+use crate::pool::GarbageCollectedPool;
 
 pub struct RequestClient {
+    pub amx: AsyncAmx,
     runtime: Runtime,
     endpoint: url::Url,
     headers: HeaderMap,
     client: Client,
     request_id: i32,
-    done_send: mpsc::Sender<Response>,
-    done_recv: mpsc::Receiver<Response>,
 }
 
 #[derive(Clone)]
@@ -24,18 +26,11 @@ pub struct Request {
     pub method: Method,
     pub headers: HeaderMap,
     pub body: String,
-    pub request_type: i32,
-}
-
-pub struct Response {
-    pub request: Request,
-    pub id: i32,
-    pub body: String,
-    pub status: StatusCode,
 }
 
 impl RequestClient {
     pub fn new(
+        amx: AsyncAmx,
         endpoint: String,
         headers: HeaderMap,
     ) -> Result<RequestClient, Box<std::error::Error>> {
@@ -44,28 +39,27 @@ impl RequestClient {
             return Err(static_err("non-http scheme"));
         }
         let rt = Runtime::new()?;
-        let (send, recv) = mpsc::channel();
 
         Ok(RequestClient {
+            amx,
             runtime: rt,
             endpoint: url,
             headers: headers,
             client: Client::new(),
             request_id: 0,
-            done_send: send,
-            done_recv: recv,
         })
     }
 
-    pub fn poll(&mut self) -> Result<Response, Box<dyn std::error::Error>> {
-        Ok(self.done_recv.try_recv()?)
-    }
-
-    pub fn request(&mut self, request: Request) -> Result<i32, Box<Error>> {
+    pub fn request(
+        &mut self,
+        request: Request,
+        json_nodes: Option<Arc<Mutex<GarbageCollectedPool<serde_json::Value>>>>,
+    ) -> Result<i32, Box<Error>> {
         let id = self.request_id;
         let mut full_url = self.endpoint.clone();
-        let request_copy = request.clone();
-        let sender = self.done_send.clone();
+        let response_amx = self.amx.clone();
+        let failure_amx = self.amx.clone();
+        let callback = request.callback.clone();
 
         self.request_id += 1;
         full_url.set_path(&request.path);
@@ -77,7 +71,11 @@ impl RequestClient {
             .headers(request.headers)
             .body(request.body)
             .send()
-            .map_err(|e| error!("{}", e))
+            .map_err(move |e| {
+                let message = e.to_string();
+                execute_request_failure_callback(failure_amx, id, message);
+                error!("{}", e)
+            })
             .and_then(move |mut response: reqwest::r#async::Response| {
                 debug!(
                     "received response for request {} status {}",
@@ -101,16 +99,17 @@ impl RequestClient {
                     }
                 };
 
-                sender
-                    .send(Response {
-                        request: request_copy,
-                        id: id,
-                        body: body,
-                        status: response.status(),
-                    })
-                    .map_err(|e| error!("{}", e))
-            })
-            .map(|_| ());
+                execute_response_callback(
+                    response_amx,
+                    callback,
+                    id,
+                    response.status().as_u16() as i32,
+                    body,
+                    json_nodes,
+                );
+
+                future::ok(())
+            });
 
         debug!(
             "spawning request task for {} to {}",
@@ -119,5 +118,60 @@ impl RequestClient {
         self.runtime.spawn(req);
 
         Ok(id)
+    }
+}
+
+fn execute_request_failure_callback(amx: AsyncAmx, id: i32, message: String) {
+    let amx = match amx.lock() {
+        Err(AmxLockError::AmxGone) => {
+            error!("OnRequestFailure => AMX is gone");
+            return;
+        }
+        Err(_) => {
+            error!("OnRequestFailure => mutex is poisoned");
+            return;
+        }
+        Ok(amx) => amx,
+    };
+    let _ = exec_public!(amx,"OnRequestFailure",id,&message => string,message.len());
+}
+
+fn execute_response_callback(
+    amx: AsyncAmx,
+    callback: String,
+    id: i32,
+    status: i32,
+    body: String,
+    json_nodes: Option<Arc<Mutex<GarbageCollectedPool<serde_json::Value>>>>,
+) {
+    let amx = match amx.lock() {
+        Err(AmxLockError::AmxGone) => {
+            error!("{} => AMX is gone", callback);
+            return;
+        }
+        Err(_) => {
+            error!("{} => mutex is poisoned", callback);
+            return;
+        }
+        Ok(amx) => amx,
+    };
+
+    if json_nodes.is_some() {
+        let v: serde_json::Value = match serde_json::from_str(&body) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("{}", e);
+                return;
+            }
+        };
+
+        let nodes = json_nodes.unwrap();
+        let mut nodes = nodes.lock().unwrap();
+        let node = nodes.alloc(v);
+        drop(nodes);
+
+        let _ = exec_public!(amx, &callback, id, status, node);
+    } else {
+        let _ = exec_public!(amx,&callback,id,status,&body => string ,body.len());
     }
 }

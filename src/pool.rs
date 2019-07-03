@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 pub struct Pool<T> {
     pub active: HashMap<i32, T>,
-    current: i32,
+    pub current: i32,
 }
 
 impl<T> Default for Pool<T> {
