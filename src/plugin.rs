@@ -62,9 +62,20 @@ impl Plugin {
         &mut self,
         amx: &Amx,
         endpoint: AmxString,
-        _headers: i32, // TODO
+        headers: i32,
     ) -> AmxResult<i32> {
-        let header_map = HeaderMap::new();
+        let header_map = if headers != -1 {
+            match self.headers.take(headers) {
+                Some(v) => v,
+                None => {
+                    error!("invalid headers identifier {} passed", headers);
+                    return Ok(-1);
+                }
+            }
+        } else {
+            HeaderMap::new()
+        };
+        
         let endpoint = endpoint.to_string();
 
         let rqc = match RequestClient::new(amx.to_async(), endpoint.clone(), header_map) {
