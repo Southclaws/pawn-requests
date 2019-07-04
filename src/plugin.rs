@@ -40,19 +40,6 @@ impl SampPlugin for Plugin {
     fn on_unload(self: Box<Self>) {
         info!("Unloaded");
     }
-
-    /*fn on_amx_unload(&mut self, _Amx: &Amx) -> i32 {
-        // let mut to_clear = Vec::new();
-        // for (id, Amx_ptr) in self.request_client_amx.iter() {
-        //     if Amx.Amx as usize == *Amx_ptr {
-        //         to_clear.push(id);
-        //     }
-        // }
-        // for id in to_clear.iter() {
-        //     self.request_client_amx.remove(id);
-        // }
-        return Amx_ERR_NONE;
-    }*/
 }
 
 impl Plugin {
