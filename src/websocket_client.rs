@@ -48,21 +48,17 @@ impl WebsocketClient {
                     stream
                         .map_err(|err| {
                             error!("{}", err);
-                            return ();
                         })
                         .for_each(move |message| {
-                            match message {
-                                OwnedMessage::Text(message) => {
-                                    execute_websocket_callback(
-                                        amx.clone(),
-                                        &callback,
-                                        client_id,
-                                        &message,
-                                        json_nodes.clone(),
-                                    );
-                                }
-                                _ => (),
-                            };
+                            if let OwnedMessage::Text(message) = message {
+                                execute_websocket_callback(
+                                    amx.clone(),
+                                    &callback,
+                                    client_id,
+                                    &message,
+                                    json_nodes.clone(),
+                                );
+                            }
 
                             Ok(())
                         }),

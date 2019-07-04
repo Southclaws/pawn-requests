@@ -62,7 +62,7 @@ impl Plugin {
         } else {
             HeaderMap::new()
         };
-        
+
         let endpoint = endpoint.to_string();
 
         let rqc = match RequestClient::new(amx.to_async(), endpoint.clone(), header_map) {
@@ -84,12 +84,11 @@ impl Plugin {
     #[native(raw, name = "RequestHeaders")]
     pub fn request_headers(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
         let arg_count = params.count();
-        let pairs = match arg_count == 0 || arg_count % 2 == 0 {
-            true => arg_count / 2,
-            false => {
-                error!("invalid variadic argument pattern passed to JsonObject");
-                return Ok(1);
-            }
+        let pairs = if arg_count == 0 || arg_count % 2 == 0 {
+            arg_count / 2
+        } else {
+            error!("invalid variadic argument pattern passed to JsonObject");
+            return Ok(-1);
         };
 
         let mut headers = reqwest::header::HeaderMap::new();
@@ -181,18 +180,17 @@ impl Plugin {
         let nodes = self.json_nodes.clone();
         let mut nodes = nodes.lock().unwrap();
 
-        let body;
-        if node != -1 {
-            body = match nodes.take(node) {
+        let body = if node != -1 {
+            match nodes.take(node) {
                 Some(v) => v,
                 None => {
                     error!("invalid json node ID {}", node);
                     return Ok(-1);
                 }
-            };
+            }
         } else {
-            body = serde_json::Value::Null;
-        }
+            serde_json::Value::Null
+        };
 
         let body = serde_json::to_string(&body).unwrap();
 
@@ -250,19 +248,20 @@ impl Plugin {
             request_client_id, headers, path, method, callback
         );
 
-        let json_nodes = match is_json {
-            true => Some(self.json_nodes.clone()),
-            false => None,
+        let json_nodes = if is_json {
+            Some(self.json_nodes.clone())
+        } else {
+            None
         };
 
         Ok(
             match client.request(
                 Request {
-                    callback: callback,
-                    path: path,
-                    method: Method::from(method),
+                    callback,
+                    path,
+                    method,
                     body: body.to_string(),
-                    headers: headers,
+                    headers,
                 },
                 json_nodes,
             ) {
@@ -457,12 +456,11 @@ impl Plugin {
     #[native(raw, name = "JsonObject")]
     pub fn json_object(&mut self, _: &Amx, mut params: samp::args::Args) -> AmxResult<i32> {
         let arg_count = params.count();
-        let pairs = match arg_count == 0 || arg_count % 2 == 0 {
-            true => arg_count / 2,
-            false => {
-                error!("invalid variadic argument pattern passed to JsonObject");
-                return Ok(1);
-            }
+        let pairs = if arg_count == 0 || arg_count % 2 == 0 {
+            arg_count / 2
+        } else {
+            error!("invalid variadic argument pattern passed to JsonObject");
+            return Ok(1);
         };
 
         let mut v = serde_json::Value::Object(serde_json::Map::new());
