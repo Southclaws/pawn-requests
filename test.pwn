@@ -288,7 +288,8 @@ public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
     printf("%d '%s'", _:ws, string);
     print("\nPASS!");
 }
-/*Test:WebSocketFail() {
+
+Test:WebSocketFail() {
     new WebSocket:id = WebSocketClient("wss://example.com", "OnWebSocket");
     ASSERT(_:id == -1);
 }
@@ -296,8 +297,7 @@ public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
 Test:JsonWebSocketFail() {
     new JsonWebSocket:id = JsonWebSocketClient("wss://example.com", "OnWebSocket");
     ASSERT(_:id == -1);
-}*/
-
+}
 
 // -
 // JSON Tests
@@ -959,11 +959,11 @@ Test:JsonGetNodeString() {
     ASSERT(!strcmp(got, "value"));
 }
 
-// Test:JsonScopeGC() {
-//     new Node:node = JsonObject();
-//     scopeNodeGC(node);
-//     ASSERT(JsonCleanup(node) == 1);
-// }
+Test:JsonScopeGC() {
+    new Node:node = JsonObject();
+    scopeNodeGC(node);
+    ASSERT(JsonCleanup(node) == 1);
+}
 
 Test:JsonToggleGC() {
     new Node:node = JsonObject(

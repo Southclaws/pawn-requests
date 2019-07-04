@@ -36,6 +36,9 @@ impl WebsocketClient {
         let mut rt = Runtime::new()?;
         let (outgoing_send, outgoing_recv) = sync::mpsc::channel(4096);
 
+        //test connection before spawning
+        ClientBuilder::from_url(&url).connect(None)?;
+
         let f = ClientBuilder::from_url(&url)
             .async_connect(None)
             .map(|(duplex, _)| duplex.split())
