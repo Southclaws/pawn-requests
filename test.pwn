@@ -178,7 +178,7 @@ public OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node) {
 
 new Request:OnGetJson_ID;
 Test:GetJson() {
-    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders());
     OnGetJson_ID = RequestJSON(
         client,
         "anything",
@@ -208,7 +208,7 @@ public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
     ASSERT(strlen(output) > 0);
 
     JsonGetString(node, "url", output);
-    ASSERT(!strcmp(output, "http://httpbin.org/anything"));
+    ASSERT(!strcmp(output, "https://httpbin.org/anything"));
 
     print("\nPASS!");
 }

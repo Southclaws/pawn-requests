@@ -73,8 +73,8 @@ impl RequestClient {
             .send()
             .map_err(move |e| {
                 let message = e.to_string();
-                execute_request_failure_callback(failure_amx, id, message);
-                error!("{}", e)
+                let error_code = e.status();
+                execute_request_failure_callback(failure_amx, id,error_code, message);
             })
             .and_then(move |mut response: reqwest::r#async::Response| {
                 debug!(
@@ -121,7 +121,7 @@ impl RequestClient {
     }
 }
 
-fn execute_request_failure_callback(amx: AsyncAmx, id: i32, message: String) {
+fn execute_request_failure_callback(amx: AsyncAmx, id: i32, error_code:Option<reqwest::StatusCode>,message: String) {
     let amx = match amx.lock() {
         Err(AmxLockError::AmxGone) => {
             error!("OnRequestFailure => AMX is gone");
@@ -133,7 +133,13 @@ fn execute_request_failure_callback(amx: AsyncAmx, id: i32, message: String) {
         }
         Ok(amx) => amx,
     };
-    let _ = exec_public!(amx,"OnRequestFailure",id,&message => string,message.len());
+
+    let status = match error_code {
+        Some(code) => code.as_u16() as i32,
+        None => -1,
+    };
+    
+    let _ = exec_public!(amx,"OnRequestFailure",id,status,&message => string,message.len());
 }
 
 fn execute_response_callback(
@@ -171,6 +177,7 @@ fn execute_response_callback(
         drop(nodes);
 
         let _ = exec_public!(amx, &callback, id, status, node);
+    
     } else {
         let _ = exec_public!(amx,&callback,id,status,&body => string ,body.len());
     }
