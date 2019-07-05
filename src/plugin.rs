@@ -96,7 +96,7 @@ impl Plugin {
             let key = match params.next::<AmxString>() {
                 None => {
                     error!("invalid type expected String");
-                    return Ok(1);
+                    return Ok(-1);
                 }
                 Some(parameter) => parameter.to_string(),
             };
@@ -104,14 +104,14 @@ impl Plugin {
                 Ok(v) => v,
                 Err(e) => {
                     error!("invalid header name {}: {}", key, e);
-                    return Ok(1);
+                    return Ok(-1);
                 }
             };
 
             let value = match params.next::<AmxString>() {
                 None => {
                     error!("invalid type expected String");
-                    return Ok(1);
+                    return Ok(-1);
                 }
                 Some(parameter) => parameter.to_string(),
             };
@@ -120,7 +120,7 @@ impl Plugin {
                 Ok(v) => v,
                 Err(e) => {
                     error!("invalid header value {}: {}", value, e);
-                    return Ok(1);
+                    return Ok(-1);
                 }
             };
 
@@ -145,7 +145,7 @@ impl Plugin {
             Some(v) => v,
             None => {
                 error!("invalid headers identifier {} passed", headers);
-                return Ok(1);
+                return Ok(-1);
             }
         };
         let id = match self.do_request(
@@ -268,7 +268,7 @@ impl Plugin {
                 Ok(v) => v,
                 Err(e) => {
                     error!("{}", e);
-                    return Ok(1);
+                    return Ok(-1);
                 }
             },
         )
