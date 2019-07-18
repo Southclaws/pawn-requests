@@ -141,13 +141,18 @@ impl Plugin {
         body: AmxString,
         headers: i32,
     ) -> AmxResult<i32> {
-        let headers = match self.headers.take(headers) {
-            Some(v) => v,
-            None => {
-                error!("invalid headers identifier {} passed", headers);
-                return Ok(-1);
+        let headers = if headers != -1 {
+            match self.headers.take(headers) {
+                Some(v) => Some(v),
+                None => {
+                    error!("invalid headers identifier {} passed", headers);
+                    return Ok(-1);
+                }
             }
+        } else {
+            None
         };
+
         let id = match self.do_request(
             request_client_id,
             path.to_string(),
@@ -163,6 +168,7 @@ impl Plugin {
                 return Ok(-1);
             }
         };
+
         Ok(id)
     }
 
@@ -194,12 +200,16 @@ impl Plugin {
 
         let body = serde_json::to_string(&body).unwrap();
 
-        let mut headers = match self.headers.take(headers) {
-            Some(v) => v,
-            None => {
-                error!("invalid headers identifier {} passed", headers);
-                return Ok(-1);
+        let mut headers = if headers != -1 {
+            match self.headers.take(headers) {
+                Some(v) => v,
+                None => {
+                    error!("invalid headers identifier {} passed", headers);
+                    return Ok(-1);
+                }
             }
+        } else {
+            HeaderMap::new()
         };
 
         headers.insert("Content-Type", "application/json".parse().unwrap());
@@ -210,7 +220,7 @@ impl Plugin {
             method,
             callback.to_string(),
             body,
-            headers,
+            Some(headers),
             true,
         ) {
             Ok(v) => v,
@@ -230,7 +240,7 @@ impl Plugin {
         method: Method,
         callback: String,
         body: T,
-        headers: reqwest::header::HeaderMap,
+        headers: Option<HeaderMap>,
         is_json: bool,
     ) -> Result<i32, Box<dyn std::error::Error>> {
         let client = match self.request_clients.get(request_client_id) {

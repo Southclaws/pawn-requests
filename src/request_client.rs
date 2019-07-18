@@ -24,7 +24,7 @@ pub struct Request {
     pub callback: String,
     pub path: String,
     pub method: Method,
-    pub headers: HeaderMap,
+    pub headers: Option<HeaderMap>,
     pub body: String,
 }
 
@@ -64,17 +64,19 @@ impl RequestClient {
         self.request_id += 1;
         full_url.set_path(&request.path);
 
-        let req = self
+        let mut req = self
             .client
             .request(request.method.into(), full_url.clone())
-            .headers(self.headers.clone())
-            .headers(request.headers)
+            .headers(self.headers.clone());
+        if let Some(headers) = request.headers {
+            req = req.headers(headers);
+        }
+
+        let request_future = req
             .body(request.body)
             .send()
             .map_err(move |e| {
-                let message = e.to_string();
-                let error_code = e.status();
-                execute_request_failure_callback(failure_amx, id, error_code, message);
+                execute_request_failure_callback(failure_amx, id, e.status(), e.to_string());
             })
             .and_then(move |mut response: reqwest::r#async::Response| {
                 debug!(
@@ -115,7 +117,8 @@ impl RequestClient {
             "spawning request task for {} to {}",
             full_url, request.callback
         );
-        self.runtime.spawn(req);
+
+        self.runtime.spawn(request_future);
 
         Ok(id)
     }

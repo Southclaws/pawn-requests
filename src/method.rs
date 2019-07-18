@@ -2,7 +2,7 @@ use samp::amx::Amx;
 use samp::cell::AmxCell;
 use samp::error::{AmxError, AmxResult};
 
-#[derive(Debug, PartialEq, Clone,Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Method {
     HttpMethodGet,
     HttpMethodHead,
@@ -14,7 +14,6 @@ pub enum Method {
     HttpMethodTrace,
     HttpMethodPatch,
 }
-
 
 impl AmxCell<'_> for Method {
     fn from_raw(_amx: &Amx, cell: i32) -> AmxResult<Method> {
