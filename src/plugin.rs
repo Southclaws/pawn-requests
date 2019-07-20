@@ -1,4 +1,4 @@
-use log::{debug, error, info};
+use log::{debug, error};
 use reqwest::header::HeaderMap;
 use samp::prelude::*;
 use samp::SampPlugin;
@@ -32,15 +32,7 @@ enum JsonNode {
 }
 }
 
-impl SampPlugin for Plugin {
-    fn on_load(&mut self) {
-        info!("Loaded");
-    }
-
-    fn on_unload(self: Box<Self>) {
-        info!("Unloaded");
-    }
-}
+impl SampPlugin for Plugin {}
 
 impl Plugin {
     // Natives
@@ -87,7 +79,7 @@ impl Plugin {
         let pairs = if arg_count == 0 || arg_count % 2 == 0 {
             arg_count / 2
         } else {
-            error!("invalid variadic argument pattern passed to JsonObject");
+            error!("invalid variadic argument pattern passed to RequestHeaders");
             return Ok(-1);
         };
 

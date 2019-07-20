@@ -55,20 +55,14 @@ initialize_plugin!(
     {
         let samp_logger = samp::plugin::logger()
             .level(log::LevelFilter::Info);
+
         samp::encoding::set_default_encoding(samp::encoding::WINDOWS_1251);
-
-        let log_file = fern::log_file("requests.log").expect("Cannot create log file!");
-
-        let trace_level = fern::Dispatch::new()
-            .level(log::LevelFilter::Info)
-            .chain(log_file);
 
         let _ = fern::Dispatch::new()
             .format(|callback, message, record| {
                 callback.finish(format_args!("[requests] [{}]: {}", record.level().to_string().to_lowercase(), message))
             })
             .chain(samp_logger)
-            .chain(trace_level)
             .apply();
 
         Plugin {
