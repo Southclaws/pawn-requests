@@ -24,8 +24,8 @@ build_script:
 test_script:
   - sampctl package ensure
   - cd test
-  - $env:RUST_BACKTRACE = 1
-  - $env:RUST_LOG = debug
+  - ps: $env:RUST_BACKTRACE = 1
+  - ps: $env:RUST_LOG = debug
   - sampctl server run
 
 artifacts:

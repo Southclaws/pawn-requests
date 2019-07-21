@@ -1,30 +1,62 @@
-enum_from_primitive! {
-#[derive(Debug, PartialEq, Clone)]
+use samp::amx::Amx;
+use samp::cell::AmxCell;
+use samp::error::{AmxError, AmxResult};
+
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Method {
-    HTTP_METHOD_GET,
-    HTTP_METHOD_HEAD,
-    HTTP_METHOD_POST,
-    HTTP_METHOD_PUT,
-    HTTP_METHOD_DELETE,
-    HTTP_METHOD_CONNECT,
-    HTTP_METHOD_OPTIONS,
-    HTTP_METHOD_TRACE,
-    HTTP_METHOD_PATCH,
+    HttpMethodGet,
+    HttpMethodHead,
+    HttpMethodPost,
+    HttpMethodPut,
+    HttpMethodDelete,
+    HttpMethodConnect,
+    HttpMethodOptions,
+    HttpMethodTrace,
+    HttpMethodPatch,
 }
+
+impl AmxCell<'_> for Method {
+    fn from_raw(_amx: &Amx, cell: i32) -> AmxResult<Method> {
+        match cell {
+            0 => Ok(Method::HttpMethodGet),
+            1 => Ok(Method::HttpMethodHead),
+            2 => Ok(Method::HttpMethodPost),
+            3 => Ok(Method::HttpMethodPut),
+            4 => Ok(Method::HttpMethodDelete),
+            5 => Ok(Method::HttpMethodConnect),
+            6 => Ok(Method::HttpMethodOptions),
+            7 => Ok(Method::HttpMethodTrace),
+            8 => Ok(Method::HttpMethodPatch),
+            _ => Err(AmxError::Params),
+        }
+    }
+    fn as_cell(&self) -> i32 {
+        match self {
+            Method::HttpMethodGet => 0,
+            Method::HttpMethodHead => 1,
+            Method::HttpMethodPost => 2,
+            Method::HttpMethodPut => 3,
+            Method::HttpMethodDelete => 4,
+            Method::HttpMethodConnect => 5,
+            Method::HttpMethodOptions => 6,
+            Method::HttpMethodTrace => 7,
+            Method::HttpMethodPatch => 8,
+        }
+    }
 }
 
 impl Method {
     pub fn into(self) -> reqwest::Method {
         match self {
-            Method::HTTP_METHOD_GET => reqwest::Method::GET,
-            Method::HTTP_METHOD_HEAD => reqwest::Method::HEAD,
-            Method::HTTP_METHOD_POST => reqwest::Method::POST,
-            Method::HTTP_METHOD_PUT => reqwest::Method::PUT,
-            Method::HTTP_METHOD_DELETE => reqwest::Method::DELETE,
-            Method::HTTP_METHOD_CONNECT => reqwest::Method::CONNECT,
-            Method::HTTP_METHOD_OPTIONS => reqwest::Method::OPTIONS,
-            Method::HTTP_METHOD_TRACE => reqwest::Method::TRACE,
-            Method::HTTP_METHOD_PATCH => reqwest::Method::PATCH,
+            Method::HttpMethodGet => reqwest::Method::GET,
+            Method::HttpMethodHead => reqwest::Method::HEAD,
+            Method::HttpMethodPost => reqwest::Method::POST,
+            Method::HttpMethodPut => reqwest::Method::PUT,
+            Method::HttpMethodDelete => reqwest::Method::DELETE,
+            Method::HttpMethodConnect => reqwest::Method::CONNECT,
+            Method::HttpMethodOptions => reqwest::Method::OPTIONS,
+            Method::HttpMethodTrace => reqwest::Method::TRACE,
+            Method::HttpMethodPatch => reqwest::Method::PATCH,
         }
     }
 }

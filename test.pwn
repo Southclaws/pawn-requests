@@ -178,7 +178,7 @@ public OnGetJsonWithHeaders(Request:id, E_HTTP_STATUS:status, Node:node) {
 
 new Request:OnGetJson_ID;
 Test:GetJson() {
-    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    new RequestsClient:client = RequestsClient("https://httpbin.org/", RequestHeaders());
     OnGetJson_ID = RequestJSON(
         client,
         "anything",
@@ -208,7 +208,7 @@ public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
     ASSERT(strlen(output) > 0);
 
     JsonGetString(node, "url", output);
-    ASSERT(!strcmp(output, "http://httpbin.org/anything"));
+    ASSERT(!strcmp(output, "https://httpbin.org/anything"));
 
     print("\nPASS!");
 }
@@ -260,46 +260,44 @@ public OnWebSocket(WebSocket:ws, const data[], dataLen) {
     print("\nPASS!");
 }
 
-// new JsonWebSocket:JsonWebSocketEcho_ID;
-// Test:JsonWebSocketEcho() {
-//     print("Connecting to WebSocket...");
-//     new start = GetTickCount();
-//     JsonWebSocketEcho_ID = JsonWebSocketClient("wss://echo.websocket.org", "OnJsonWebSocket");
-//     printf("Connected! Took %dms", GetTickCount() - start);
+new JsonWebSocket:JsonWebSocketEcho_ID;
+Test:JsonWebSocketEcho() {
+    print("Connecting to WebSocket...");
+    new start = GetTickCount();
+    JsonWebSocketEcho_ID = JsonWebSocketClient("wss://echo.websocket.org", "OnJsonWebSocket");
+    printf("Connected! Took %dms", GetTickCount() - start);
 
-//     start = GetTickCount();
-//     printf("Sending WebSocket message...");
-//     new ret = JsonWebSocketSend(JsonWebSocketEcho_ID, JsonObject(
-//         "key1", JsonString("value1"),
-//         "key2", JsonString("value2"),
-//         "key3", JsonString("value3")
-//     ));
-//     printf("Sent! Took %dms", GetTickCount() - start);
+    start = GetTickCount();
+    printf("Sending WebSocket message...");
+    new ret = JsonWebSocketSend(JsonWebSocketEcho_ID, JsonObject(
+        "key1", JsonString("value1"),
+        "key2", JsonString("value2"),
+        "key3", JsonString("value3")
+    ));
+    printf("Sent! Took %dms", GetTickCount() - start);
 
-//     ASSERT(ret == 0);
-// }
-// forward OnJsonWebSocket(JsonWebSocket:ws, Node:node);
-// public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
-//     print("*** Test OnJsonWebSocket\n");
+    ASSERT(ret == 0);
+}
+forward OnJsonWebSocket(JsonWebSocket:ws, Node:node);
+public OnJsonWebSocket(JsonWebSocket:ws, Node:node) {
+    print("*** Test OnJsonWebSocket\n");
 
-//     new string[512];
-//     JsonStringify(node, string);
-//     ASSERT(!strcmp(string, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
-//     printf("%d '%s'", _:ws, string);
+    new string[512];
+    JsonStringify(node, string);
+    ASSERT(!strcmp(string, "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}"));
+    printf("%d '%s'", _:ws, string);
+    print("\nPASS!");
+}
 
-//     print("\nPASS!");
-// }
+Test:WebSocketFail() {
+    new WebSocket:id = WebSocketClient("wss://example.com", "OnWebSocket");
+    ASSERT(_:id == -1);
+}
 
-// Test:WebSocketFail() {
-//     new WebSocket:id = WebSocketClient("wss://example.com", "OnWebSocket");
-//     ASSERT(_:id == -1);
-// }
-
-// Test:JsonWebSocketFail() {
-//     new JsonWebSocket:id = JsonWebSocketClient("wss://example.com", "OnWebSocket");
-//     ASSERT(_:id == -1);
-// }
-
+Test:JsonWebSocketFail() {
+    new JsonWebSocket:id = JsonWebSocketClient("wss://example.com", "OnWebSocket");
+    ASSERT(_:id == -1);
+}
 
 // -
 // JSON Tests
@@ -961,11 +959,11 @@ Test:JsonGetNodeString() {
     ASSERT(!strcmp(got, "value"));
 }
 
-// Test:JsonScopeGC() {
-//     new Node:node = JsonObject();
-//     scopeNodeGC(node);
-//     ASSERT(JsonCleanup(node) == 1);
-// }
+Test:JsonScopeGC() {
+    new Node:node = JsonObject();
+    scopeNodeGC(node);
+    ASSERT(JsonCleanup(node) == 1);
+}
 
 Test:JsonToggleGC() {
     new Node:node = JsonObject(

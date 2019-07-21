@@ -1,9 +1,8 @@
-use samp_sdk::types::Cell;
 use std::collections::HashMap;
 
 pub struct Pool<T> {
-    pub active: HashMap<Cell, T>,
-    current: Cell,
+    pub active: HashMap<i32, T>,
+    pub current: i32,
 }
 
 impl<T> Default for Pool<T> {
@@ -28,8 +27,8 @@ impl<T> Pool<T> {
 }
 
 pub struct GarbageCollectedPool<T: Clone> {
-    pub active: HashMap<Cell, Item<T>>,
-    current: Cell,
+    pub active: HashMap<i32, Item<T>>,
+    current: i32,
 }
 
 #[derive(Clone)]
