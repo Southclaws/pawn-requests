@@ -33,7 +33,7 @@ impl RequestClient {
         amx: AsyncAmx,
         endpoint: String,
         headers: HeaderMap,
-    ) -> Result<RequestClient, Box<std::error::Error>> {
+    ) -> Result<RequestClient, Box<dyn std::error::Error>> {
         let url = url::Url::parse(&endpoint)?;
         if !url.scheme().starts_with("http") {
             return Err(static_err("non-http scheme"));
@@ -54,7 +54,7 @@ impl RequestClient {
         &mut self,
         request: Request,
         json_nodes: Option<Arc<Mutex<GarbageCollectedPool<serde_json::Value>>>>,
-    ) -> Result<i32, Box<Error>> {
+    ) -> Result<i32, Box<dyn Error>> {
         let id = self.request_id;
         let mut full_url = self.endpoint.clone();
         let response_amx = self.amx.clone();
