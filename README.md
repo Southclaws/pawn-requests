@@ -155,7 +155,7 @@ RequestJSON(
     .headers = RequestHeaders()
 );
 
-public OnGetJson(Request:id, E_HTTP_STATUS:status, Node:node) {
+public OnPostJson(Request:id, E_HTTP_STATUS:status, Node:node) {
     if(status == HTTP_STATUS_CREATED) {
         printf("successfully posted JSON!");
     }
