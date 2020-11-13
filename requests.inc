@@ -37,7 +37,7 @@ native Request:Request(
     RequestsClient:id,
     const path[],
     E_HTTP_METHOD:method,
-    callback[],
+    const callback[],
     body[] = "",
     Headers:headers = Headers:-1
 );
@@ -47,7 +47,7 @@ native Request:RequestJSON(
     RequestsClient:id,
     const path[],
     E_HTTP_METHOD:method,
-    callback[],
+    const callback[],
     Node:json = Node:-1,
     Headers:headers = Headers:-1
 );
