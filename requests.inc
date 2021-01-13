@@ -38,7 +38,7 @@ native Request:Request(
     const path[],
     E_HTTP_METHOD:method,
     const callback[],
-    body[] = "",
+    const body[] = "",
     Headers:headers = Headers:-1
 );
 
@@ -80,7 +80,7 @@ enum JSON_NODE {
 native JsonParse(const string[], &Node:output);
 
 // JsonStringify encodes a JSON node into `buf`.
-native JsonStringify(Node:node, buf[], len = sizeof(buf));
+native JsonStringify(Node:node, const buf[], len = sizeof(buf));
 
 // JsonNodeType returns the type of a node from the above enumerator.
 native JSON_NODE:JsonNodeType(Node:node);
