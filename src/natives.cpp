@@ -37,8 +37,9 @@ int Natives::Request(AMX* amx, cell* params)
     amx_GetCString(amx, params[5], data);
     // std::string data = amx_GetCppString(amx, params[6]);
     int headers = params[6];
+    Impl::E_CONTENT_TYPE response_type =  static_cast<Impl::E_CONTENT_TYPE>(params[7]);
 
-    return Impl::Request(amx, id, path, method, callback, data, headers);
+    return Impl::Request(amx, id, path, method, callback, data, headers, response_type);
 }
 
 int Natives::RequestJSON(AMX* amx, cell* params)
@@ -49,8 +50,9 @@ int Natives::RequestJSON(AMX* amx, cell* params)
     std::string callback = amx_GetCppString(amx, params[4]);
     auto obj = JSON::Get(params[5]);
     int headers = params[6];
+    Impl::E_CONTENT_TYPE response_type =  static_cast<Impl::E_CONTENT_TYPE>(params[7]);
 
-    return Impl::RequestJSON(amx, id, path, method, callback, obj, headers);
+    return Impl::RequestJSON(amx, id, path, method, callback, obj, headers, response_type);
 }
 
 void Natives::processTick(AMX* amx)

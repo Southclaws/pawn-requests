@@ -12,7 +12,12 @@
 #include "status_codes"
 #include "http_methods"
 
-
+enum ResponseType
+{
+    RESPONSE_NONE = 0,
+    RESPONSE_STRING,
+    RESPONSE_JSON,
+};
 // -
 // Request API
 // -
@@ -39,7 +44,8 @@ native Request:Request(
     E_HTTP_METHOD:method,
     const callback[],
     body[] = "",
-    Headers:headers = Headers:-1
+    Headers:headers = Headers:-1,
+    ResponseType: response = RESPONSE_STRING
 );
 
 // RequestJSON performs a request to send or receive JSON data
@@ -49,7 +55,8 @@ native Request:RequestJSON(
     E_HTTP_METHOD:method,
     const callback[],
     Node:json = Node:-1,
-    Headers:headers = Headers:-1
+    Headers:headers = Headers:-1,
+    ResponseType: response = RESPONSE_JSON
 );
 
 // WebSocketClient creates a websocket client and establishes a connection at

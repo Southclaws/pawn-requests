@@ -34,7 +34,7 @@ int Impl::RequestHeaders(std::vector<std::pair<std::string, std::string>> header
     return id;
 }
 
-int Impl::Request(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, char* data, int headers)
+int Impl::Request(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, char* data, int headers, E_CONTENT_TYPE response_type)
 {
     RequestData requestData;
     requestData.amx = amx;
@@ -42,7 +42,7 @@ int Impl::Request(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std:
     requestData.callback = callback;
     requestData.path = path;
     requestData.method = method;
-    requestData.requestType = E_CONTENT_TYPE::string;
+    requestData.requestType = response_type;
     requestData.headers = headers;
     requestData.bodyString = data;
 
@@ -53,7 +53,7 @@ int Impl::Request(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std:
     return requestCounter++;
 }
 
-int Impl::RequestJSON(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers)
+int Impl::RequestJSON(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers, E_CONTENT_TYPE response_type)
 {
     RequestData requestData;
     requestData.amx = amx;
@@ -61,7 +61,7 @@ int Impl::RequestJSON(AMX* amx, int id, std::string path, E_HTTP_METHOD method, 
     requestData.callback = callback;
     requestData.path = path;
     requestData.method = method;
-    requestData.requestType = E_CONTENT_TYPE::json;
+    requestData.requestType = response_type;
     requestData.headers = headers;
     requestData.bodyJson = json;
 
