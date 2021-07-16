@@ -42,7 +42,8 @@ int Impl::Request(AMX* amx, int id, std::string path, E_HTTP_METHOD method, std:
     requestData.callback = callback;
     requestData.path = path;
     requestData.method = method;
-    requestData.requestType = response_type;
+    requestData.requestType = E_CONTENT_TYPE::string;
+    requestData.responseType = response_type;
     requestData.headers = headers;
     requestData.bodyString = data;
 
@@ -61,7 +62,8 @@ int Impl::RequestJSON(AMX* amx, int id, std::string path, E_HTTP_METHOD method, 
     requestData.callback = callback;
     requestData.path = path;
     requestData.method = method;
-    requestData.requestType = response_type;
+    requestData.requestType = E_CONTENT_TYPE::json;
+    requestData.responseType = response_type;
     requestData.headers = headers;
     requestData.bodyJson = json;
 
@@ -170,7 +172,7 @@ void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& r
 
     responseData.status = response.status_code();
     responseData.rawBody = body;
-    responseData.responseType = requestData.requestType;
+    responseData.responseType = requestData.responseType;
 }
 
 web::http::method Impl::methodName(E_HTTP_METHOD id)

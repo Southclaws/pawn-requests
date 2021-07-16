@@ -46,6 +46,7 @@ struct RequestData {
     std::string path;
     E_HTTP_METHOD method;
     E_CONTENT_TYPE requestType;
+    E_CONTENT_TYPE responseType;
     int headers;
     std::string bodyString;
     web::json::value bodyJson;
