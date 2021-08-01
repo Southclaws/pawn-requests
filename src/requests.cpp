@@ -1,4 +1,4 @@
-#include <set>
+#include <unordered_set>
 
 #include <amx/amx.h>
 #include <plugincommon.h>
@@ -55,7 +55,7 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     { 0, 0 }
 };
 
-std::set<AMX*> amx_List;
+std::unordered_set<AMX*> amx_List;
 
 PLUGIN_EXPORT unsigned int PLUGIN_CALL Supports()
 {
@@ -79,9 +79,7 @@ PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX* amx)
 
 PLUGIN_EXPORT void PLUGIN_CALL ProcessTick()
 {
-    for (AMX* i : amx_List) {
-        Natives::processTick(i);
-    }
+    Natives::processTick(amx_List);
 }
 
 PLUGIN_EXPORT int PLUGIN_CALL Unload()

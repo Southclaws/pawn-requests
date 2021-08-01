@@ -1,8 +1,8 @@
 #include <stack>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
@@ -85,7 +85,7 @@ struct WebSocketClientData {
 int headersCleanup(int id);
 int doRequest(int id, RequestData data);
 void doRequestWithClient(ClientData cd, RequestData requestData);
-void doRequestSync(ClientData cd, RequestData requestData, ResponseData& responseData);
+Impl::ResponseData doRequestSync(ClientData cd, RequestData requestData);
 web::http::method methodName(E_HTTP_METHOD id);
 void startWebSocketListener(WebSocketClientData wsc);
 

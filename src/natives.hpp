@@ -1,7 +1,7 @@
 #ifndef REQUESTS_NATIVES_H
 #define REQUESTS_NATIVES_H
 
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 
@@ -22,7 +22,7 @@ int WebSocketSend(AMX* amx, cell* params);
 int JsonWebSocketClient(AMX* amx, cell* params);
 int JsonWebSocketSend(AMX* amx, cell* params);
 
-void processTick(AMX* amx);
+void processTick(const std::unordered_set<AMX*>& amx);
 
 namespace JSON {
     int Parse(AMX* amx, cell* params);

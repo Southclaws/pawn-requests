@@ -89,8 +89,9 @@ int Impl::doRequest(int id, RequestData requestData)
     ClientData cd = clientsTable[id];
 
     try {
-        std::thread t(doRequestWithClient, cd, requestData);
-        t.detach();
+        pplx::create_task([cd, requestData]() { 
+            doRequestWithClient(cd, requestData); 
+        });
     } catch (std::exception e) {
         logprintf("ERROR: failed to dispatch request thread: '%s'", e.what());
         return -2;
@@ -102,13 +103,9 @@ int Impl::doRequest(int id, RequestData requestData)
 void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
 {
     ResponseData responseData;
-    responseData.amx = requestData.amx;
-    responseData.id = requestData.id;
-    responseData.callback = requestData.callback;
-    responseData.responseType = E_CONTENT_TYPE::empty;
 
     try {
-        doRequestSync(cd, requestData, responseData);
+        responseData = doRequestSync(cd, requestData);
     } catch (http::http_exception e) {
         logprintf("ERROR: HTTP error %s", e.what());
         responseData.callback = "OnRequestFailure";
@@ -132,14 +129,19 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
             responseData.status = 3;
         }
     }
-
     responseQueueLock.lock();
+    logprintf("Pushing response...");
     responseQueue.push(responseData);
     responseQueueLock.unlock();
 }
 
-void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& responseData)
+Impl::ResponseData Impl::doRequestSync(ClientData cd, RequestData requestData)
 {
+    ResponseData responseData;
+    responseData.amx = requestData.amx;
+    responseData.id = requestData.id;
+    responseData.callback = requestData.callback;
+    responseData.responseType = E_CONTENT_TYPE::empty;
     http_request request(methodName(requestData.method));
     for (auto h : cd.headers) {
         request.headers().add(
@@ -167,12 +169,15 @@ void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData& r
     }
     }
 
+    logprintf("Trying to get response...");
     http_response response = cd.client->request(request).get();
     std::string body = response.extract_utf8string().get();
 
     responseData.status = response.status_code();
     responseData.rawBody = body;
     responseData.responseType = requestData.responseType;
+
+    return responseData;
 }
 
 web::http::method Impl::methodName(E_HTTP_METHOD id)

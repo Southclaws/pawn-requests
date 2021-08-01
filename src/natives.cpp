@@ -55,19 +55,19 @@ int Natives::RequestJSON(AMX* amx, cell* params)
     return Impl::RequestJSON(amx, id, path, method, callback, obj, headers, response_type);
 }
 
-void Natives::processTick(AMX* amx)
+void Natives::processTick(const std::unordered_set<AMX*>& amxList)
 {
     std::vector<Impl::ResponseData> responses = Impl::gatherResponses();
-    for (auto response : responses) {
-        if (response.amx != amx) {
+    for (auto response : responses) 
+    {
+        if (amxList.find(response.amx) == amxList.end()) {
             continue;
         }
+        AMX* amx = response.amx;
 
         int error;
         int amx_idx;
         cell amx_addr;
-        cell amx_ret;
-        cell* phys_addr;
 
         error = amx_FindPublic(amx, response.callback.c_str(), &amx_idx);
         if (error != AMX_ERR_NONE) {
@@ -75,72 +75,77 @@ void Natives::processTick(AMX* amx)
             continue;
         }
 
-        switch (response.responseType) {
-        default: {
-            logprintf("ERROR: Invalid response object type: %d", response.responseType);
-            break;
-        }
-        case Impl::E_CONTENT_TYPE::empty: {
-            // (Request:id, errorCode, errorMessage[], len)
-            amx_Push(amx, response.rawBody.length());
-            amx_PushString(amx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
-            amx_Push(amx, response.status);
-            amx_Push(amx, response.id);
+        switch (response.responseType) 
+        {
+            default: {
+                logprintf("ERROR: Invalid response object type: %d", response.responseType);
+                break;
+            }
+            case Impl::E_CONTENT_TYPE::empty: {
+                // (Request:id, errorCode, errorMessage[], len)
+                amx_Push(amx, static_cast<cell>(response.rawBody.length()));
+                amx_PushString(amx, &amx_addr, nullptr, response.rawBody.c_str(), 0, 0);
+                amx_Push(amx, static_cast<cell>(response.status));
+                amx_Push(amx, static_cast<cell>(response.id));
 
-            amx_Exec(amx, &amx_ret, amx_idx);
-            amx_Release(amx, amx_addr);
+                amx_Exec(amx, nullptr, amx_idx);
+                amx_Release(amx, amx_addr);
 
-            break;
-        }
-
-        case Impl::E_CONTENT_TYPE::string: {
-            amx_Push(amx, response.rawBody.length());
-            amx_PushString(amx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
-
-            // signature is either
-            // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
-            // or:
-            // (WebSocket:id, data[], dataLen)
-            // depending on whether the response is from a websocket
-            if (!response.isWebSocket) {
-                amx_Push(amx, response.status);
+                break;
             }
 
-            amx_Push(amx, response.id);
+            case Impl::E_CONTENT_TYPE::string: 
+            {
+                // responseID, str, dataLen
+                amx_Push(amx, static_cast<cell>(response.rawBody.length()));
+                amx_PushString(amx, &amx_addr, nullptr, response.rawBody.c_str(), 0, 0);
 
-            amx_Exec(amx, &amx_ret, amx_idx);
-            amx_Release(amx, amx_addr);
+                // signature is either
+                // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
+                // or:
+                // (WebSocket:id, data[], dataLen)
+                // depending on whether the response is from a websocket
+                if (!response.isWebSocket) {
+                    amx_Push(amx,  static_cast<cell>(response.status));
+                }
 
-            break;
-        }
+                amx_Push(amx, static_cast<cell>(response.id));
 
-        case Impl::E_CONTENT_TYPE::json: {
-            cell id = -1;
-            try {
-                json::value* obj = new json::value;
-                *obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
-                id = JSON::Alloc(obj);
-            } catch (std::exception e) {
-                logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
+                amx_Exec(amx, nullptr, amx_idx);
+                amx_Release(amx, amx_addr);
+
+                break;
             }
 
-            amx_Push(amx, id);
-            // signature is either
-            // (Request:id, E_HTTP_STATUS:status, Node:node)
-            // or:
-            // (WebSocket:id, Node:node)
-            // depending on whether the response is from a websocket
-            if (!response.isWebSocket) {
-                amx_Push(amx, response.status);
+            case Impl::E_CONTENT_TYPE::json: 
+            {
+                cell id = -1;
+                try {
+                    json::value* obj = new json::value;
+                    *obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
+                    id = JSON::Alloc(obj);
+                } catch (std::exception e) {
+                    logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
+                }
+
+                amx_Push(amx, id);
+                // signature is either
+                // (Request:id, E_HTTP_STATUS:status, Node:node)
+                // or:
+                // (WebSocket:id, Node:node)
+                // depending on whether the response is from a websocket
+                if (!response.isWebSocket) {
+                    amx_Push(amx, static_cast<cell>(response.status));
+                }
+                amx_Push(amx, static_cast<cell>(response.id));
+
+                amx_Exec(amx, nullptr, amx_idx);
+
+                JSON::Erase(id);
+                break;
             }
-            amx_Push(amx, response.id);
-
-            amx_Exec(amx, &amx_ret, amx_idx);
-
-            JSON::Erase(id);
-            break;
         }
-        }
+        logprintf("Log: Response should have been sent. ");
     }
 }
 
