@@ -130,7 +130,6 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
         }
     }
     responseQueueLock.lock();
-    logprintf("Pushing response...");
     responseQueue.push(responseData);
     responseQueueLock.unlock();
 }
@@ -169,7 +168,6 @@ Impl::ResponseData Impl::doRequestSync(ClientData cd, RequestData requestData)
     }
     }
 
-    logprintf("Trying to get response...");
     http_response response = cd.client->request(request).get();
     std::string body = response.extract_utf8string().get();
 

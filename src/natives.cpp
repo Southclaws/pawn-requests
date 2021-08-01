@@ -145,7 +145,6 @@ void Natives::processTick(const std::unordered_set<AMX*>& amxList)
                 break;
             }
         }
-        logprintf("Log: Response should have been sent. ");
     }
 }
 
