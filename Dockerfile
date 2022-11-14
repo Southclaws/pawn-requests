@@ -1,5 +1,14 @@
-FROM maddinat0r/debian-samp
+FROM ubuntu:latest
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+WORKDIR /root
+
+RUN apt-get update && \
+    dpkg --add-architecture i386 && \
+    apt-get -qq update && \
+    apt-get -qq install -y g++-multilib git ca-certificates make wget git cmake
 
 # -
 # zlib
@@ -29,7 +38,7 @@ ENV OPENSSL_ROOT_DIR=/root/openssl-1.0.2o
 # -
 # Boost
 # -
-RUN wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz && \
+RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.67.0/source/boost_1_67_0.tar.gz && \
     tar -xzf boost_1_67_0.tar.gz
 RUN cd boost_1_67_0 && \
     ./bootstrap.sh && \
@@ -37,14 +46,13 @@ RUN cd boost_1_67_0 && \
     cd ..
 ENV BOOST_ROOT=/root/boost_1_67_0
 
-
 # -
 # cpprestsdk
 # -
 
 RUN git clone --recursive https://github.com/Microsoft/cpprestsdk.git casablanca
 RUN cd casablanca/Release && \
-    git checkout v2.10.8 && \
+    git checkout v2.10.18 && \
     mkdir build && \
     cd build && \
     cmake .. \
