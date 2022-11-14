@@ -1,9 +1,0 @@
-{
-  "gamemodes": ["test"],
-  "plugins": ["requests"],
-  "rcon_password": ";,JoTh856/:?",
-  "port": 7777,
-  "hostname": "test",
-  "maxplayers": 32,
-  "mode": "server"
-}

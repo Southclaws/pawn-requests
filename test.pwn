@@ -1,7 +1,7 @@
 #define RUN_TESTS
 
 #include <a_samp>
-#include <YSI\y_testing>
+#include <YSI_Core\y_testing>
 
 #include "requests.inc"
 
@@ -234,7 +234,7 @@ new WebSocket:WebSocketEcho_ID;
 Test:WebSocketEcho() {
     print("Connecting to WebSocket...");
     new start = GetTickCount();
-    WebSocketEcho_ID = WebSocketClient("wss://echo.websocket.org", "OnWebSocket");
+    WebSocketEcho_ID = WebSocketClient("wss://echo.websocket.events", "OnWebSocket");
     printf("Connected! Took %dms", GetTickCount() - start);
 
     start = GetTickCount();
@@ -691,7 +691,7 @@ Test:JsonGetInt() {
 
     new got;
     new ret;
-    
+
     ret = JsonGetInt(node, "key1", got);
     ASSERT(ret == 0);
     ASSERT(got == 1);
@@ -717,7 +717,7 @@ Test:JsonGetFloat() {
 
     new Float:got;
     new ret;
-    
+
     ret = JsonGetFloat(node, "key1", got);
     ASSERT(ret == 0);
     ASSERT(got == 1.5);
@@ -743,7 +743,7 @@ Test:JsonGetBool() {
 
     new bool:got;
     new ret;
-    
+
     ret = JsonGetBool(node, "key1", got);
     ASSERT(ret == 0);
     ASSERT(got == false);
@@ -769,7 +769,7 @@ Test:JsonGetString() {
 
     new got[128];
     new ret;
-    
+
     ret = JsonGetString(node, "key1", got);
     ASSERT(ret == 0);
     ASSERT(!strcmp(got, "value1"));

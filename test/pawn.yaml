@@ -1,0 +1,13 @@
+site: "Southclaws/pawn-requests"
+user: southclaws
+repo: pawn-requests
+tag: 0.9.0
+entry: ../test.pwn
+output: gamemodes/test.amx
+dependencies:
+  - pawn-lang/samp-stdlib
+  - pawn-lang/YSI-Includes@5.x
+local: true
+runtime:
+  plugins:
+    - requests.so
