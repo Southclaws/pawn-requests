@@ -24,7 +24,8 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(Boost_USE_STATIC_LIBS ON)
 
 if(UNIX)
-find_package(Boost 1.66 COMPONENTS system)
+find_package(Boost 1.67.0 COMPONENTS system)
+include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
 find_package(cpprestsdk REQUIRED)
