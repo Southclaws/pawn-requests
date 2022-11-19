@@ -7,3 +7,6 @@
 [submodule "src/plugin-natives"]
 	path = src/plugin-natives
 	url = https://github.com/Y-Less/plugin-natives
+[submodule "cmake-conan-original"]
+	path = lib/cmake-conan
+	url = https://github.com/conan-io/cmake-conan.git
