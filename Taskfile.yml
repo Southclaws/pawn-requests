@@ -1,0 +1,29 @@
+version: 3
+tasks:
+  default:
+    dir: build
+    cmds:
+      - cmake .. -DCMAKE_BUILD_TYPE=Debug
+      - make
+
+  build:release:
+    dir: build
+    cmds:
+      - cmake .. -DCMAKE_BUILD_TYPE=Release
+      - make
+
+  pkg:linux:
+    dir: releases/linux
+    cmds:
+      - mkdir -p {plugins,includes}
+      - cp ../../test/plugins/requests.so ./plugins/requests.so
+      - cp ../../*.inc ./includes
+      - 7z a -r ../pawn-requests-linux.zip *
+
+  pkg:windows:
+    dir: releases/windows
+    cmds:
+      - mkdir -p {plugins,includes}
+      - cp ../../test/plugins/requests.dll ./plugins/requests.dll
+      - cp ../../*.inc ./includes
+      - 7z a -r ../pawn-requests-windows.zip *

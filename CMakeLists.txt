@@ -1,33 +1,47 @@
-cmake_minimum_required(VERSION 3.0)
-
+cmake_minimum_required(VERSION 3.20)
 project(requests)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/cmake-modules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR};${CMAKE_SOURCE_DIR}/lib/cmake-modules")
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
-if(UNIX)
-	set(CMAKE_CXX_FLAGS "-m32")
-	set(CMAKE_C_FLAGS "-m32")
-	set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS OFF)
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.14/conan.cmake"
+                 "${CMAKE_BINARY_DIR}/conan.cmake")
+endif()
+
+include("${CMAKE_BINARY_DIR}/conan.cmake")
+
+if (UNIX)
+conan_cmake_run(REQUIRES cpprestsdk/2.10.18
+               BASIC_SETUP BUILD missing
+               SETTINGS arch=x86
+               SETTINGS compiler.libcxx=libstdc++11
+               SETTINGS compiler.cppstd=11)
+else()
+conan_cmake_run(REQUIRES cpprestsdk/2.10.18
+               BASIC_SETUP BUILD missing
+               SETTINGS arch=x86)
 endif()
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/test/plugins)
-set(CMAKE_BUILD_TYPE Release)
-set(BUILD_SHARED_LIBS 0)
 
-add_definitions(-D_NO_ASYNCRTIMP=1)
-set(BUILD_SAMPLES OFF)
-set(BUILD_TESTS OFF)
-set(WERROR OFF)
-set(VCPKG_TARGET_ARCHITECTURE x86)
-set(VCPKG_CRT_LINKAGE dynamic)
-set(VCPKG_LIBRARY_LINKAGE static)
-set(Boost_USE_STATIC_LIBS ON)
+if (MSVC)
+	# link runtime statically
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+elseif(UNIX)
+	# hide non-exported symbols
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32 -fvisibility=hidden")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32 -fvisibility=hidden")
+	set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS OFF)
 
-if(UNIX)
-find_package(Boost 1.67.0 COMPONENTS system)
-include_directories(${Boost_INCLUDE_DIRS})
+	# link runtime statically
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+	add_link_options(
+		"-static-libgcc"
+		"-static-libstdc++"
+	)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN'")
 endif()
-
-find_package(cpprestsdk REQUIRED)
 
 add_subdirectory(src)

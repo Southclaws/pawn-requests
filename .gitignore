@@ -49,4 +49,5 @@ build*/
 *.so
 *.o
 
-release-*/
+releases
+releases/*

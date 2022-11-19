@@ -1,3 +1,6 @@
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(NO_OUTPUT_DIRS)
+
 include(AMXConfig)
 include(AddSAMPPlugin)
 
@@ -21,8 +24,32 @@ add_samp_plugin(requests
 	plugin.def
 )
 
-target_link_libraries(requests cpprestsdk::cpprest)
+if(MSVC)
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+	target_compile_definitions(requests PRIVATE
+		_CRT_SECURE_NO_WARNINGS
+		NOMINMAX
+		_WIN32_WINNT=0x0600
+		_SCL_SECURE_NO_WARNINGS
+	)
 
-if(UNIX)
-target_link_libraries(requests ${Boost_LIBRARIES})
+	target_compile_options(requests PRIVATE
+		/W4
+		/permissive-
+	)
+
+	# also enable multi-processor compilation
+	target_compile_options(requests PRIVATE
+		/MP
+	)
 endif()
+
+if (MSVC)
+add_custom_command(
+    TARGET requests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+		${CMAKE_BINARY_DIR}/lib/requests.dll
+		${CMAKE_SOURCE_DIR}/test/plugins/requests.dll)
+endif()
+
+conan_target_link_libraries(requests)

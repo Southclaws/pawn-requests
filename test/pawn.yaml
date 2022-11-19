@@ -10,4 +10,4 @@ dependencies:
 local: true
 runtime:
   plugins:
-    - requests.so
+    - requests
