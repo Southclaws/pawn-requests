@@ -259,7 +259,7 @@ new JsonWebSocket:JsonWebSocketEcho_ID;
 Test:JsonWebSocketEcho() {
     print("Connecting to WebSocket...");
     new start = GetTickCount();
-    JsonWebSocketEcho_ID = JsonWebSocketClient("wss://echo.websocket.org", "OnJsonWebSocket");
+    JsonWebSocketEcho_ID = JsonWebSocketClient("wss://echo.websocket.events", "OnJsonWebSocket");
     printf("Connected! Took %dms", GetTickCount() - start);
 
     start = GetTickCount();

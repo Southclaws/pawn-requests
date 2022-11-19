@@ -9,5 +9,6 @@ dependencies:
   - pawn-lang/YSI-Includes@5.x
 local: true
 runtime:
+  mode: "y_testing"
   plugins:
     - requests
