@@ -12,17 +12,9 @@ endif()
 
 include("${CMAKE_BINARY_DIR}/conan.cmake")
 
-if (UNIX)
-conan_cmake_run(REQUIRES cpprestsdk/2.10.18
-               BASIC_SETUP BUILD missing
-               SETTINGS arch=x86
-               SETTINGS compiler.libcxx=libstdc++11
-               SETTINGS compiler.cppstd=11)
-else()
 conan_cmake_run(REQUIRES cpprestsdk/2.10.18
                BASIC_SETUP BUILD missing
                SETTINGS arch=x86)
-endif()
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/test/plugins)
 
