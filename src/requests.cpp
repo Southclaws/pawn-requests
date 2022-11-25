@@ -34,7 +34,7 @@ extern "C" AMX_NATIVE_INFO amx_Natives[] = {
     {"JsonSetFloat", Natives::JSON::SetFloat},
     {"JsonSetBool", Natives::JSON::SetBool},
     {"JsonSetString", Natives::JSON::SetString},
-    {"JsonGetObject", Natives::JSON::GetObject},
+    {"JsonGetObject", Natives::JSON::GetObjectAlt}, // renamed due to a msvc macro interfering
     {"JsonGetInt", Natives::JSON::GetInt},
     {"JsonGetFloat", Natives::JSON::GetFloat},
     {"JsonGetBool", Natives::JSON::GetBool},

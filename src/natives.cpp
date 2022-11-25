@@ -486,7 +486,7 @@ int Natives::JSON::SetString(AMX *amx, cell *params)
     return 0;
 }
 
-int Natives::JSON::GetObject(AMX *amx, cell *params)
+int Natives::JSON::GetObjectAlt(AMX *amx, cell *params)
 {
     web::json::value obj = Get(params[1]);
     if (obj == web::json::value::null())

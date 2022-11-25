@@ -42,7 +42,7 @@ namespace Natives
         int SetFloat(AMX *amx, cell *params);
         int SetBool(AMX *amx, cell *params);
         int SetString(AMX *amx, cell *params);
-        int GetObject(AMX *amx, cell *params);
+        int GetObjectAlt(AMX *amx, cell *params);
         int GetInt(AMX *amx, cell *params);
         int GetFloat(AMX *amx, cell *params);
         int GetBool(AMX *amx, cell *params);
