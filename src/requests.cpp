@@ -76,10 +76,7 @@ PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX *amx)
 
 PLUGIN_EXPORT void PLUGIN_CALL ProcessTick()
 {
-    for (AMX *i : amx_List)
-    {
-        Natives::processTick(i);
-    }
+    Natives::processTick(amx_List);
 }
 
 PLUGIN_EXPORT int PLUGIN_CALL Unload()

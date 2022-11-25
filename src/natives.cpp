@@ -57,14 +57,26 @@ int Natives::RequestJSON(AMX *amx, cell *params)
     return Impl::RequestJSON(amx, id, path, method, callback, obj, headers);
 }
 
-void Natives::processTick(AMX *amx)
+void Natives::processTick(std::set<AMX *> amx_List)
 {
     std::vector<Impl::ResponseData> responses = Impl::gatherResponses();
     for (auto response : responses)
     {
-        if (response.amx != amx)
+        AMX *currentAmx = nullptr;
+        for (AMX *amx : amx_List)
         {
-            continue;
+            if (amx != response.amx)
+            {
+                continue;
+            }
+
+            currentAmx = amx;
+            break;
+        }
+
+        if (currentAmx == nullptr)
+        {
+            return;
         }
 
         int error;
@@ -73,7 +85,7 @@ void Natives::processTick(AMX *amx)
         cell amx_ret;
         cell *phys_addr;
 
-        error = amx_FindPublic(amx, response.callback.c_str(), &amx_idx);
+        error = amx_FindPublic(currentAmx, response.callback.c_str(), &amx_idx);
         if (error != AMX_ERR_NONE)
         {
             logprintf("ERROR: failed to locate public function '%s' in amx, error: %d", response.callback.c_str(), error);
@@ -90,21 +102,21 @@ void Natives::processTick(AMX *amx)
         case Impl::E_CONTENT_TYPE::empty:
         {
             // (Request:id, errorCode, errorMessage[], len)
-            amx_Push(amx, response.rawBody.length());
-            amx_PushString(amx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
-            amx_Push(amx, response.status);
-            amx_Push(amx, response.id);
+            amx_Push(currentAmx, response.rawBody.length());
+            amx_PushString(currentAmx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
+            amx_Push(currentAmx, response.status);
+            amx_Push(currentAmx, response.id);
 
-            amx_Exec(amx, &amx_ret, amx_idx);
-            amx_Release(amx, amx_addr);
+            amx_Exec(currentAmx, &amx_ret, amx_idx);
+            amx_Release(currentAmx, amx_addr);
 
             break;
         }
 
         case Impl::E_CONTENT_TYPE::string:
         {
-            amx_Push(amx, response.rawBody.length());
-            amx_PushString(amx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
+            amx_Push(currentAmx, response.rawBody.length());
+            amx_PushString(currentAmx, &amx_addr, &phys_addr, response.rawBody.c_str(), 0, 0);
 
             // signature is either
             // (Request:id, E_HTTP_STATUS:status, data[], dataLen)
@@ -113,13 +125,13 @@ void Natives::processTick(AMX *amx)
             // depending on whether the response is from a websocket
             if (!response.isWebSocket)
             {
-                amx_Push(amx, response.status);
+                amx_Push(currentAmx, response.status);
             }
 
-            amx_Push(amx, response.id);
+            amx_Push(currentAmx, response.id);
 
-            amx_Exec(amx, &amx_ret, amx_idx);
-            amx_Release(amx, amx_addr);
+            amx_Exec(currentAmx, &amx_ret, amx_idx);
+            amx_Release(currentAmx, amx_addr);
 
             break;
         }
@@ -138,7 +150,7 @@ void Natives::processTick(AMX *amx)
                 logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
             }
 
-            amx_Push(amx, id);
+            amx_Push(currentAmx, id);
             // signature is either
             // (Request:id, E_HTTP_STATUS:status, Node:node)
             // or:
@@ -146,11 +158,11 @@ void Natives::processTick(AMX *amx)
             // depending on whether the response is from a websocket
             if (!response.isWebSocket)
             {
-                amx_Push(amx, response.status);
+                amx_Push(currentAmx, response.status);
             }
-            amx_Push(amx, response.id);
+            amx_Push(currentAmx, response.id);
 
-            amx_Exec(amx, &amx_ret, amx_idx);
+            amx_Exec(currentAmx, &amx_ret, amx_idx);
 
             JSON::Erase(id);
             break;

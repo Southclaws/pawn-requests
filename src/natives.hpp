@@ -22,7 +22,7 @@ namespace Natives
     int JsonWebSocketClient(AMX *amx, cell *params);
     int JsonWebSocketSend(AMX *amx, cell *params);
 
-    void processTick(AMX *amx);
+    void processTick(std::set<AMX *> amx_List);
 
     namespace JSON
     {
