@@ -10,7 +10,7 @@ tasks:
     dir: build
     cmds:
       - cmake .. -DCMAKE_BUILD_TYPE=Release
-      - make
+      - cmake --build . --config Release
 
   pkg:linux:
     dir: releases/linux
@@ -27,3 +27,13 @@ tasks:
       - cp ../../test/plugins/requests.dll ./plugins/requests.dll
       - cp ../../*.inc ./includes
       - 7z a -r ../pawn-requests-windows.zip *
+
+  docker:linux:
+    cmds:
+      - rm -rf build
+      - docker build --no-cache -t southclaws/requests-build .
+      - docker run \
+          -v $(shell pwd):/build \
+          southclaws/requests-build
+    env:
+      DOCKER_BUILDKIT: 1
