@@ -332,16 +332,15 @@ int Impl::JsonWebSocketSend(int id, web::json::value json)
     try
     {
         wsc = websocketClientsTable[id];
+        websocket_outgoing_message msg;
+        msg.set_utf8_message(utility::conversions::to_utf8string(json.serialize()));
+        wsc.client->send(msg);
     }
     catch (std::exception e)
     {
+        logprintf("ERROR: JsonWebSocketSend failed: %s", e.what());
         return -1;
     }
-
-    websocket_outgoing_message msg;
-    msg.set_utf8_message(utility::conversions::to_utf8string(json.serialize()));
-    wsc.client->send(msg);
-
     return 0;
 }
 
