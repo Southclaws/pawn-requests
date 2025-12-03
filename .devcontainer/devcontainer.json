@@ -1,0 +1,28 @@
+{
+  "name": "pawn-requests",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "vscode",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "root",
+  "overrideCommand": true,
+  "mounts": [
+    "source=../,target=/workspace,type=bind",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "containerEnv": {
+    "EARTHLY_DISABLE_ANALYTICS": "1"
+  },
+  "postCreateCommand": "~/.ssh.sh && conan profile new default --detect --force || true",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-azuretools.vscode-docker",
+        "earthly.earthfile-syntax-highlighting",
+        "github.copilot"
+      ]
+    }
+  }
+}
