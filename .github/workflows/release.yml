@@ -52,6 +52,16 @@ jobs:
         run: conan profile new default --detect --force
       - name: Force MSVC toolset
         run: conan profile update settings.compiler.version=194 default
+      - name: Ensure MSVC v14.3 alias
+        shell: pwsh
+        run: |
+          $toolsRoot = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC"
+          $target = Get-ChildItem $toolsRoot | Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $target) { throw "Could not locate MSVC toolset under $toolsRoot" }
+          $alias = Join-Path $toolsRoot "14.3"
+          if (-not (Test-Path $alias)) {
+            New-Item -ItemType Junction -Path $alias -Target $target.FullName | Out-Null
+          }
       - name: Configure CMake
         run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -T v143 -DCONAN_DISABLE_CHECK_COMPILER=ON
       - name: Build
