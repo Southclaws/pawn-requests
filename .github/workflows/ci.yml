@@ -62,7 +62,10 @@ jobs:
         run: |
           $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
           if (-not (Test-Path $vswhere)) { throw "vswhere.exe not found at $vswhere" }
-          $vsPath = & $vswhere -latest -products * -requires Microsoft.Component.MSVC.v143.x86.x64 -property installationPath
+          $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vsPath) {
+            $vsPath = & $vswhere -latest -products * -property installationPath
+          }
           if (-not $vsPath) { throw "Unable to locate Visual Studio installation via vswhere" }
           $toolsRoot = Join-Path $vsPath "VC\Tools\MSVC"
           $target = Get-ChildItem $toolsRoot | Sort-Object Name -Descending | Select-Object -First 1
