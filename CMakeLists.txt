@@ -4,19 +4,13 @@ project(requests)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR};${CMAKE_SOURCE_DIR}/lib/cmake-modules")
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
-set(CONAN_CMAKE_SOURCE "${CMAKE_SOURCE_DIR}/lib/cmake-conan/conan.cmake")
-set(CONAN_CMAKE_BINARY "${CMAKE_BINARY_DIR}/conan.cmake")
-if(EXISTS "${CONAN_CMAKE_SOURCE}")
-	configure_file("${CONAN_CMAKE_SOURCE}" "${CONAN_CMAKE_BINARY}" COPYONLY)
-else()
-	if(NOT EXISTS "${CONAN_CMAKE_BINARY}")
-		message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-		file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.14/conan.cmake"
-						  "${CONAN_CMAKE_BINARY}")
-	endif()
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+	message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+	file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.14/conan.cmake"
+					  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
-include("${CONAN_CMAKE_BINARY}")
+include("${CMAKE_BINARY_DIR}/conan.cmake")
 
 conan_cmake_run(REQUIRES cpprestsdk/2.10.18
                BASIC_SETUP BUILD missing
