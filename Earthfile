@@ -41,7 +41,7 @@ package:
     WORKDIR /src/releases/linux_package
     RUN 7z a ../pawn-requests-linux.zip ./includes ./plugins
     WORKDIR /src
-    SAVE ARTIFACT releases/pawn-requests-linux.zip AS pawn-requests-linux.zip
+    SAVE ARTIFACT releases/pawn-requests-linux.zip
     SAVE ARTIFACT releases/pawn-requests-linux.zip AS LOCAL releases/pawn-requests-linux.zip
 
 release:
