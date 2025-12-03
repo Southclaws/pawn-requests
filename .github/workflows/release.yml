@@ -46,6 +46,8 @@ jobs:
         run: pip install "conan<2"
       - name: Configure Conan profile
         run: conan profile new default --detect --force
+      - name: Force MSVC toolset
+        run: conan profile update settings.compiler.version=193 default
       - name: Configure CMake
         run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -T v143 -DCONAN_DISABLE_CHECK_COMPILER=ON
       - name: Build
