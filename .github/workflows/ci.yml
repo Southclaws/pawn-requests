@@ -24,7 +24,7 @@ jobs:
         with:
           version: latest
       - name: Build and package
-        run: earthly --ci +release
+        run: earthly --ci --artifact +package/pawn-requests-linux.zip releases/pawn-requests-linux.zip
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
