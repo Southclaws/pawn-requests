@@ -37,6 +37,8 @@ jobs:
     env:
       CONAN_VCVARS_VER: "14.4"
       VCVARS_VER: "14.4"
+      CONAN_REQUEST_TIMEOUT: "600"
+      CONAN_RETRY: "5"
     permissions:
       contents: read
     steps:
