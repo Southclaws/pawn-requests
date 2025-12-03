@@ -1,6 +1,8 @@
+#include <mutex>
 #include <stack>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -52,7 +54,7 @@ namespace Impl
         std::string path;
         E_HTTP_METHOD method;
         E_CONTENT_TYPE requestType;
-        int headers;
+        std::vector<std::pair<std::string, std::string>> extraHeaders;
         std::string bodyString;
         web::json::value bodyJson;
     };
@@ -69,12 +71,12 @@ namespace Impl
 
     int RequestsClient(std::string endpoint, int headers);
     int RequestHeaders(std::vector<std::pair<std::string, std::string>> headers);
-    int Request(AMX *amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, char *data, int headers);
+    int Request(AMX *amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, const std::string &data, int headers);
     int RequestJSON(AMX *amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, web::json::value json, int headers);
 
-    int WebSocketClient(std::string address, std::string callback);
+    int WebSocketClient(AMX *amx, std::string address, std::string callback);
     int WebSocketSend(int id, std::string data);
-    int JsonWebSocketClient(std::string address, std::string callback);
+    int JsonWebSocketClient(AMX *amx, std::string address, std::string callback);
     int JsonWebSocketSend(int id, web::json::value json);
 
     struct ClientData
@@ -89,13 +91,14 @@ namespace Impl
         std::string address;
         std::string callback;
         bool isJson;
+        AMX *amx;
     };
     int headersCleanup(int id);
     int doRequest(int id, RequestData data);
     void doRequestWithClient(ClientData cd, RequestData requestData);
     void doRequestSync(ClientData cd, RequestData requestData, ResponseData &responseData);
     web::http::method methodName(E_HTTP_METHOD id);
-    void startWebSocketListener(WebSocketClientData wsc);
+    void startWebSocketListener(WebSocketClientData &wsc);
 
     extern int requestCounter;
     extern std::stack<ResponseData> responseQueue;

@@ -1,5 +1,8 @@
 #include "impl.hpp"
 
+#include <cstdlib>
+#include <openssl/err.h>
+
 int Impl::requestCounter = 0;
 
 std::stack<Impl::ResponseData> Impl::responseQueue;
@@ -14,9 +17,65 @@ int Impl::headersTableCounter = 0;
 std::unordered_map<int, Impl::WebSocketClientData> Impl::websocketClientsTable;
 int Impl::websocketClientsTableCounter = 0;
 
+namespace
+{
+    bool isSslLoggingEnabled()
+    {
+        static const bool enabled = []() {
+            const char *env = std::getenv("PAWN_REQUESTS_LOG_SSL");
+            if (env == nullptr || env[0] == '\0')
+            {
+                return false;
+            }
+            const char first = env[0];
+            return !(first == '0' || first == 'f' || first == 'F' || first == 'n' || first == 'N');
+        }();
+        return enabled;
+    }
+
+    std::vector<std::pair<std::string, std::string>> copyHeadersForId(int headersId)
+    {
+        if (headersId < 0)
+        {
+            return {};
+        }
+
+        auto it = Impl::headersTable.find(headersId);
+        if (it == Impl::headersTable.end())
+        {
+            logprintf("WARN: headers handle %d does not exist", headersId);
+            return {};
+        }
+
+        return it->second;
+    }
+
+    void logOpenSslErrors(const char *context)
+    {
+        if (!isSslLoggingEnabled())
+        {
+            while (ERR_get_error() != 0)
+            {
+            }
+            return;
+        }
+
+        unsigned long err = ERR_get_error();
+        while (err != 0)
+        {
+            char buffer[256];
+            ERR_error_string_n(err, buffer, sizeof(buffer));
+            logprintf("ERROR: %s: OpenSSL error: %s", context, buffer);
+            err = ERR_get_error();
+        }
+    }
+
+}
+
 int Impl::RequestsClient(std::string endpoint, int headers)
 {
     int id = clientsTableCounter++;
+    auto clientHeaders = copyHeadersForId(headers);
     try
     {
         http_client_config config;
@@ -24,10 +83,13 @@ int Impl::RequestsClient(std::string endpoint, int headers)
         // TODO: in the future allow the user to specify options to configure
         // TODO: the client with
         config.set_ssl_context_callback([](boost::asio::ssl::context &ctx)
-                                        { ctx.load_verify_file("/etc/ssl/certs/ca-certificates.crt"); });
+                                        {
+                                            ctx.set_default_verify_paths();
+                                            ctx.load_verify_file("/etc/ssl/certs/ca-certificates.crt");
+                                        });
 #endif
         http_client *client = new http_client(utility::conversions::to_string_t(endpoint), config);
-        clientsTable[id] = {client, headersTable[headers]};
+        clientsTable[id] = {client, clientHeaders};
     }
     catch (std::exception &e)
     {
@@ -44,7 +106,7 @@ int Impl::RequestHeaders(std::vector<std::pair<std::string, std::string>> header
     return id;
 }
 
-int Impl::Request(AMX *amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, char *data, int headers)
+int Impl::Request(AMX *amx, int id, std::string path, E_HTTP_METHOD method, std::string callback, const std::string &data, int headers)
 {
     RequestData requestData;
     requestData.amx = amx;
@@ -53,7 +115,7 @@ int Impl::Request(AMX *amx, int id, std::string path, E_HTTP_METHOD method, std:
     requestData.path = path;
     requestData.method = method;
     requestData.requestType = E_CONTENT_TYPE::string;
-    requestData.headers = headers;
+    requestData.extraHeaders = copyHeadersForId(headers);
     requestData.bodyString = data;
 
     int ret = doRequest(id, requestData);
@@ -73,7 +135,7 @@ int Impl::RequestJSON(AMX *amx, int id, std::string path, E_HTTP_METHOD method, 
     requestData.path = path;
     requestData.method = method;
     requestData.requestType = E_CONTENT_TYPE::json;
-    requestData.headers = headers;
+    requestData.extraHeaders = copyHeadersForId(headers);
     requestData.bodyJson = json;
 
     int ret = doRequest(id, requestData);
@@ -158,9 +220,10 @@ void Impl::doRequestWithClient(ClientData cd, RequestData requestData)
         }
     }
 
-    responseQueueLock.lock();
-    responseQueue.push(responseData);
-    responseQueueLock.unlock();
+    {
+        std::lock_guard<std::mutex> lock(responseQueueLock);
+        responseQueue.push(responseData);
+    }
 }
 
 void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData &responseData)
@@ -172,7 +235,7 @@ void Impl::doRequestSync(ClientData cd, RequestData requestData, ResponseData &r
             utility::conversions::to_string_t(h.first),
             utility::conversions::to_string_t(h.second));
     }
-    for (auto h : headersTable[requestData.headers])
+    for (auto h : requestData.extraHeaders)
     {
         request.headers().add(
             utility::conversions::to_string_t(h.first),
@@ -252,14 +315,17 @@ std::vector<Impl::ResponseData> Impl::gatherResponses()
     return tasks;
 }
 
-int Impl::WebSocketClient(std::string address, std::string callback)
+int Impl::WebSocketClient(AMX *amx, std::string address, std::string callback)
 {
     int id = websocketClientsTableCounter++;
 
     websocket_client_config wcc;
 #ifndef _WIN32
     wcc.set_ssl_context_callback([](boost::asio::ssl::context &ctx)
-                                 { ctx.load_verify_file("/etc/ssl/certs/ca-certificates.crt"); });
+                                 {
+                                     ctx.set_default_verify_paths();
+                                     ctx.load_verify_file("/etc/ssl/certs/ca-certificates.crt");
+                                 });
 #endif
     websocket_callback_client *client = new websocket_callback_client(wcc);
     if (client == nullptr)
@@ -267,15 +333,17 @@ int Impl::WebSocketClient(std::string address, std::string callback)
         return -1;
     }
 
-    WebSocketClientData wsc = {id, client, address, callback, false};
+    WebSocketClientData wsc = {id, client, address, callback, false, amx};
     websocketClientsTable[id] = wsc;
+    auto &entry = websocketClientsTable[id];
     try
     {
-        startWebSocketListener(wsc);
+        startWebSocketListener(entry);
     }
     catch (std::exception &e)
     {
         logprintf("ERROR: WebSocketClient failed: %s", e.what());
+        logOpenSslErrors("WebSocketClient");
         return -1;
     }
 
@@ -284,42 +352,57 @@ int Impl::WebSocketClient(std::string address, std::string callback)
 
 int Impl::WebSocketSend(int id, std::string data)
 {
-    WebSocketClientData wsc;
-    try
+    auto it = websocketClientsTable.find(id);
+    if (it == websocketClientsTable.end() || it->second.client == nullptr)
     {
-        wsc = websocketClientsTable[id];
-    }
-    catch (std::exception e)
-    {
+        logprintf("ERROR: WebSocketSend failed, invalid client id %d", id);
         return -1;
     }
 
-    websocket_outgoing_message msg;
-    msg.set_utf8_message(data);
-    wsc.client->send(msg);
+    try
+    {
+        websocket_outgoing_message msg;
+        msg.set_utf8_message(data);
+        it->second.client->send(msg);
+    }
+    catch (const std::exception &e)
+    {
+        logprintf("ERROR: WebSocketSend failed: %s", e.what());
+        return -1;
+    }
 
     return 0;
 }
 
-int Impl::JsonWebSocketClient(std::string address, std::string callback)
+int Impl::JsonWebSocketClient(AMX *amx, std::string address, std::string callback)
 {
     int id = websocketClientsTableCounter++;
 
-    websocket_callback_client *client = new websocket_callback_client();
+    websocket_client_config wcc;
+#ifndef _WIN32
+    wcc.set_ssl_context_callback([](boost::asio::ssl::context &ctx)
+                                 {
+                                     ctx.set_default_verify_paths();
+                                     ctx.load_verify_file("/etc/ssl/certs/ca-certificates.crt");
+                                 });
+#endif
+    websocket_callback_client *client = new websocket_callback_client(wcc);
     if (client == nullptr)
     {
         return -1;
     }
 
-    WebSocketClientData wsc = {id, client, address, callback, true};
+    WebSocketClientData wsc = {id, client, address, callback, true, amx};
     websocketClientsTable[id] = wsc;
+    auto &entry = websocketClientsTable[id];
     try
     {
-        startWebSocketListener(wsc);
+        startWebSocketListener(entry);
     }
     catch (std::exception &e)
     {
         logprintf("ERROR: JsonWebSocketClient failed: %s", e.what());
+        logOpenSslErrors("JsonWebSocketClient");
         return -1;
     }
 
@@ -328,15 +411,20 @@ int Impl::JsonWebSocketClient(std::string address, std::string callback)
 
 int Impl::JsonWebSocketSend(int id, web::json::value json)
 {
-    WebSocketClientData wsc;
+    auto it = websocketClientsTable.find(id);
+    if (it == websocketClientsTable.end() || it->second.client == nullptr)
+    {
+        logprintf("ERROR: JsonWebSocketSend failed, invalid client id %d", id);
+        return -1;
+    }
+
     try
     {
-        wsc = websocketClientsTable[id];
         websocket_outgoing_message msg;
         msg.set_utf8_message(utility::conversions::to_utf8string(json.serialize()));
-        wsc.client->send(msg);
+        it->second.client->send(msg);
     }
-    catch (std::exception e)
+    catch (const std::exception &e)
     {
         logprintf("ERROR: JsonWebSocketSend failed: %s", e.what());
         return -1;
@@ -344,22 +432,39 @@ int Impl::JsonWebSocketSend(int id, web::json::value json)
     return 0;
 }
 
-void Impl::startWebSocketListener(WebSocketClientData wsc)
+void Impl::startWebSocketListener(WebSocketClientData &wsc)
 {
     wsc.client->set_message_handler([wsc](const websocket_incoming_message &msg) -> void
                                     {
         std::string raw = msg.extract_string().get();
 
         ResponseData responseData;
+        responseData.amx = wsc.amx;
         responseData.id = wsc.id;
         responseData.callback = wsc.callback;
         responseData.rawBody = raw;
         responseData.responseType = wsc.isJson ? E_CONTENT_TYPE::json : E_CONTENT_TYPE::string;
         responseData.isWebSocket = true;
 
-        responseQueueLock.lock();
-        responseQueue.push(responseData);
-        responseQueueLock.unlock(); });
+        {
+            std::lock_guard<std::mutex> lock(responseQueueLock);
+            responseQueue.push(responseData);
+        } });
+
+    wsc.client->set_close_handler([id = wsc.id](websocket_close_status status, const utility::string_t &reason, const std::error_code &error)
+                                  {
+                                      if (!error)
+                                      {
+                                          return;
+                                      }
+                                      auto reasonUtf8 = utility::conversions::to_utf8string(reason);
+                                      logprintf("WARN: WebSocket %d closed during status %d, reason '%s', error %d (%s)",
+                                                id,
+                                                static_cast<int>(status),
+                                                reasonUtf8.c_str(),
+                                                error.value(),
+                                                error.message().c_str());
+                                  });
 
     wsc.client->connect(utility::conversions::to_string_t(wsc.address)).wait();
 }

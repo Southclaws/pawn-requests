@@ -37,9 +37,7 @@ int Natives::Request(AMX *amx, cell *params)
     std::string path = amx_GetCppString(amx, params[2]);
     Impl::E_HTTP_METHOD method = static_cast<Impl::E_HTTP_METHOD>(params[3]);
     std::string callback = amx_GetCppString(amx, params[4]);
-    char *data;
-    amx_GetCString(amx, params[5], data);
-    // std::string data = amx_GetCppString(amx, params[6]);
+    std::string data = amx_GetCppString(amx, params[5]);
     int headers = params[6];
 
     return Impl::Request(amx, id, path, method, callback, data, headers);
@@ -76,7 +74,8 @@ void Natives::processTick(std::set<AMX *> amx_List)
 
         if (currentAmx == nullptr)
         {
-            return;
+            logprintf("WARN: received response for unknown AMX instance, dropping");
+            continue;
         }
 
         int error;
@@ -175,7 +174,7 @@ int Natives::WebSocketClient(AMX *amx, cell *params)
 {
     std::string address = amx_GetCppString(amx, params[1]);
     std::string callback = amx_GetCppString(amx, params[2]);
-    return Impl::WebSocketClient(address, callback);
+    return Impl::WebSocketClient(amx, address, callback);
 }
 
 int Natives::WebSocketSend(AMX *amx, cell *params)
@@ -189,7 +188,7 @@ int Natives::JsonWebSocketClient(AMX *amx, cell *params)
 {
     std::string address = amx_GetCppString(amx, params[1]);
     std::string callback = amx_GetCppString(amx, params[2]);
-    return Impl::JsonWebSocketClient(address, callback);
+    return Impl::JsonWebSocketClient(amx, address, callback);
 }
 
 int Natives::JsonWebSocketSend(AMX *amx, cell *params)
@@ -216,6 +215,7 @@ int Natives::JSON::Parse(AMX *amx, cell *params)
     }
     catch (std::exception &e)
     {
+        delete obj;
         logprintf("ERROR: JsonParse failed with: %s", e.what());
         return 1;
     }
@@ -499,10 +499,19 @@ int Natives::JSON::GetObjectAlt(AMX *amx, cell *params)
     web::json::value *result = new web::json::value();
     try
     {
-        *result = obj.as_object()[utility::conversions::to_string_t(key)];
+        auto &object = obj.as_object();
+        utility::string_t nativeKey = utility::conversions::to_string_t(key);
+        auto it = object.find(nativeKey);
+        if (it == object.end())
+        {
+            delete result;
+            return 2;
+        }
+        *result = it->second;
     }
     catch (...)
     {
+        delete result;
         return 2;
     }
     cell id = Alloc(result);
