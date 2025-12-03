@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set up Earthly
+        uses: earthly/actions/setup-earthly@v1
+        with:
+          version: latest
+      - name: Build Linux release
+        run: earthly --ci +release
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pawn-requests-linux
+          path: releases/pawn-requests-linux.zip
+
+  windows-build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Conan
+        run: pip install "conan<2"
+      - name: Configure Conan profile
+        run: conan profile new default --detect --force
+      - name: Configure CMake
+        run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package Windows release
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force releases -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path releases/windows/plugins -Force | Out-Null
+          New-Item -ItemType Directory -Path releases/windows/includes -Force | Out-Null
+          Copy-Item test/plugins/requests.dll releases/windows/plugins/requests.dll
+          Copy-Item *.inc releases/windows/includes/
+          Push-Location releases/windows
+          Compress-Archive -Path plugins,includes -DestinationPath ../pawn-requests-windows.zip -Force
+          Pop-Location
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pawn-requests-windows
+          path: releases/pawn-requests-windows.zip
+
+  publish:
+    runs-on: ubuntu-22.04
+    needs:
+      - linux-build
+      - windows-build
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pawn-requests-linux
+          path: releases
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pawn-requests-windows
+          path: releases
+      - name: Generate changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          if [ -z "$PREVIOUS_TAG" ]; then
+            git log --pretty=format:'* %s (%h)' > CHANGELOG.md
+          else
+            git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'* %s (%h)' > CHANGELOG.md
+          fi
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            releases/pawn-requests-linux.zip
+            releases/pawn-requests-windows.zip
+          body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
