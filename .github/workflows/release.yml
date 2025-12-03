@@ -45,7 +45,7 @@ jobs:
       - name: Configure Conan profile
         run: conan profile new default --detect --force
       - name: Configure CMake
-        run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -T v143
       - name: Build
         run: cmake --build build --config Release
       - name: Package Windows release
