@@ -34,6 +34,8 @@ jobs:
   windows:
     name: Build (Windows)
     runs-on: windows-latest
+    env:
+      CONAN_VCVARS_VER: "14.4"
     permissions:
       contents: read
     steps:
