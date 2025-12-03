@@ -234,7 +234,7 @@ new WebSocket:WebSocketEcho_ID;
 Test:WebSocketEcho() {
     print("Connecting to WebSocket...");
     new start = GetTickCount();
-    WebSocketEcho_ID = WebSocketClient("wss://echo.websocket.events", "OnWebSocket");
+    WebSocketEcho_ID = WebSocketClient("wss://ws.postman-echo.com/raw", "OnWebSocket");
     printf("Connected! Took %dms", GetTickCount() - start);
 
     start = GetTickCount();
@@ -259,7 +259,7 @@ new JsonWebSocket:JsonWebSocketEcho_ID;
 Test:JsonWebSocketEcho() {
     print("Connecting to WebSocket...");
     new start = GetTickCount();
-    JsonWebSocketEcho_ID = JsonWebSocketClient("wss://echo.websocket.events", "OnJsonWebSocket");
+    JsonWebSocketEcho_ID = JsonWebSocketClient("wss://ws.postman-echo.com/raw", "OnJsonWebSocket");
     printf("Connected! Took %dms", GetTickCount() - start);
 
     start = GetTickCount();
