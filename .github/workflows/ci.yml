@@ -83,9 +83,9 @@ jobs:
             New-Item -ItemType Junction -Path $alias -Target $target.FullName | Out-Null
           }
       - name: Configure CMake
-        run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -T v143 -DCONAN_DISABLE_CHECK_COMPILER=ON
+        run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=RelWithDebInfo -T v143 -DCONAN_DISABLE_CHECK_COMPILER=ON
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config RelWithDebInfo
       - name: Package Windows artifact
         shell: pwsh
         run: |
@@ -93,6 +93,7 @@ jobs:
           New-Item -ItemType Directory -Path releases/windows/plugins -Force | Out-Null
           New-Item -ItemType Directory -Path releases/windows/includes -Force | Out-Null
           Copy-Item test/plugins/requests.dll releases/windows/plugins/requests.dll
+          Copy-Item test/plugins/requests.pdb releases/windows/plugins/requests.pdb
           Copy-Item *.inc releases/windows/includes/
           Push-Location releases/windows
           Compress-Archive -Path plugins,includes -DestinationPath ../pawn-requests-windows.zip -Force
