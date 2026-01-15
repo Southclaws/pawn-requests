@@ -434,37 +434,76 @@ int Impl::JsonWebSocketSend(int id, web::json::value json)
 
 void Impl::startWebSocketListener(WebSocketClientData &wsc)
 {
-    wsc.client->set_message_handler([wsc](const websocket_incoming_message &msg) -> void
-                                    {
-        std::string raw = msg.extract_string().get();
+    const int id = wsc.id;
+    const bool isJson = wsc.isJson;
+    const std::string callback = wsc.callback;
+    AMX *const amx = wsc.amx;
+
+    wsc.client->set_message_handler([id, isJson, callback, amx](const websocket_incoming_message &msg) -> void {
+        std::string raw;
+        try
+        {
+            raw = msg.extract_string().get();
+        }
+        catch (const std::exception &e)
+        {
+            logprintf("ERROR: WebSocket %d message extract failed: %s", id, e.what());
+            return;
+        }
 
         ResponseData responseData;
-        responseData.amx = wsc.amx;
-        responseData.id = wsc.id;
-        responseData.callback = wsc.callback;
+        responseData.amx = amx;
+        responseData.id = id;
+        responseData.callback = callback;
         responseData.rawBody = raw;
-        responseData.responseType = wsc.isJson ? E_CONTENT_TYPE::json : E_CONTENT_TYPE::string;
+        responseData.responseType = isJson ? E_CONTENT_TYPE::json : E_CONTENT_TYPE::string;
         responseData.isWebSocket = true;
 
-        {
-            std::lock_guard<std::mutex> lock(responseQueueLock);
-            responseQueue.push(responseData);
-        } });
+        std::lock_guard<std::mutex> lock(responseQueueLock);
+        responseQueue.push(responseData);
+    });
 
-    wsc.client->set_close_handler([id = wsc.id](websocket_close_status status, const utility::string_t &reason, const std::error_code &error)
-                                  {
-                                      if (!error)
-                                      {
-                                          return;
-                                      }
-                                      auto reasonUtf8 = utility::conversions::to_utf8string(reason);
-                                      logprintf("WARN: WebSocket %d closed during status %d, reason '%s', error %d (%s)",
-                                                id,
-                                                static_cast<int>(status),
-                                                reasonUtf8.c_str(),
-                                                error.value(),
-                                                error.message().c_str());
-                                  });
+    wsc.client->set_close_handler([id, isJson, amx](websocket_close_status status, const utility::string_t &reason, const std::error_code &error) {
+        try
+        {
+            const auto reasonUtf8 = utility::conversions::to_utf8string(reason);
+
+            int amx_idx;
+            int findError = amx_FindPublic(amx, "OnWebSocketDisconnect", &amx_idx);
+            if (findError == AMX_ERR_NONE)
+            {
+                cell amx_addr;
+                cell amx_ret;
+                cell *phys_addr;
+
+                // (WebSocket:ws, bool:isJson, status, reason[], reasonLen, errorCode)
+                amx_Push(amx, error.value());
+                amx_Push(amx, reasonUtf8.length());
+                amx_PushString(amx, &amx_addr, &phys_addr, reasonUtf8.c_str(), 0, 0);
+                amx_Push(amx, static_cast<int>(status));
+                amx_Push(amx, isJson ? 1 : 0);
+                amx_Push(amx, id);
+
+                amx_Exec(amx, &amx_ret, amx_idx);
+                amx_Release(amx, amx_addr);
+            }
+
+            auto it = websocketClientsTable.find(id);
+            if (it != websocketClientsTable.end())
+            {
+                delete it->second.client;
+                it->second.client = nullptr;
+            }
+        }
+        catch (const std::exception &e)
+        {
+            logprintf("ERROR: WebSocket %d close handler threw: %s", id, e.what());
+        }
+        catch (...)
+        {
+            logprintf("ERROR: WebSocket %d close handler threw unknown exception", id);
+        }
+    });
 
     wsc.client->connect(utility::conversions::to_string_t(wsc.address)).wait();
 }

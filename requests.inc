@@ -19,6 +19,8 @@
 
 // OnRequestFailure is only called when there is some internal failure/exception
 forward OnRequestFailure(Request:id, errorCode, errorMessage[], len);
+// OnWebSocketDisconnect is called when any websocket (string or JSON) closes.
+forward OnWebSocketDisconnect(WebSocket:ws, bool:isJson, status, reason[], reasonLen, errorCode);
 
 // RequestsClient initialises a new Requests client with an endpoint. The endpoint
 // must include a scheme (http or https) and must not contain a path. Any
