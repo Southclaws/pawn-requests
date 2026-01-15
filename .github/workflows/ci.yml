@@ -39,7 +39,8 @@ jobs:
       VCVARS_VER: "14.4"
       VSCMD_ARG_VCVARS_VER: "14.4"
       CONAN_REQUEST_TIMEOUT: "600"
-      CONAN_RETRY: "5"
+      CONAN_RETRIES: "5"
+      CONAN_RETRY_WAIT: "10"
     permissions:
       contents: read
     steps:
@@ -52,9 +53,20 @@ jobs:
         with:
           path: |
             C:\Users\runneradmin\.conan
-          key: windows-conan-${{ hashFiles('CMakeLists.txt', 'src/CMakeLists.txt', 'lib/cmake-conan/conan.cmake') }}
+          key: windows-conan-${{ hashFiles('**/conanfile.*', '**/conan.lock', 'CMakeLists.txt', 'src/CMakeLists.txt', 'lib/cmake-conan/conan.cmake') }}
           restore-keys: |
             windows-conan-
+      - name: Remove Conan download cache
+        shell: pwsh
+        run: |
+          $conanHome = "C:\Users\runneradmin\.conan"
+          if (Test-Path $conanHome) {
+            Get-ChildItem -Path $conanHome -Recurse -Directory -Filter "_dl" -ErrorAction SilentlyContinue |
+              ForEach-Object {
+                Write-Host "Removing $($_.FullName)"
+                Remove-Item -Recurse -Force $_.FullName -ErrorAction SilentlyContinue
+              }
+          }
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
